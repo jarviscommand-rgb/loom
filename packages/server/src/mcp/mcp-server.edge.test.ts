@@ -298,6 +298,17 @@ describe('MCP Server — Tool Handler Coverage', () => {
       const secondCount = graph.getAllEntities().length;
       expect(secondCount).toBeGreaterThan(0);
     });
+
+    it('should return isError for unknown scenario (bypassing Zod)', async () => {
+      // Directly call the handler with a scenario not in demoScenarios
+      // to cover the dead-code guard at line 249 of mcp-server.ts
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const registeredTools = (server as any)._registeredTools;
+      const tool = registeredTools['loom_demo_load'];
+      const result = await tool.handler({ scenario: 'nonexistent-scenario' }, {});
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Unknown scenario');
+    });
   });
 
   // --------------------------------------------------------
