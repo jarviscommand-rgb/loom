@@ -28,7 +28,7 @@ const ingestSchema = z.object({
       z.object({
         title: z.string().min(1),
         content: z.string().min(1),
-        url: z.string().url().optional().default(''),
+        url: z.string().url().optional(),
         sourceId: z.string().min(1),
         publishedAt: z.string().optional(),
         language: z.string().default('id'),
