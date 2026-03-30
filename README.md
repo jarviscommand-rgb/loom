@@ -235,6 +235,17 @@ packages/
 
 ## API Documentation
 
+### Interactive API Docs (Swagger UI)
+
+LOOM ships with auto-generated OpenAPI 3.0 documentation. Start the server and visit:
+
+- **Swagger UI:** [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- **Raw JSON spec:** [http://localhost:3000/api-docs/json](http://localhost:3000/api-docs/json)
+
+All endpoints, request/response schemas, and query parameters are documented interactively.
+
+### Endpoints
+
 Base URL: `/api`
 
 ### Graph State
