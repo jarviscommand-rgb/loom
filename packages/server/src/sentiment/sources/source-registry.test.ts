@@ -120,6 +120,54 @@ describe('SourceRegistry', () => {
   });
 
   // -------------------------------------------------------------------------
+  // filterByLeaning
+  // -------------------------------------------------------------------------
+  describe('filterByLeaning', () => {
+    it('filters by centrist leaning', () => {
+      const centrist = registry.filterByLeaning('centrist');
+      expect(centrist.length).toBeGreaterThan(0);
+      for (const source of centrist) {
+        expect(source.politicalLeaning).toBe('centrist');
+      }
+    });
+
+    it('returns empty for unrepresented leaning', () => {
+      // 'islamic-conservative' may not be present in all source sets
+      const all = registry.getAll();
+      const hasTarget = all.some((s) => s.politicalLeaning === 'islamic-conservative');
+      if (!hasTarget) {
+        expect(registry.filterByLeaning('islamic-conservative')).toHaveLength(0);
+      } else {
+        const filtered = registry.filterByLeaning('islamic-conservative');
+        for (const source of filtered) {
+          expect(source.politicalLeaning).toBe('islamic-conservative');
+        }
+      }
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // filterByAudience
+  // -------------------------------------------------------------------------
+  describe('filterByAudience', () => {
+    it('filters by urban-middle audience type', () => {
+      const urbanMiddle = registry.filterByAudience('urban-middle');
+      expect(urbanMiddle.length).toBeGreaterThan(0);
+      for (const source of urbanMiddle) {
+        expect(source.audienceTypes).toContain('urban-middle');
+      }
+    });
+
+    it('filters by youth-digital audience type', () => {
+      const youth = registry.filterByAudience('youth-digital');
+      expect(youth.length).toBeGreaterThan(0);
+      for (const source of youth) {
+        expect(source.audienceTypes).toContain('youth-digital');
+      }
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // filterByReliability
   // -------------------------------------------------------------------------
   describe('filterByReliability', () => {

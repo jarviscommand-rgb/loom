@@ -272,6 +272,100 @@ describe('SocialMediaEngine', () => {
     });
   });
 
+  describe('edge cases', () => {
+    it('trackAnnouncement with minimal data (single platform, no tags)', () => {
+      const ann = engine.trackAnnouncement('e1', 'E1', 'Title', 'Desc', ['twitter']);
+      expect(ann.tags).toEqual([]);
+      expect(ann.platforms).toEqual(['twitter']);
+      expect(ann.platformResponses).toHaveLength(1);
+    });
+
+    it('trackAnnouncement with all 6 platforms', () => {
+      const ann = engine.trackAnnouncement(
+        'e1',
+        'E1',
+        'Title',
+        'Desc',
+        ['twitter', 'instagram', 'tiktok', 'facebook', 'reddit', 'youtube'],
+        ['tag1']
+      );
+      expect(ann.platformResponses).toHaveLength(6);
+    });
+
+    it('getEngagementPattern returns pattern with expected fields', () => {
+      const tracked = engine.trackAnnouncement('e1', 'E1', 'T', 'D', ['twitter']);
+      const p = engine.getEngagementPattern(tracked.id);
+      expect(typeof p!.peakValue).toBe('number');
+      expect(typeof p!.viralCoefficient).toBe('number');
+      expect(typeof p!.decayRate).toBe('number');
+    });
+
+    it('buildAmplificationChain with empty data (freshly tracked announcement)', () => {
+      const ann = engine.trackAnnouncement('e1', 'E1', 'T', 'D', ['twitter']);
+      const chain = engine.buildAmplificationChain(ann.id);
+      expect(chain).toBeDefined();
+      expect(chain!.source).toBeDefined();
+      expect(chain!.source.nodeType).toBe('source');
+    });
+
+    it('predictPersonaReaction with nonexistent persona (no demo data)', () => {
+      const reaction = engine.predictPersonaReaction('non-existent', 'Test', [], []);
+      expect(reaction).toBeUndefined();
+    });
+
+    it('getDashboard with no data loaded should return stable trend', () => {
+      const dashboard = engine.getDashboard();
+      expect(dashboard.trendDirection).toBe('stable');
+      expect(dashboard.mostActivePlatform).toBe('twitter');
+      expect(dashboard.topAnnouncements).toEqual([]);
+      expect(dashboard.topInfluencers).toEqual([]);
+    });
+
+    it('getAudienceOverlap with same entity twice', () => {
+      engine.loadDemoData();
+      const overlap = engine.getAudienceOverlap('entity-prabowo', 'entity-prabowo');
+      expect(overlap).toBeDefined();
+      expect(overlap.entityId1).toBe('entity-prabowo');
+      expect(overlap.entityId2).toBe('entity-prabowo');
+    });
+
+    it('getAudienceOverlap with unknown entities', () => {
+      engine.loadDemoData();
+      const overlap = engine.getAudienceOverlap('unknown-1', 'unknown-2');
+      expect(overlap).toBeDefined();
+      expect(typeof overlap.overlapCoefficient).toBe('number');
+    });
+
+    it('scoreEngagementQuality stance breakdown for freshly tracked announcement', () => {
+      const ann = engine.trackAnnouncement('e1', 'E1', 'T', 'D', ['twitter', 'instagram']);
+      const quality = engine.scoreEngagementQuality(ann.id);
+      expect(quality).toBeDefined();
+      expect(quality!.stanceBreakdown).toHaveProperty('supportive');
+      expect(quality!.stanceBreakdown).toHaveProperty('adversarial');
+      expect(quality!.stanceBreakdown).toHaveProperty('neutral');
+    });
+
+    it('analyzeCrossPlatform for freshly tracked multi-platform announcement', () => {
+      const ann = engine.trackAnnouncement('e1', 'E1', 'T', 'D', [
+        'twitter',
+        'instagram',
+        'tiktok',
+      ]);
+      const analysis = engine.analyzeCrossPlatform(ann.id);
+      expect(analysis).toBeDefined();
+      expect(analysis!.framingDifferences.length).toBeGreaterThan(0);
+      expect(analysis!.engagementRanking.length).toBe(3);
+    });
+
+    it('getPersonaById returns undefined when no data', () => {
+      expect(engine.getPersonaById('any-id')).toBeUndefined();
+    });
+
+    it('getAnnouncementById returns undefined for unknown ID', () => {
+      expect(engine.getAnnouncementById('non-existent')).toBeUndefined();
+    });
+  });
+
   describe('clear', () => {
     it('should empty all data', () => {
       engine.loadDemoData();

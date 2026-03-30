@@ -305,7 +305,163 @@ describe('API Routes', () => {
     });
   });
 
+  // --- Research validation ---
+
+  describe('POST /api/research', () => {
+    it('should return 400 for missing topic field', async () => {
+      const res = await request(app, 'POST', '/api/research', {});
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 for empty topic', async () => {
+      const res = await request(app, 'POST', '/api/research', { topic: '' });
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 for maxArticles > 20', async () => {
+      const res = await request(app, 'POST', '/api/research', { topic: 'test', maxArticles: 25 });
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // --- Entities events ---
+
+  describe('GET /api/entities/:id/events', () => {
+    it('should return events for entity', async () => {
+      const entity = graph.addEntity({
+        name: 'EventEntity',
+        type: 'person',
+        motivation: 'T',
+        capability: 'T',
+        alliances: [],
+        description: 'T',
+        firstSeen: '2023-01-01T00:00:00Z',
+        lastSeen: '2023-01-01T00:00:00Z',
+      });
+
+      graph.addEvent({
+        title: 'Related Event',
+        description: 'D',
+        timestamp: '2023-01-15T00:00:00Z',
+        participants: [entity.id],
+        causalPredecessors: [],
+        impact: 0.5,
+        sentiment: 0,
+      });
+
+      const res = await request(app, 'GET', `/api/entities/${entity.id}/events`);
+      expect(res.status).toBe(200);
+      const body = res.body as { data: unknown[]; total: number };
+      expect(body.total).toBe(1);
+      expect(body.data).toHaveLength(1);
+    });
+
+    it('should return empty for entity with no events', async () => {
+      const entity = graph.addEntity({
+        name: 'Lonely',
+        type: 'person',
+        motivation: 'T',
+        capability: 'T',
+        alliances: [],
+        description: 'T',
+        firstSeen: '2023-01-01T00:00:00Z',
+        lastSeen: '2023-01-01T00:00:00Z',
+      });
+
+      const res = await request(app, 'GET', `/api/entities/${entity.id}/events`);
+      expect(res.status).toBe(200);
+      const body = res.body as { data: unknown[]; total: number };
+      expect(body.total).toBe(0);
+      expect(body.data).toHaveLength(0);
+    });
+  });
+
+  // --- Pagination edge cases ---
+
+  describe('Pagination edge cases', () => {
+    it('should return empty data when offset beyond total entities', async () => {
+      graph.addEntity({
+        name: 'Only',
+        type: 'person',
+        motivation: 'T',
+        capability: 'T',
+        alliances: [],
+        description: 'T',
+        firstSeen: '2023-01-01T00:00:00Z',
+        lastSeen: '2023-01-01T00:00:00Z',
+      });
+
+      const res = await request(app, 'GET', '/api/entities?offset=100');
+      expect(res.status).toBe(200);
+      const body = res.body as { data: unknown[]; total: number; offset: number };
+      expect(body.data).toHaveLength(0);
+      expect(body.total).toBe(1);
+      expect(body.offset).toBe(100);
+    });
+
+    it('should respect limit=1 for events', async () => {
+      graph.addEvent({
+        title: 'Ev1',
+        description: 'D',
+        timestamp: '2023-01-01T00:00:00Z',
+        participants: [],
+        causalPredecessors: [],
+        impact: 0.5,
+        sentiment: 0,
+      });
+      graph.addEvent({
+        title: 'Ev2',
+        description: 'D',
+        timestamp: '2023-01-02T00:00:00Z',
+        participants: [],
+        causalPredecessors: [],
+        impact: 0.5,
+        sentiment: 0,
+      });
+
+      const res = await request(app, 'GET', '/api/events?limit=1');
+      expect(res.status).toBe(200);
+      const body = res.body as { data: unknown[]; total: number; limit: number };
+      expect(body.data).toHaveLength(1);
+      expect(body.total).toBe(2);
+      expect(body.limit).toBe(1);
+    });
+  });
+
   // --- Demo ---
+
+  describe('GET /api/demo/list', () => {
+    it('should return list of available demo scenarios', async () => {
+      const res = await request(app, 'GET', '/api/demo/list');
+      expect(res.status).toBe(200);
+      const body = res.body as { scenarios: unknown[] };
+      expect(body.scenarios).toBeDefined();
+      expect(body.scenarios.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should include scenario metadata', async () => {
+      const res = await request(app, 'GET', '/api/demo/list');
+      expect(res.status).toBe(200);
+      const body = res.body as {
+        scenarios: Array<{
+          id: string;
+          name: string;
+          entities: number;
+          events: number;
+          tensions: number;
+          arcs: number;
+        }>;
+      };
+      for (const scenario of body.scenarios) {
+        expect(scenario).toHaveProperty('id');
+        expect(scenario).toHaveProperty('name');
+        expect(typeof scenario.entities).toBe('number');
+        expect(typeof scenario.events).toBe('number');
+        expect(typeof scenario.tensions).toBe('number');
+        expect(typeof scenario.arcs).toBe('number');
+      }
+    });
+  });
 
   describe('POST /api/demo/load', () => {
     it('should load demo dataset and broadcast', async () => {
@@ -314,6 +470,20 @@ describe('API Routes', () => {
       expect((res.body as { message: string }).message).toContain('Demo loaded');
       expect(broadcasts.length).toBe(1);
       expect(graph.getAllEntities().length).toBeGreaterThan(0);
+    });
+
+    it('should load specific scenario', async () => {
+      const res = await request(app, 'POST', '/api/demo/load?scenario=us-china-tech-war');
+      expect(res.status).toBe(200);
+      const body = res.body as { message: string; scenario: string };
+      expect(body.message).toContain('US-China');
+      expect(body.scenario).toBe('us-china-tech-war');
+      expect(graph.getAllEntities().length).toBeGreaterThan(0);
+    });
+
+    it('should return 400 for unknown scenario', async () => {
+      const res = await request(app, 'POST', '/api/demo/load?scenario=nonexistent');
+      expect(res.status).toBe(400);
     });
   });
 
@@ -325,6 +495,17 @@ describe('API Routes', () => {
       expect(res.status).toBe(200);
       expect((res.body as { message: string }).message).toBe('Graph cleared');
       expect(graph.getAllEntities()).toEqual([]);
+    });
+
+    it('should result in empty graph after reset', async () => {
+      await request(app, 'POST', '/api/demo/load');
+      await request(app, 'POST', '/api/demo/reset');
+
+      const res = await request(app, 'GET', '/api/graph');
+      expect(res.status).toBe(200);
+      const body = res.body as { entities: unknown[]; events: unknown[] };
+      expect(body.entities).toHaveLength(0);
+      expect(body.events).toHaveLength(0);
     });
   });
 });

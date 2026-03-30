@@ -107,6 +107,50 @@ describe('Social API Routes', () => {
       expect(res.body.limit).toBe(3);
       expect((res.body.announcements as unknown[]).length).toBeLessThanOrEqual(3);
     });
+
+    it('should filter by entityId query param', async () => {
+      engine.loadDemoData();
+      const res = await testRequest(app, 'GET', '/social/announcements?entityId=entity-prabowo');
+
+      expect(res.status).toBe(200);
+      const announcements = res.body.announcements as Array<{ entityId: string }>;
+      expect(announcements.length).toBeGreaterThan(0);
+      announcements.forEach((a) => {
+        expect(a.entityId).toBe('entity-prabowo');
+      });
+    });
+
+    it('should filter by tag query param', async () => {
+      engine.loadDemoData();
+      const res = await testRequest(app, 'GET', '/social/announcements?tag=politics');
+
+      expect(res.status).toBe(200);
+      const announcements = res.body.announcements as Array<{ tags: string[] }>;
+      announcements.forEach((a) => {
+        const hasTag = a.tags.some((t) => t.toLowerCase().includes('politics'));
+        expect(hasTag).toBe(true);
+      });
+    });
+
+    it('should filter by combined entityId and tag', async () => {
+      engine.loadDemoData();
+      const res = await testRequest(
+        app,
+        'GET',
+        '/social/announcements?entityId=entity-prabowo&tag=politics'
+      );
+
+      expect(res.status).toBe(200);
+      const announcements = res.body.announcements as Array<{
+        entityId: string;
+        tags: string[];
+      }>;
+      announcements.forEach((a) => {
+        expect(a.entityId).toBe('entity-prabowo');
+        const hasTag = a.tags.some((t) => t.toLowerCase().includes('politics'));
+        expect(hasTag).toBe(true);
+      });
+    });
   });
 
   describe('POST /social/announcements', () => {
@@ -188,6 +232,11 @@ describe('Social API Routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.type).toBeDefined();
     });
+
+    it('should return 400 for non-existent announcement', async () => {
+      const res = await testRequest(app, 'GET', '/social/announcements/non-existent/engagement');
+      expect(res.status).toBe(400);
+    });
   });
 
   describe('GET /social/announcements/:id/amplification', () => {
@@ -204,6 +253,32 @@ describe('Social API Routes', () => {
       expect(res.body.source).toBeDefined();
       expect(typeof res.body.totalReach).toBe('number');
     });
+
+    it('should return 400 for non-existent announcement', async () => {
+      const res = await testRequest(app, 'GET', '/social/announcements/non-existent/amplification');
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('GET /social/audiences/:entityId', () => {
+    it('should return audience segments for entity with data', async () => {
+      engine.loadDemoData();
+      const res = await testRequest(app, 'GET', '/social/audiences/entity-prabowo');
+
+      expect(res.status).toBe(200);
+      expect(res.body.entityId).toBe('entity-prabowo');
+      expect(Array.isArray(res.body.segments)).toBe(true);
+      expect((res.body.segments as unknown[]).length).toBeGreaterThan(0);
+    });
+
+    it('should return segments for unknown entity', async () => {
+      engine.loadDemoData();
+      const res = await testRequest(app, 'GET', '/social/audiences/unknown-entity');
+
+      expect(res.status).toBe(200);
+      expect(res.body.entityId).toBe('unknown-entity');
+      expect(Array.isArray(res.body.segments)).toBe(true);
+    });
   });
 
   describe('GET /social/personas', () => {
@@ -214,6 +289,23 @@ describe('Social API Routes', () => {
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body.personas)).toBe(true);
       expect((res.body.personas as unknown[]).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('GET /social/personas/:id', () => {
+    it('should return persona by id', async () => {
+      engine.loadDemoData();
+      const personas = engine.buildAudiencePersonas();
+      const res = await testRequest(app, 'GET', `/social/personas/${personas[0].id}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.id).toBe(personas[0].id);
+      expect(res.body.name).toBe(personas[0].name);
+    });
+
+    it('should return 400 for non-existent persona', async () => {
+      const res = await testRequest(app, 'GET', '/social/personas/non-existent');
+      expect(res.status).toBe(400);
     });
   });
 
@@ -272,6 +364,27 @@ describe('Social API Routes', () => {
     });
   });
 
+  describe('GET /social/influencers/:entityId', () => {
+    it('should return influencers for entity', async () => {
+      engine.loadDemoData();
+      const res = await testRequest(app, 'GET', '/social/influencers/entity-prabowo');
+
+      expect(res.status).toBe(200);
+      expect(res.body.entityId).toBe('entity-prabowo');
+      expect(Array.isArray(res.body.influencers)).toBe(true);
+      expect((res.body.influencers as unknown[]).length).toBeGreaterThan(0);
+    });
+
+    it('should return influencers for unknown entity', async () => {
+      engine.loadDemoData();
+      const res = await testRequest(app, 'GET', '/social/influencers/unknown-entity');
+
+      expect(res.status).toBe(200);
+      expect(res.body.entityId).toBe('unknown-entity');
+      expect(Array.isArray(res.body.influencers)).toBe(true);
+    });
+  });
+
   describe('GET /social/cross-platform/:eventId', () => {
     it('should return cross-platform analysis', async () => {
       engine.loadDemoData();
@@ -309,6 +422,11 @@ describe('Social API Routes', () => {
 
     it('should reject missing entity2', async () => {
       const res = await testRequest(app, 'GET', '/social/overlap?entity1=test');
+      expect(res.status).toBe(400);
+    });
+
+    it('should reject missing entity1 only', async () => {
+      const res = await testRequest(app, 'GET', '/social/overlap?entity2=test');
       expect(res.status).toBe(400);
     });
   });

@@ -229,6 +229,115 @@ describe('NarrativeBridge', () => {
     });
   });
 
+  // --- Additional Edge Cases ---
+
+  describe('additional edge cases', () => {
+    it('linkAnnouncementToEvent with both IDs invalid', () => {
+      const link = bridge.linkAnnouncementToEvent('fake-ann', 'fake-event');
+      expect(link).toBeNull();
+    });
+
+    it('getEventSocialImpact for completely non-existent event', () => {
+      const impact = bridge.getEventSocialImpact('totally-fake-id');
+      expect(impact).toBeNull();
+    });
+
+    it('correlateEngagementWithSentiment with entity that has only one announcement', () => {
+      socialEngine.loadDemoData();
+      // Track a single announcement for a unique entity
+      socialEngine.trackAnnouncement('single-entity', 'Single', 'Test', 'Desc', ['twitter']);
+      const corr = bridge.correlateEngagementWithSentiment('single-entity');
+      expect(corr).not.toBeNull();
+      expect(corr!.announcementCount).toBe(1);
+      expect(corr!.correlationCoefficient).toBe(0);
+    });
+
+    it('buildFullImpactChain steps have valid timestamps', () => {
+      socialEngine.loadDemoData();
+      const chain = bridge.buildFullImpactChain('ann-cabinet-reshuffle');
+      expect(chain).not.toBeNull();
+      for (const step of chain!.steps) {
+        expect(new Date(step.timestamp).getTime()).not.toBeNaN();
+      }
+    });
+
+    it('calculateSocialNIS for multiple announcements gives consistent scoring', () => {
+      socialEngine.loadDemoData();
+      const nis1 = bridge.calculateSocialNIS('ann-cabinet-reshuffle');
+      const nis2 = bridge.calculateSocialNIS('ann-scs-incident');
+      expect(nis1).not.toBeNull();
+      expect(nis2).not.toBeNull();
+      expect(nis1!.compositeScore).not.toBe(nis2!.compositeScore);
+    });
+
+    it('getEventSocialImpact socialSentiment is within valid range', () => {
+      socialEngine.loadDemoData();
+      const event = graph.addEvent({
+        title: 'T',
+        description: 'D',
+        timestamp: '2025-03-15T10:00:00Z',
+        participants: [],
+        causalPredecessors: [],
+        impact: 0.5,
+        sentiment: 0,
+      });
+      bridge.linkAnnouncementToEvent('ann-cabinet-reshuffle', event.id);
+      const impact = bridge.getEventSocialImpact(event.id);
+      expect(impact!.socialSentiment).toBeGreaterThanOrEqual(-1);
+      expect(impact!.socialSentiment).toBeLessThanOrEqual(1);
+    });
+  });
+
+  // --- Sentiment Integration ---
+
+  describe('correlateEngagementWithSentiment with sentiment articles', () => {
+    it('should use article sentiment scores when articles match entity', () => {
+      socialEngine.loadDemoData();
+      sentimentEngine.loadDemoData();
+      // Track announcement with entityId matching sentiment entity name pattern
+      socialEngine.trackAnnouncement('prabowo', 'Prabowo', 'Policy speech', 'Desc', ['twitter']);
+      socialEngine.trackAnnouncement('prabowo', 'Prabowo', 'New initiative', 'Desc', ['instagram']);
+
+      const corr = bridge.correlateEngagementWithSentiment('prabowo');
+      expect(corr).not.toBeNull();
+      expect(corr!.entityId).toBe('prabowo');
+      expect(corr!.announcementCount).toBe(2);
+      expect(corr!.articleCount).toBeGreaterThan(0);
+      expect(corr!.correlationCoefficient).toBeGreaterThanOrEqual(-1);
+      expect(corr!.correlationCoefficient).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('buildFullImpactChain with sentiment articles', () => {
+    it('should include media-pickup step with article count when articles exist', () => {
+      socialEngine.loadDemoData();
+      sentimentEngine.loadDemoData();
+      // ann-scs-incident has tags that may match article topics
+      const chain = bridge.buildFullImpactChain('ann-scs-incident');
+      expect(chain).not.toBeNull();
+      expect(chain!.steps).toHaveLength(5);
+      const mediaStep = chain!.steps.find((s) => s.stage === 'media-pickup');
+      expect(mediaStep).toBeDefined();
+      expect(typeof mediaStep!.metrics.articleCount).toBe('number');
+    });
+
+    it('should find related articles via tag matching', () => {
+      sentimentEngine.loadDemoData();
+      // Track announcement with tags that match article topics
+      const ann = socialEngine.trackAnnouncement(
+        'entity-test',
+        'Test',
+        'Indonesia cabinet economic policy',
+        'Desc',
+        ['twitter', 'instagram'],
+        ['indonesia', 'economic', 'policy']
+      );
+      const chain = bridge.buildFullImpactChain(ann.id);
+      expect(chain).not.toBeNull();
+      expect(chain!.steps).toHaveLength(5);
+    });
+  });
+
   // --- Edge Cases ---
 
   describe('edge cases', () => {
