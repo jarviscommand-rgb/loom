@@ -145,7 +145,7 @@ export async function extractNarrative(
  * Each chunk stays under the character limit with overlap
  * to maintain context across boundaries.
  */
-function chunkText(text: string): string[] {
+export function chunkText(text: string): string[] {
   if (text.length <= CHUNK_CHAR_LIMIT) return [text];
 
   const paragraphs = text.split(/\n\s*\n/);
@@ -219,7 +219,7 @@ async function extractChunkWithRetry(openai: OpenAI, text: string): Promise<RawE
  * Merge extractions from multiple chunks into a single extraction.
  * Deduplicates characters and events across chunks.
  */
-function mergeExtractions(extractions: RawExtraction[]): RawExtraction {
+export function mergeExtractions(extractions: RawExtraction[]): RawExtraction {
   if (extractions.length === 1) return extractions[0];
 
   const merged: RawExtraction = {
@@ -311,7 +311,7 @@ function mergeExtractions(extractions: RawExtraction[]): RawExtraction {
  * Deduplicate entities using fuzzy name matching.
  * Handles cases like "Sam Altman" vs "Altman" vs "Samuel Altman".
  */
-function deduplicateEntities(raw: RawExtraction): RawExtraction {
+export function deduplicateEntities(raw: RawExtraction): RawExtraction {
   const nameGroups = groupSimilarNames(raw.characters.map((c) => c.name));
 
   if (nameGroups.size === 0) return raw;
@@ -378,7 +378,7 @@ function deduplicateEntities(raw: RawExtraction): RawExtraction {
  * Group names that likely refer to the same entity.
  * Returns a map of canonical name → list of all variants.
  */
-function groupSimilarNames(names: string[]): Map<string, string[]> {
+export function groupSimilarNames(names: string[]): Map<string, string[]> {
   const groups = new Map<string, string[]>();
   const assigned = new Set<string>();
 
@@ -411,7 +411,7 @@ function groupSimilarNames(names: string[]): Map<string, string[]> {
  * Check if two names likely refer to the same entity.
  * Handles: substring matching, last-name matching, and Jaccard similarity.
  */
-function namesMatch(a: string, b: string): boolean {
+export function namesMatch(a: string, b: string): boolean {
   const aLower = a.toLowerCase().trim();
   const bLower = b.toLowerCase().trim();
 
@@ -447,7 +447,7 @@ function namesMatch(a: string, b: string): boolean {
 // Reference resolution and graph integration
 // ============================================================
 
-function resolveAndAddToGraph(raw: RawExtraction, graph: TemporalGraph): ExtractionResult {
+export function resolveAndAddToGraph(raw: RawExtraction, graph: TemporalGraph): ExtractionResult {
   const nameToEntityId = new Map<string, string>();
   const titleToEventId = new Map<string, string>();
   const nameToTensionId = new Map<string, string>();
@@ -578,7 +578,7 @@ function resolveAndAddToGraph(raw: RawExtraction, graph: TemporalGraph): Extract
 // ============================================================
 
 /** Parse JSON from LLM output, handling markdown code blocks. */
-function parseJsonResponse<T>(content: string): T {
+export function parseJsonResponse<T>(content: string): T {
   try {
     return JSON.parse(content) as T;
   } catch {
@@ -590,7 +590,7 @@ function parseJsonResponse<T>(content: string): T {
   }
 }
 
-function clamp(value: number, min: number, max: number): number {
+export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 

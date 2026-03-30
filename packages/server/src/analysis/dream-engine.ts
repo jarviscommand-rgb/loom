@@ -99,7 +99,7 @@ interface GenerationResult {
   retries: number;
 }
 
-async function generateForStrategy(
+export async function generateForStrategy(
   snapshot: GraphSnapshot,
   strategy: DreamStrategy,
   _graph: TemporalGraph
@@ -126,7 +126,7 @@ async function generateForStrategy(
 }
 
 /** Build the state description with strategy-specific emphasis. */
-function buildStateDescription(snapshot: GraphSnapshot, strategy: DreamStrategy): string {
+export function buildStateDescription(snapshot: GraphSnapshot, strategy: DreamStrategy): string {
   const recentEvents = snapshot.events.slice(-10);
   const activeTensions = snapshot.tensions.filter((t) => t.status !== 'resolved');
 
@@ -197,7 +197,7 @@ function buildStateDescription(snapshot: GraphSnapshot, strategy: DreamStrategy)
 }
 
 /** Build the prompt for a specific strategy. */
-function buildStrategyPrompt(strategy: DreamStrategy, stateDescription: string): string {
+export function buildStrategyPrompt(strategy: DreamStrategy, stateDescription: string): string {
   const strategyInstructions: Record<DreamStrategy, string> = {
     conservative: `Generate 1-2 CONSERVATIVE future scenarios. These should be the most probable next developments based on existing momentum and character motivations. Probability should be relatively high (0.3-0.7).`,
     wild_card: `Generate 1-2 WILD CARD scenarios. These are unlikely but plausible disruptions that would fundamentally alter the narrative trajectory. Probability should be low (0.05-0.25) but the scenarios must still be grounded in the established world.`,
@@ -221,7 +221,7 @@ interface RawBranch {
   affectedEntities: string[];
 }
 
-async function callLLMWithRetry(prompt: string): Promise<RawBranch[]> {
+export async function callLLMWithRetry(prompt: string): Promise<RawBranch[]> {
   const openai = getOpenAIClient();
   let lastError: Error | undefined;
 
@@ -268,7 +268,7 @@ async function callLLMWithRetry(prompt: string): Promise<RawBranch[]> {
  * Uses a softmax-like approach weighted by original probabilities
  * to preserve relative ordering while ensuring valid distribution.
  */
-function normalizeProbabilities(branches: DreamBranch[]): void {
+export function normalizeProbabilities(branches: DreamBranch[]): void {
   if (branches.length === 0) return;
 
   const sum = branches.reduce((s, b) => s + b.probability, 0);
@@ -292,7 +292,7 @@ function normalizeProbabilities(branches: DreamBranch[]): void {
  * Score how well each branch aligns with character motivations.
  * Higher score = characters are acting in-character.
  */
-function applyMotivationAlignment(branches: DreamBranch[], snapshot: GraphSnapshot): void {
+export function applyMotivationAlignment(branches: DreamBranch[], snapshot: GraphSnapshot): void {
   const entityMap = new Map<string, Entity>();
   for (const e of snapshot.entities) {
     entityMap.set(e.name.toLowerCase(), e);
@@ -340,7 +340,7 @@ function applyMotivationAlignment(branches: DreamBranch[], snapshot: GraphSnapsh
  * Check branches against established facts in the graph.
  * Returns violations found.
  */
-function checkConstraints(
+export function checkConstraints(
   branches: DreamBranch[],
   snapshot: GraphSnapshot,
   _graph: TemporalGraph
@@ -408,7 +408,7 @@ function checkConstraints(
  * Validate that branches follow from the timeline.
  * Marks each branch's temporallyCoherent flag.
  */
-function validateTemporalCoherence(branches: DreamBranch[], snapshot: GraphSnapshot): void {
+export function validateTemporalCoherence(branches: DreamBranch[], snapshot: GraphSnapshot): void {
   if (snapshot.events.length === 0) {
     for (const b of branches) b.temporallyCoherent = true;
     return;
@@ -443,7 +443,7 @@ function validateTemporalCoherence(branches: DreamBranch[], snapshot: GraphSnaps
  * Analyze dependencies between branches — does one branch's outcome
  * make another more or less likely?
  */
-function analyzeInterBranchDependencies(branches: DreamBranch[]): BranchDependency[] {
+export function analyzeInterBranchDependencies(branches: DreamBranch[]): BranchDependency[] {
   const dependencies: BranchDependency[] = [];
 
   for (let i = 0; i < branches.length; i++) {
@@ -498,7 +498,7 @@ function analyzeInterBranchDependencies(branches: DreamBranch[]): BranchDependen
 // ============================================================
 
 /** Parse JSON from LLM output, handling markdown code blocks. */
-function parseJsonResponse<T>(content: string): T {
+export function parseJsonResponse<T>(content: string): T {
   // Try direct parse
   try {
     return JSON.parse(content) as T;
@@ -513,7 +513,7 @@ function parseJsonResponse<T>(content: string): T {
 }
 
 /** Simple text similarity check based on shared significant words. */
-function similarText(a: string, b: string): boolean {
+export function similarText(a: string, b: string): boolean {
   const wordsA = new Set(
     a
       .toLowerCase()
@@ -536,10 +536,10 @@ function similarText(a: string, b: string): boolean {
   return minSize > 0 && shared / minSize >= 0.3;
 }
 
-function clamp(value: number, min: number, max: number): number {
+export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function sleep(ms: number): Promise<void> {
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
