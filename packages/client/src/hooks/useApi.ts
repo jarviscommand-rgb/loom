@@ -12,14 +12,98 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface PaginationParams {
+  limit?: number;
+  offset?: number;
+}
+
+function buildQuery(params?: PaginationParams): string {
+  if (!params) return '';
+  const query = new URLSearchParams();
+  if (params.limit !== undefined) query.set('limit', String(params.limit));
+  if (params.offset !== undefined) query.set('offset', String(params.offset));
+  const str = query.toString();
+  return str ? `?${str}` : '';
+}
+
+/**
+ * Unwraps a paginated response, returning just the data array.
+ * Handles both paginated `{ data, total, limit, offset }` and raw array formats
+ * for backwards compatibility.
+ */
+function unwrapPaginated<T>(response: PaginatedResponse<T> | T[]): T[] {
+  if (Array.isArray(response)) return response;
+  return response.data;
+}
+
 export const api = {
   getGraph: () => request<GraphSnapshot>('/graph'),
   getGraphAt: (ts: string) => request<GraphSnapshot>(`/graph/at/${ts}`),
-  getEntities: () => request<Entity[]>('/entities'),
-  getEvents: () => request<NarrativeEvent[]>('/events'),
-  getTensions: () => request<Tension[]>('/tensions'),
+
+  /** Fetch entities. Returns paginated response with metadata. */
+  getEntitiesPaginated: (params?: PaginationParams) =>
+    request<PaginatedResponse<Entity>>(`/entities${buildQuery(params)}`),
+  /** Fetch entities. Returns just the data array for convenience. */
+  getEntities: async (params?: PaginationParams): Promise<Entity[]> => {
+    const res = await request<PaginatedResponse<Entity> | Entity[]>(
+      `/entities${buildQuery(params)}`
+    );
+    return unwrapPaginated(res);
+  },
+
+  getEntity: (id: string) => request<Entity>(`/entities/${id}`),
+  getEntityEvents: async (id: string, params?: PaginationParams): Promise<NarrativeEvent[]> => {
+    const res = await request<PaginatedResponse<NarrativeEvent> | NarrativeEvent[]>(
+      `/entities/${id}/events${buildQuery(params)}`
+    );
+    return unwrapPaginated(res);
+  },
+
+  /** Fetch events. Returns paginated response with metadata. */
+  getEventsPaginated: (params?: PaginationParams) =>
+    request<PaginatedResponse<NarrativeEvent>>(`/events${buildQuery(params)}`),
+  /** Fetch events. Returns just the data array for convenience. */
+  getEvents: async (params?: PaginationParams): Promise<NarrativeEvent[]> => {
+    const res = await request<PaginatedResponse<NarrativeEvent> | NarrativeEvent[]>(
+      `/events${buildQuery(params)}`
+    );
+    return unwrapPaginated(res);
+  },
+
+  getEventsInRange: (from: string, to: string) =>
+    request<NarrativeEvent[]>(`/events/range?from=${from}&to=${to}`),
+
+  /** Fetch tensions. Returns paginated response with metadata. */
+  getTensionsPaginated: (params?: PaginationParams) =>
+    request<PaginatedResponse<Tension>>(`/tensions${buildQuery(params)}`),
+  /** Fetch tensions. Returns just the data array for convenience. */
+  getTensions: async (params?: PaginationParams): Promise<Tension[]> => {
+    const res = await request<PaginatedResponse<Tension> | Tension[]>(
+      `/tensions${buildQuery(params)}`
+    );
+    return unwrapPaginated(res);
+  },
+
   getActiveTensions: () => request<Tension[]>('/tensions/active'),
-  getArcs: () => request<NarrativeArc[]>('/arcs'),
+
+  /** Fetch arcs. Returns paginated response with metadata. */
+  getArcsPaginated: (params?: PaginationParams) =>
+    request<PaginatedResponse<NarrativeArc>>(`/arcs${buildQuery(params)}`),
+  /** Fetch arcs. Returns just the data array for convenience. */
+  getArcs: async (params?: PaginationParams): Promise<NarrativeArc[]> => {
+    const res = await request<PaginatedResponse<NarrativeArc> | NarrativeArc[]>(
+      `/arcs${buildQuery(params)}`
+    );
+    return unwrapPaginated(res);
+  },
+
   getPressurePoints: () => request<PressurePoint[]>('/analysis/pressure-points'),
   generateDreams: () => request<DreamBranch[]>('/analysis/dream', { method: 'POST' }),
   extractNarrative: (text: string) =>
