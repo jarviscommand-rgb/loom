@@ -1,12 +1,44 @@
 # LOOM — Causal Narrative Intelligence Engine
 
-> _"Every dataset tells a story. LOOM reads the plot, tracks the tension, and dreams the next chapter."_
+> **What if you could read the plot of reality in real-time?**
 
-**20,000+ lines of TypeScript. 520+ passing tests. MCP-enabled. One narrative lens.**
+**33,700+ lines of TypeScript. 624 passing tests. 16 source profiles. MCP-enabled. Zero `any` types.**
 
-LOOM is a full-stack intelligence engine that treats real-world data as **living narrative** — extracting characters, tracking tensions, detecting story arcs, and generating speculative futures using the deep structure of storytelling.
+Most analytics tools show you _what happened_. LOOM shows you _the story_ — who the characters are, what tensions are building, which subplots everyone stopped watching, and what happens next.
 
-Feed it news articles, earnings calls, intelligence reports, or any unstructured text. LOOM doesn't give you dashboards. It gives you the **story your data is telling** — and what happens next.
+Feed it news articles, earnings calls, intelligence reports, or any unstructured text. LOOM extracts the **narrative skeleton** — characters with motivations, events in causal chains, tensions with cascade risk, and story arcs following classical patterns — then dreams plausible futures as explorable branches.
+
+It's not a dashboard. It's a **narrative lens**.
+
+```
+$ curl -X POST localhost:3001/api/extract -d '{"text": "..."}'
+→ 9 characters, 10 events, 5 tensions, 3 arcs detected
+→ "Safety vs. Speed" tension at 0.87 — cascade risk: HIGH
+→ Climax predicted in 4-7 days based on escalation rate
+```
+
+---
+
+## Why LOOM?
+
+Every dataset is a story someone stopped reading too early.
+
+Traditional analytics reduces the world to numbers on a dashboard — time series, KPIs, anomaly scores. These tools answer "what" and "how much" but systematically strip away the _narrative structure_ that actually drives outcomes: who wants what, who's blocking whom, which tensions are about to break, and which quiet subplots are where the real risk hides.
+
+Humans have understood the world through narrative for 100,000 years. Stories aren't a simplification of reality — they're the **native data structure of human behavior**. When a CEO makes a decision, they're not optimizing a loss function. They're acting as a _character_ with motivations, alliances, and constraints, inside a _plot_ that has momentum and logic.
+
+LOOM takes this seriously. It applies the same structural mechanics that drive novels, films, and history — character arcs, rising tension, climax prediction, subplot detection — as an **analytical framework for real-world data**.
+
+The result is intelligence that reads the way analysts actually think: _"This tension between X and Y has been escalating for 28 days, it's converging with two other pressure points, and based on the arc pattern, we're 70% through the rising action."_
+
+That's not a metric. That's a briefing.
+
+**Narrative intelligence matters because:**
+
+- **Unresolved tensions are early-warning signals.** A dashboard shows you the explosion. LOOM shows you the fuse.
+- **Character arc shifts predict behavior.** When an entity breaks pattern, something changed in their calculus. That's signal.
+- **Subplots everyone stopped tracking are where risk hides.** The boring storyline that went quiet didn't resolve — it went underground.
+- **Narratives that don't cohere structurally are worth investigating.** If the story doesn't make sense, someone is lying or something is missing.
 
 ---
 
@@ -36,8 +68,6 @@ Feed it news articles, earnings calls, intelligence reports, or any unstructured
 
 ## What Makes This Different
 
-This isn't another chart-and-table analytics tool. LOOM applies narrative structure — the same mechanics that drive novels, films, and history — as an analytical framework.
-
 | Traditional Analytics   | LOOM                                                                 |
 | ----------------------- | -------------------------------------------------------------------- |
 | Entities in a database  | **Characters** with motivations and alliances                        |
@@ -47,7 +77,94 @@ This isn't another chart-and-table analytics tool. LOOM applies narrative struct
 | Linear forecasts        | **Dream branches** — speculative futures grounded in character logic |
 | Anomaly detection       | **Plot twist detection** — structural breaks in narrative coherence  |
 
-**Why this matters:** Unresolved tensions are early-warning signals. Character arc shifts predict behavior. Subplots everyone stopped tracking are where risk hides. Narratives that don't cohere structurally are worth investigating.
+---
+
+## Architecture
+
+```
+                              ┌─────────────────────────────────────────┐
+                              │            LOOM Architecture            │
+                              └─────────────────────────────────────────┘
+
+  ┌──────────────────┐     ┌──────────────────────────────────────────────────────────┐
+  │   Input Sources   │     │                    packages/server                       │
+  │                    │     │                                                          │
+  │  News Articles     │     │  ┌──────────────┐   ┌──────────────┐   ┌─────────────┐ │
+  │  Earnings Calls    │────▶│  │  Extraction   │──▶│  Temporal     │──▶│  Analysis   │ │
+  │  Intel Reports     │     │  │  Pipeline     │   │  Causal Graph │   │  Engine     │ │
+  │  Any Text          │     │  │  (GPT-4o)     │   │  (In-Memory)  │   │            │ │
+  └──────────────────┘     │  └──────────────┘   └──────┬───────┘   └──────┬──────┘ │
+                              │         │                  │                  │         │
+  ┌──────────────────┐     │         │           ┌──────┴───────┐   ┌──────┴──────┐ │
+  │   MCP Clients     │     │         ▼           │   Entities    │   │  Tension    │ │
+  │                    │     │  ┌──────────────┐  │   Events      │   │  Radar      │ │
+  │  Claude Desktop    │◀──▶│  │  MCP Server   │  │   Tensions    │   │  Arc        │ │
+  │  GPT Agents        │     │  │  (8 tools)    │  │   Arcs        │   │  Detector   │ │
+  │  Custom Agents     │     │  └──────────────┘  │   Alliances   │   │  Dream      │ │
+  └──────────────────┘     │                     └──────────────┘   │  Engine     │ │
+                              │                                        └─────────────┘ │
+  ┌──────────────────┐     │  ┌──────────────────────────────────────────────────┐   │
+  │   News Feeds       │     │  │              Sentiment Engine                    │   │
+  │                    │     │  │                                                    │   │
+  │  RSS Feeds         │────▶│  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐ │   │
+  │  SerpAPI           │     │  │  │ 16 Source │  │ NIS Score │  │ Knowledge    │ │   │
+  │  Google News       │     │  │  │ Profiles  │  │ Breakdown │  │ Base +       │ │   │
+  │  Firecrawl         │     │  │  │ (weighted)│  │ (0-100)   │  │ Entity       │ │   │
+  └──────────────────┘     │  │  └──────────┘  └───────────┘  │ Profiles     │ │   │
+                              │  │                                └──────────────┘ │   │
+                              │  └──────────────────────────────────────────────────┘   │
+                              │                                                          │
+                              │  ┌────────────────┐  ┌───────────────┐                  │
+                              │  │  Express API    │  │  WebSocket    │                  │
+                              │  │  30+ endpoints  │  │  Real-time +  │                  │
+                              │  │  Zod validated  │  │  Streaming    │                  │
+                              │  └───────┬────────┘  └───────┬───────┘                  │
+                              └──────────┼──────────────────┼──────────────────────────┘
+                                           │                  │
+                              ┌──────────┼──────────────────┼──────────────────────────┐
+                              │          ▼                  ▼        packages/client     │
+                              │                                                          │
+                              │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+                              │  │  3D Tapestry  │  │  D3 Timeline │  │  Network     │  │
+                              │  │  Three.js     │  │  Causal      │  │  Graph       │  │
+                              │  │  Bloom + Fog  │  │  Curves      │  │  Force-dir.  │  │
+                              │  └──────────────┘  └──────────────┘  └──────────────┘  │
+                              │                                                          │
+                              │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+                              │  │  Tension      │  │  Sentiment   │  │  Knowledge   │  │
+                              │  │  Radar        │  │  Dashboard   │  │  Base UI     │  │
+                              │  │  Heatmap      │  │  NIS + Trend │  │  Sources +   │  │
+                              │  └──────────────┘  └──────────────┘  │  Entities    │  │
+                              │                                        └──────────────┘  │
+                              │  ┌──────────────┐  ┌──────────────┐                     │
+                              │  │  Dream Tree   │  │  Score        │                     │
+                              │  │  Branch       │  │  Transparency │                     │
+                              │  │  Explorer     │  │  Breakdown    │                     │
+                              │  └──────────────┘  └──────────────┘                     │
+                              │                                                          │
+                              │         React 18 + Vite + Tailwind (Dark Theme)         │
+                              └──────────────────────────────────────────────────────────┘
+```
+
+### Data Flow
+
+```
+  Text Input                 Extraction              Graph                Analysis
+  ─────────                  ──────────              ─────                ────────
+
+  "Board fires    ──▶  GPT-4o extracts:   ──▶  Temporal graph   ──▶  Tension Radar
+   Sam Altman"        • 9 entities              indexes by:          scores 6 dimensions
+                       • 10 events              • entity ID          per tension
+                       • 5 tensions             • timestamp
+                       • 3 arcs                 • causal links     Arc Detector
+                                                                     matches 6 classical
+                                                                     archetypes
+
+                                                                    Dream Engine
+                                                                     3 strategies →
+                                                                     constraint filter →
+                                                                     explorable branches
+```
 
 ---
 
@@ -55,7 +172,7 @@ This isn't another chart-and-table analytics tool. LOOM applies narrative struct
 
 ### Story Extraction
 
-Feed LOOM any text and it extracts the **narrative skeleton** via GPT-4o: characters and their motivations, events and their causal chains, conflicts and their trajectory. The extraction pipeline identifies entities, maps alliances, scores impact and sentiment, and links events into causal graphs.
+Feed LOOM any text and it extracts the **narrative skeleton** via GPT-4o: characters and their motivations, events and their causal chains, conflicts and their trajectory. The extraction pipeline identifies entities, maps alliances, scores impact and sentiment, and links events into causal graphs. Supports both REST and **streaming WebSocket** extraction with real-time progress.
 
 ### Tension Radar
 
@@ -69,6 +186,14 @@ Automatic detection of narrative phases (setup, rising action, climax, falling a
 
 Multi-strategy speculative generation that produces plausible "next chapters" as explorable story branches. Three strategies — conservative extrapolation, wild card disruptions, and pattern-based projection — filtered through constraint satisfaction, motivation alignment, and temporal coherence checks.
 
+### Score Transparency System
+
+Every computed metric in LOOM — tension scores, arc health, NIS, sentiment — is fully decomposable. The score transparency system exposes the raw value, normalized value, weight, and weighted contribution of every variable in every score. No black boxes. Every number has a receipt.
+
+### Knowledge Base
+
+Structured intelligence profiles for entities and media sources. 16 Indonesian media source profiles with ownership chains, political leanings, reliability scores, and editorial histories. 9+ entity profiles with relationship maps, public stances, and historical positions. The knowledge base powers the source-weighted sentiment analysis and enables pattern detection across ownership networks.
+
 ### The Tapestry
 
 A cinematic Three.js visualization where characters orbit as glowing spheres, tensions pulse as luminous threads between them, events scatter like stars along a flowing time river, and bloom effects light the narrative space. Fog, particles, and smooth camera motion at 60fps.
@@ -81,13 +206,13 @@ Force-directed network graphs showing entity relationships and alliances. Timeli
 
 ## Country Sentiment Engine
 
-LOOM includes a **precision sentiment measurement instrument** for country-level narrative analysis. Starting with Indonesia, it ingests real news, measures impact, and enables predictive analysis.
+LOOM includes a **precision sentiment measurement instrument** for country-level narrative analysis. Starting with Indonesia, it ingests real news, measures impact with source-weighted scoring, and enables predictive analysis.
 
 ### How It Works
 
 | Step           | What Happens                                                                                         |
 | -------------- | ---------------------------------------------------------------------------------------------------- |
-| **Ingest**     | Feed articles from multiple news sources (RSS, API, manual)                                          |
+| **Ingest**     | Feed articles from multiple news sources (RSS, SerpAPI, Google News, Firecrawl, manual)              |
 | **Categorize** | Auto-classify into 12 categories (political, economic, corruption, etc.)                             |
 | **Score**      | Multi-strategy sentiment scoring (lexicon + LLM) with bilingual support (English + Bahasa Indonesia) |
 | **Weight**     | Source-weighted scoring — unexpected sentiment from biased sources is amplified                      |
@@ -98,11 +223,11 @@ LOOM includes a **precision sentiment measurement instrument** for country-level
 
 Not all sources are equal. The **same event** reported by different sources tells you different things:
 
-| Source                   | Type                      | If They Report Positively on Government    | Signal    |
-| ------------------------ | ------------------------- | ------------------------------------------ | --------- |
-| **Tempo** (opposition)   | Independent investigative | Unexpected → **HIGH signal** (2.5x weight) | 🔴 Strong |
-| **Antara** (state media) | Government wire service   | Expected → **LOW signal** (0.5x weight)    | ⚪ Weak   |
-| **Kompas** (centrist)    | Quality broadsheet        | Baseline signal (1.0x weight)              | 🟡 Normal |
+| Source                   | Type                      | If They Report Positively on Government    | Signal |
+| ------------------------ | ------------------------- | ------------------------------------------ | ------ |
+| **Tempo** (opposition)   | Independent investigative | Unexpected → **HIGH signal** (2.5x weight) | Strong |
+| **Antara** (state media) | Government wire service   | Expected → **LOW signal** (0.5x weight)    | Weak   |
+| **Kompas** (centrist)    | Quality broadsheet        | Baseline signal (1.0x weight)              | Normal |
 
 A positive article about Prabowo from Tempo is worth **5x** a positive article from Antara.
 
@@ -116,27 +241,32 @@ Every article gets a **NIS** (0-100) combining:
 - **Impact duration** estimate (0-20)
 - **Cross-source amplification** (0-20)
 
-### Indonesian Media Profiles (11 Sources)
+### Indonesian Media Profiles (16 Sources)
 
-| Source          | Owner                     | Bias                 | Reliability | Audience             |
-| --------------- | ------------------------- | -------------------- | ----------- | -------------------- |
-| Kompas          | Kompas Gramedia           | Centrist/Neutral     | 0.85        | Elite, Urban         |
-| Tempo           | Independent               | Anti-gov             | 0.90        | Elite, International |
-| Detik           | CT Corp (Chairul Tanjung) | Pro-gov              | 0.60        | Urban, Youth         |
-| Jakarta Post    | Independent               | Neutral              | 0.82        | International        |
-| Antara          | State                     | Pro-gov              | 0.55        | Elite, Rural         |
-| Republika       | Mahaka Media              | Islamic Conservative | 0.60        | Urban, Rural         |
-| Kumparan        | Independent               | Neutral              | 0.65        | Youth                |
-| CNN Indonesia   | CT Corp                   | Pro-gov              | 0.70        | Urban, Youth         |
-| tvOne/Viva      | Bakrie Group              | Pro-gov              | 0.45        | Rural, Urban         |
-| Media Indonesia | Surya Paloh (NasDem)      | Pro-gov              | 0.50        | Elite                |
-| Tribunnews      | Kompas Gramedia           | Neutral              | 0.45        | Mass market          |
+| Source          | Owner                          | Bias                 | Reliability | Audience             |
+| --------------- | ------------------------------ | -------------------- | ----------- | -------------------- |
+| Kompas          | Kompas Gramedia                | Centrist             | 0.85        | Elite, Urban         |
+| Tempo           | Independent                    | Anti-gov             | 0.90        | Elite, International |
+| Detik           | CT Corp (Chairul Tanjung)      | Pro-gov              | 0.60        | Urban, Youth         |
+| Jakarta Post    | Independent                    | Progressive          | 0.82        | International        |
+| Antara          | State                          | Pro-gov              | 0.55        | Elite, Rural         |
+| Republika       | Bakrie Group                   | Islamic Conservative | 0.60        | Urban, Rural         |
+| Kumparan        | Independent                    | Neutral              | 0.65        | Youth                |
+| CNN Indonesia   | CT Corp                        | Pro-gov              | 0.70        | Urban, Youth         |
+| tvOne/Viva      | Bakrie Group                   | Pro-gov              | 0.45        | Rural, Urban         |
+| Media Indonesia | Surya Paloh (NasDem)           | Pro-gov              | 0.50        | Elite                |
+| Tribunnews      | Kompas Gramedia                | Neutral              | 0.65        | Mass market          |
+| MNC Media       | Hary Tanoesoedibjo (MNC Group) | Pro-gov              | 0.50        | Mass market          |
+| EMTEK Media     | Emtek Group                    | Centrist             | 0.60        | Urban, Youth         |
+| Berita Satu     | Lippo Group                    | Pro-business         | 0.55        | Elite, Business      |
+| Tirto.id        | Independent                    | Neutral              | 0.80        | Youth, Urban         |
+| Narasi TV       | Najwa Shihab                   | Independent          | 0.78        | Youth, Urban         |
 
 ### Event Detail Analysis
 
 Click any article/event to see:
 
-- **NIS Score** with component breakdown
+- **NIS Score** with full component breakdown (score transparency)
 - **Sentiment Types** — 8 emotional dimensions (fear, hope, anger, trust, pride, confusion, urgency, apathy)
 - **Effectiveness Analysis** — source credibility, timing, framing quality, emotional resonance, novelty
 - **Audience Impact** — which demographics are affected (elite, urban, rural, international, youth)
@@ -146,7 +276,7 @@ Click any article/event to see:
 
 ## Demo Scenarios
 
-LOOM ships with three pre-loaded narrative scenarios. Load any of them in one click.
+LOOM ships with four pre-loaded narrative scenarios. Load any of them in one click.
 
 ### 1. The OpenAI Board Crisis (November 2023)
 
@@ -171,9 +301,10 @@ LOOM ships with three pre-loaded narrative scenarios. Load any of them in one cl
 
 ### 4. Indonesian Sentiment Engine Demo
 
-- **22 articles** across 11 Indonesian media sources
+- **50+ articles** across 16 Indonesian media sources
 - Covers Prabowo's first 100 days, IKN, economic policy, South China Sea, anti-corruption
 - Source-weighted sentiment analysis with NIS (Narrative Impact Score) for every article
+- Full score transparency breakdowns showing how every number was computed
 
 ---
 
@@ -183,7 +314,7 @@ LOOM ships with three pre-loaded narrative scenarios. Load any of them in one cl
 
 ```bash
 # Clone and install
-git clone https://github.com/your-org/loom.git
+git clone https://github.com/jarviscommand-rgb/loom.git
 cd loom
 npm install          # Installs all workspace dependencies
 
@@ -215,47 +346,8 @@ Then open **http://localhost:5173** and click **"Load Demo"** to explore the Ope
 | `RATE_LIMIT_MAX`            | No       | `10`     | Max requests per rate limit window             |
 | `RATE_LIMIT_WINDOW_MINUTES` | No       | `1`      | Rate limit window in minutes                   |
 | `MAX_INPUT_LENGTH`          | No       | `50000`  | Max characters for extraction input            |
-
----
-
-## Architecture
-
-```
-packages/
-├── server/src/
-│   ├── analysis/         # Tension radar, arc detector, dream engine
-│   ├── extraction/       # LLM-powered narrative extraction pipeline
-│   ├── graph/            # In-memory temporal causal graph with indexed lookups
-│   ├── api/              # Express routes with Zod validation + pagination
-│   ├── errors/           # Custom error classes (LoomError hierarchy)
-│   ├── middleware/        # Rate limiting, validation, error handling
-│   ├── config/           # Environment validation (fail-fast on missing vars)
-│   ├── mcp/              # MCP server for AI agent integration (8 tools)
-│   ├── demo/             # 3 narrative scenarios (OpenAI, US-China, AI Bubble)
-│   ├── sentiment/        # Country Sentiment Engine
-│   │   ├── analysis/     # Scoring, classification, impact, trend tracking
-│   │   ├── sources/      # Media source registry + profiles (Indonesia)
-│   │   ├── api/          # Sentiment REST endpoints
-│   │   └── demo/         # Indonesian news demo data (22 articles)
-│   └── index.ts          # Express + WebSocket server entry point
-│
-└── client/src/
-    ├── components/
-    │   ├── Tapestry.tsx      # 3D narrative visualization (Three.js + bloom + particles)
-    │   ├── Timeline.tsx      # Chronological event view with causal curves (D3)
-    │   ├── NetworkGraph.tsx  # Entity relationship force graph (D3)
-    │   ├── TensionRadar.tsx  # Tension pressure heatmap
-    │   ├── DreamTree.tsx     # Speculative branch explorer
-    │   ├── InputPanel.tsx         # Text extraction + demo controls
-    │   ├── SentimentDashboard.tsx # Country sentiment dashboard
-    │   └── EventDetailPanel.tsx   # Article/event detail slide-out
-    ├── hooks/
-    │   ├── useApi.ts                  # Typed API client with pagination support
-    │   ├── useSentiment.ts            # Sentiment engine hooks
-    │   ├── useWebSocket.ts            # Real-time graph update subscription
-    │   └── useStreamingExtraction.ts  # WebSocket streaming extraction hook
-    └── App.tsx               # Main app with Narrative | Sentiment tabs
-```
+| `SERPAPI_KEY`               | No       | —        | SerpAPI key for auto-research ingestion        |
+| `FIRECRAWL_API_KEY`         | No       | —        | Firecrawl key for web content extraction       |
 
 ---
 
@@ -382,10 +474,11 @@ Base URL: `/api`
 
 ### Analysis
 
-| Method | Endpoint                    | Description                                         |
-| ------ | --------------------------- | --------------------------------------------------- |
-| `GET`  | `/analysis/pressure-points` | Ranked tension risk scores                          |
-| `POST` | `/analysis/dream`           | Generate speculative future branches (rate-limited) |
+| Method | Endpoint                              | Description                          |
+| ------ | ------------------------------------- | ------------------------------------ |
+| `GET`  | `/analysis/pressure-points`           | Ranked tension risk scores           |
+| `POST` | `/analysis/dream`                     | Generate speculative future branches |
+| `GET`  | `/analysis/breakdown/:metricType/:id` | Full score transparency breakdown    |
 
 ```json
 // GET /api/analysis/pressure-points
@@ -453,6 +546,18 @@ Base URL: `/api/sentiment`
 | `GET`  | `/dashboard`              | Aggregated dashboard for a country                        |
 | `GET`  | `/compare?entities=A,B,C` | Compare sentiment across entities                         |
 | `POST` | `/demo/load`              | Load Indonesian sentiment demo data                       |
+
+### Knowledge Base API
+
+Base URL: `/api/knowledge-base`
+
+| Method | Endpoint        | Description                        |
+| ------ | --------------- | ---------------------------------- |
+| `GET`  | `/sources`      | All source profiles with metadata  |
+| `GET`  | `/sources/:id`  | Single source deep profile         |
+| `GET`  | `/entities`     | Entity profiles with relationships |
+| `GET`  | `/entities/:id` | Single entity profile              |
+| `GET`  | `/methodology`  | Scoring methodology documentation  |
 
 ### Pagination
 
@@ -542,7 +647,7 @@ The tension radar scores each unresolved tension across six weighted dimensions:
 - **Momentum** (15%) — Is the tension accelerating or decaying? Based on event frequency and impact trends
 - **Cascade Risk** (15%) — The probability that this tension breaking triggers cascading failures in related tensions, based on entity overlap and volatility of connected tensions
 
-The composite score produces ranked **pressure points** with human-readable narrative explanations.
+The composite score produces ranked **pressure points** with human-readable narrative explanations. Every dimension is exposed via the score transparency system with raw values, weights, and contributions.
 
 ### Arc Detector
 
@@ -582,24 +687,27 @@ Uses GPT-4o with retry logic and exponential backoff for resilient generation.
 
 ## Tech Stack
 
-| Layer            | Technology                                                    |
-| ---------------- | ------------------------------------------------------------- |
-| Language         | TypeScript (strict mode, zero `any` types)                    |
-| Server           | Express + WebSocket (ws)                                      |
-| Client           | React 18 + Vite                                               |
-| 3D Visualization | Three.js via @react-three/fiber + postprocessing (bloom, fog) |
-| 2D Visualization | D3.js (force graphs, timeline with causal curves)             |
-| AI               | OpenAI GPT-4o (extraction + dream engine)                     |
-| Validation       | Zod (runtime schema validation on all endpoints)              |
-| Styling          | Tailwind CSS (dark theme throughout)                          |
-| MCP              | @modelcontextprotocol/sdk (AI agent integration)              |
-| API Docs         | Swagger UI (auto-generated OpenAPI 3.0)                       |
-| Testing          | Vitest (520+ tests passing)                                   |
-| Linting          | ESLint + Prettier (enforced via Husky pre-commit hooks)       |
-| CI/CD            | GitHub Actions (lint → test → build)                          |
-| Containerization | Docker + Docker Compose                                       |
+| Layer              | Technology                                                      |
+| ------------------ | --------------------------------------------------------------- |
+| Language           | TypeScript (strict mode, zero `any` types)                      |
+| Server             | Express + WebSocket (ws)                                        |
+| Client             | React 18 + Vite                                                 |
+| 3D Visualization   | Three.js via @react-three/fiber + postprocessing (bloom, fog)   |
+| 2D Visualization   | D3.js (force graphs, timeline with causal curves)               |
+| AI                 | OpenAI GPT-4o (extraction + dream engine)                       |
+| Auto-Research      | SerpAPI + Google News RSS + Firecrawl (topic ingestion)         |
+| Validation         | Zod (runtime schema validation on all endpoints)                |
+| Styling            | Tailwind CSS (dark theme throughout)                            |
+| MCP                | @modelcontextprotocol/sdk (AI agent integration)                |
+| Knowledge Base     | Structured source profiles, entity profiles, methodology docs   |
+| Score Transparency | Universal score breakdown system (40+ variables, full receipts) |
+| API Docs           | Swagger UI (auto-generated OpenAPI 3.0)                         |
+| Testing            | Vitest (624 tests passing)                                      |
+| Linting            | ESLint + Prettier (enforced via Husky pre-commit hooks)         |
+| CI/CD              | GitHub Actions (lint → test → build)                            |
+| Containerization   | Docker + Docker Compose                                         |
 
-**20,000+ lines across 90+ TypeScript files.** Full lint, build, and test pipeline. Production-quality error handling with custom error classes, rate limiting, input validation, and environment validation at startup. MCP server for AI agent integration. Performance benchmarked at 5,000+ entities.
+**33,700+ lines across 90+ TypeScript files.** Full lint, build, and test pipeline. Production-quality error handling with custom error classes, rate limiting, input validation, and environment validation at startup. Knowledge base with 16 source profiles and 9+ entity profiles. Score transparency system with 40+ decomposable variables. MCP server for AI agent integration. Performance benchmarked at 5,000+ entities.
 
 ---
 
@@ -615,7 +723,7 @@ npm run test         # Run all tests
 npm run test:cov     # Tests with coverage report
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup and PR guidelines.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, code style guide, and how to extend LOOM.
 
 ---
 
