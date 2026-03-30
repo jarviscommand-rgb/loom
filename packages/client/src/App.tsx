@@ -208,7 +208,7 @@ export default function App() {
       <div className="flex-1 flex overflow-hidden">
         {/* Knowledge Base routes (full-width, no sidebar) */}
         {isKnowledgeBase ? (
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto page-enter" key={location.pathname}>
             <Routes>
               <Route path="/knowledge-base" element={<KnowledgeBaseLanding />} />
               <Route path="/knowledge-base/sources" element={<SourcesPage />} />

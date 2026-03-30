@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
-import { Canvas, type ThreeEvent } from '@react-three/fiber';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
@@ -24,6 +24,25 @@ interface HoverInfo {
   y: number;
 }
 
+/** Subtle mouse-following spotlight that adds depth when hovering the scene */
+function MouseSpotlight() {
+  const lightRef = useRef<THREE.PointLight>(null);
+  const { camera, pointer } = useThree();
+
+  useFrame(() => {
+    if (lightRef.current) {
+      // Project mouse into 3D space a few units in front of camera
+      const vec = new THREE.Vector3(pointer.x, pointer.y, 0.5).unproject(camera);
+      const dir = vec.sub(camera.position).normalize();
+      const target = camera.position.clone().add(dir.multiplyScalar(8));
+      // Smooth follow
+      lightRef.current.position.lerp(target, 0.08);
+    }
+  });
+
+  return <pointLight ref={lightRef} color="#c4b5fd" intensity={0.25} distance={12} decay={2} />;
+}
+
 function Scene({
   entities,
   events,
@@ -34,6 +53,17 @@ function Scene({
   onHover: (info: HoverInfo) => void;
   onHoverEnd: () => void;
 }) {
+  /** Map entity ID → number of connections (tensions) */
+  const connectionCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const tension of tensions) {
+      for (const party of tension.parties) {
+        counts.set(party, (counts.get(party) || 0) + 1);
+      }
+    }
+    return counts;
+  }, [tensions]);
+
   const entityPositions = useMemo(() => {
     const positions = new Map<string, [number, number, number]>();
     const count = entities.length;
@@ -86,9 +116,10 @@ function Scene({
       <pointLight position={[10, 10, 10]} intensity={0.6} color="#8b5cf6" />
       <pointLight position={[-10, -5, -10]} intensity={0.4} color="#22d3ee" />
       <pointLight position={[0, 8, 0]} intensity={0.2} color="#f97316" />
+      <MouseSpotlight />
 
       {/* Fog for depth */}
-      <fog attach="fog" args={['#0a0a0f', 15, 35]} />
+      <fog attach="fog" args={['#0a0a0f', 15, 40]} />
 
       {/* Background elements */}
       <Starfield />
@@ -103,6 +134,7 @@ function Scene({
             key={entity.id}
             entity={entity}
             position={pos}
+            connectionCount={connectionCounts.get(entity.id) || 0}
             onPointerOver={handleEntityHover(entity)}
             onPointerOut={onHoverEnd}
           />
@@ -130,23 +162,23 @@ function Scene({
         <EventParticle key={event.id} event={event} position={position} />
       ))}
 
-      {/* Postprocessing — enhanced bloom for glow effects on tension threads */}
+      {/* Postprocessing — tuned bloom: vivid but not blown out */}
       <EffectComposer>
-        <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.8} intensity={1.5} mipmapBlur />
-        <Vignette offset={0.3} darkness={0.65} />
+        <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={1.2} mipmapBlur />
+        <Vignette offset={0.3} darkness={0.7} />
       </EffectComposer>
 
-      {/* Controls */}
+      {/* Controls — smooth idle auto-orbit */}
       <OrbitControls
         enablePan
         enableZoom
         enableRotate
         autoRotate
-        autoRotateSpeed={0.3}
+        autoRotateSpeed={0.15}
         maxPolarAngle={Math.PI / 1.5}
         minPolarAngle={Math.PI / 4}
         enableDamping
-        dampingFactor={0.05}
+        dampingFactor={0.04}
         maxDistance={25}
         minDistance={4}
       />

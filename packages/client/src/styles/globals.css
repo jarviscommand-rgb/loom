@@ -280,3 +280,80 @@
 .status-live {
   animation: statusPulse 2s ease-in-out infinite;
 }
+
+/* ============================================================
+   Page & route transitions
+   ============================================================ */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Section content transition within detail pages */
+@keyframes sectionFade {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.section-enter {
+  animation: sectionFade 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
+   Knowledge Base card polish
+   ============================================================ */
+.kb-card {
+  @apply border border-loom-border/40 rounded-xl bg-loom-surface/20 transition-all duration-200;
+}
+
+.kb-card:hover {
+  @apply bg-loom-surface/50 border-loom-border/70;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.05);
+}
+
+/* Accordion expand animation */
+@keyframes accordionOpen {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
+}
+
+.accordion-enter {
+  animation: accordionOpen 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+/* ============================================================
+   Typography helpers
+   ============================================================ */
+.heading-serif {
+  @apply font-serif font-bold text-loom-text tracking-wide;
+}
+
+.text-balance {
+  text-wrap: balance;
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronRight, Calculator, Beaker } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Calculator, Beaker } from 'lucide-react';
 import { KnowledgeBaseSkeleton } from '../LoadingSkeleton';
 
 interface MethodologyVariable {
@@ -46,30 +46,32 @@ export default function MethodologyPage() {
   if (loading) return <KnowledgeBaseSkeleton />;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6 animate-fadeSlideIn">
+    <div className="max-w-5xl mx-auto p-6 space-y-6 page-enter">
       <div className="flex items-center gap-3">
         <Link
           to="/knowledge-base"
-          className="text-loom-muted hover:text-loom-text transition-colors"
+          className="text-loom-muted hover:text-loom-text transition-colors p-1 rounded hover:bg-white/5"
         >
           <ArrowLeft size={18} />
         </Link>
         <div>
-          <h1 className="text-xl font-serif font-bold text-loom-text">Scoring Methodology</h1>
-          <p className="text-xs text-loom-muted">
+          <h1 className="text-heading-lg font-serif font-bold text-loom-text">
+            Scoring Methodology
+          </h1>
+          <p className="text-body-sm text-loom-muted">
             {methodologies.length} algorithms fully documented
           </p>
         </div>
       </div>
 
-      <div className="text-xs text-loom-muted bg-loom-accent/5 border border-loom-accent/20 rounded-lg p-3">
+      <div className="text-body-sm text-loom-muted bg-loom-accent/5 border border-loom-accent/20 rounded-lg p-3">
         Every number in LOOM is computed from a transparent, documented algorithm. Click any
         algorithm below to see the full formula, variables, weight justifications, and worked
         examples.
       </div>
 
       {/* Methodology cards */}
-      <div className="space-y-3">
+      <div className="space-y-3 list-stagger">
         {methodologies.map((entry) => (
           <MethodologyCard
             key={entry.id}
@@ -93,7 +95,7 @@ function MethodologyCard({
   onToggle: () => void;
 }) {
   return (
-    <div className="border border-loom-border/40 rounded-xl bg-loom-surface/20 overflow-hidden">
+    <div className="kb-card overflow-hidden">
       {/* Header */}
       <button
         onClick={onToggle}
@@ -103,56 +105,62 @@ function MethodologyCard({
           <Calculator size={16} className="text-loom-glow" />
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-loom-text">{entry.name}</h3>
-          <p className="text-[10px] text-loom-muted">
+          <h3 className="text-heading-sm text-loom-text">{entry.name}</h3>
+          <p className="text-micro text-loom-muted">
             {entry.module} · Range: {entry.range.min}–{entry.range.max} {entry.unit}
           </p>
         </div>
-        {expanded ? (
-          <ChevronDown size={14} className="text-loom-muted" />
-        ) : (
-          <ChevronRight size={14} className="text-loom-muted" />
-        )}
+        <div
+          className="text-loom-muted transition-transform duration-200"
+          style={{ transform: expanded ? 'rotate(0)' : 'rotate(-90deg)' }}
+        >
+          <ChevronDown size={14} />
+        </div>
       </button>
 
       {/* Expanded */}
       {expanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-loom-border/20 pt-3 animate-fadeSlideIn">
+        <div className="px-4 pb-4 space-y-4 border-t border-loom-border/20 pt-3 accordion-enter">
           {/* Description */}
-          <p className="text-xs text-loom-muted leading-relaxed">{entry.description}</p>
+          <p className="text-body-sm text-loom-muted leading-relaxed">{entry.description}</p>
 
           {/* Formula */}
           <div className="bg-loom-bg/80 border border-loom-border/20 rounded-lg p-3">
-            <h4 className="text-[10px] text-loom-muted uppercase tracking-wider mb-1">Formula</h4>
-            <code className="text-xs font-mono text-loom-accent break-all">{entry.formula}</code>
+            <h4 className="text-micro text-loom-muted uppercase tracking-wider mb-1.5">Formula</h4>
+            <code className="text-body-sm font-mono text-loom-accent break-all">
+              {entry.formula}
+            </code>
           </div>
 
           {/* Variables table */}
           <div>
-            <h4 className="text-xs font-semibold text-loom-text mb-2">Variables</h4>
+            <h4 className="text-body-sm font-semibold text-loom-text mb-2">Variables</h4>
             <div className="border border-loom-border/20 rounded-lg overflow-hidden">
-              <table className="w-full text-xs">
+              <table className="w-full text-body-sm">
                 <thead>
-                  <tr className="bg-white/3">
-                    <th className="text-left text-[10px] text-loom-muted font-normal px-3 py-1.5">
+                  <tr className="bg-white/[0.03]">
+                    <th className="text-left text-micro text-loom-muted font-normal px-3 py-2">
                       Name
                     </th>
-                    <th className="text-left text-[10px] text-loom-muted font-normal px-3 py-1.5">
+                    <th className="text-left text-micro text-loom-muted font-normal px-3 py-2">
                       Range
                     </th>
-                    <th className="text-left text-[10px] text-loom-muted font-normal px-3 py-1.5">
+                    <th className="text-left text-micro text-loom-muted font-normal px-3 py-2">
                       Description
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {entry.variables.map((v, i) => (
-                    <tr key={i} className="border-t border-loom-border/10">
-                      <td className="px-3 py-1.5 font-mono text-loom-text">{v.name}</td>
-                      <td className="px-3 py-1.5 text-loom-muted">
+                    <tr
+                      key={i}
+                      className="border-t border-loom-border/10 hover:bg-white/[0.02] transition-colors"
+                    >
+                      <td className="px-3 py-2 font-mono text-loom-text">{v.name}</td>
+                      <td className="px-3 py-2 text-loom-muted">
                         {v.range} {v.unit}
                       </td>
-                      <td className="px-3 py-1.5 text-loom-muted">{v.description}</td>
+                      <td className="px-3 py-2 text-loom-muted">{v.description}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -162,14 +170,16 @@ function MethodologyCard({
 
           {/* Weight justification */}
           <div>
-            <h4 className="text-xs font-semibold text-loom-text mb-1">Weight Justification</h4>
-            <p className="text-xs text-loom-muted leading-relaxed">{entry.weightJustification}</p>
+            <h4 className="text-body-sm font-semibold text-loom-text mb-1">Weight Justification</h4>
+            <p className="text-body-sm text-loom-muted leading-relaxed">
+              {entry.weightJustification}
+            </p>
           </div>
 
           {/* Examples */}
           {entry.examples.length > 0 && (
             <div>
-              <h4 className="text-xs font-semibold text-loom-text mb-2 flex items-center gap-1.5">
+              <h4 className="text-body-sm font-semibold text-loom-text mb-2 flex items-center gap-1.5">
                 <Beaker size={12} className="text-loom-glow" />
                 Worked Examples
               </h4>
@@ -177,13 +187,15 @@ function MethodologyCard({
                 {entry.examples.map((ex, i) => (
                   <div
                     key={i}
-                    className="border border-loom-border/20 rounded-lg p-3 bg-loom-bg/30"
+                    className="border border-loom-border/20 rounded-lg p-3 bg-loom-bg/30 hover:bg-loom-bg/50 transition-colors"
                   >
-                    <div className="text-xs text-loom-text font-medium mb-1">{ex.scenario}</div>
-                    <div className="text-[10px] text-loom-accent font-mono mb-1">
+                    <div className="text-body-sm text-loom-text font-medium mb-1">
+                      {ex.scenario}
+                    </div>
+                    <div className="text-micro text-loom-accent font-mono mb-1">
                       Expected: {ex.expectedScore}
                     </div>
-                    <p className="text-[10px] text-loom-muted">{ex.explanation}</p>
+                    <p className="text-micro text-loom-muted">{ex.explanation}</p>
                   </div>
                 ))}
               </div>

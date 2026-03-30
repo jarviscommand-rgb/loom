@@ -43,18 +43,18 @@ export default function SourcesPage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6 animate-fadeSlideIn">
+    <div className="max-w-5xl mx-auto p-6 space-y-6 page-enter">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
           to="/knowledge-base"
-          className="text-loom-muted hover:text-loom-text transition-colors"
+          className="text-loom-muted hover:text-loom-text transition-colors p-1 rounded hover:bg-white/5"
         >
           <ArrowLeft size={18} />
         </Link>
         <div>
-          <h1 className="text-xl font-serif font-bold text-loom-text">Media Sources</h1>
-          <p className="text-xs text-loom-muted">
+          <h1 className="text-heading-lg font-serif font-bold text-loom-text">Media Sources</h1>
+          <p className="text-body-sm text-loom-muted">
             {sources.length} Indonesian media sources profiled
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function SourcesPage() {
         <select
           value={filterBias}
           onChange={(e) => setFilterBias(e.target.value)}
-          className="text-xs bg-loom-surface border border-loom-border/50 rounded px-2 py-1.5 text-loom-text focus:outline-none focus:border-loom-accent/50"
+          className="text-body-sm bg-loom-surface border border-loom-border/50 rounded-lg px-2.5 py-1.5 text-loom-text focus:outline-none focus:border-loom-accent/50 transition-colors"
         >
           <option value="all">All bias</option>
           <option value="pro-government">Pro-government</option>
@@ -76,27 +76,27 @@ export default function SourcesPage() {
         <select
           value={filterReliability}
           onChange={(e) => setFilterReliability(e.target.value)}
-          className="text-xs bg-loom-surface border border-loom-border/50 rounded px-2 py-1.5 text-loom-text focus:outline-none focus:border-loom-accent/50"
+          className="text-body-sm bg-loom-surface border border-loom-border/50 rounded-lg px-2.5 py-1.5 text-loom-text focus:outline-none focus:border-loom-accent/50 transition-colors"
         >
           <option value="all">All reliability</option>
           <option value="high">High (0.7+)</option>
           <option value="medium">Medium (0.5-0.7)</option>
           <option value="low">Low (&lt;0.5)</option>
         </select>
-        <span className="text-xs text-loom-muted ml-auto">
+        <span className="text-body-sm text-loom-muted ml-auto">
           Showing {filtered.length} of {sources.length}
         </span>
       </div>
 
       {/* Source cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 list-stagger">
         {filtered.map((source) => (
           <SourceCard key={source.id} source={source} />
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-12 text-loom-muted text-sm">
+        <div className="text-center py-12 text-loom-muted text-body">
           No sources match the current filters.
         </div>
       )}
@@ -120,33 +120,30 @@ function SourceCard({ source }: { source: SourceSummary }) {
         : 'bg-gray-500/10 text-gray-400 border-gray-500/20';
 
   return (
-    <Link
-      to={`/knowledge-base/sources/${source.id}`}
-      className="group border border-loom-border/40 rounded-lg p-4 bg-loom-surface/20 hover:bg-loom-surface/50 hover:border-loom-border transition-all duration-200"
-    >
+    <Link to={`/knowledge-base/sources/${source.id}`} className="group kb-card p-4">
       <div className="flex items-start justify-between mb-2">
-        <h3 className="text-sm font-semibold text-loom-text group-hover:text-loom-accent transition-colors">
+        <h3 className="text-heading-sm text-loom-text group-hover:text-loom-accent transition-colors">
           {source.name}
         </h3>
         <ExternalLink
           size={12}
-          className="text-loom-muted opacity-0 group-hover:opacity-100 transition-opacity"
+          className="text-loom-muted opacity-0 group-hover:opacity-100 transition-opacity mt-0.5"
         />
       </div>
 
       <div className="flex items-center gap-2 mb-3">
-        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${biasColor}`}>
+        <span className={`text-micro px-1.5 py-0.5 rounded border ${biasColor}`}>
           {source.biasDirection}
         </span>
-        <span className="text-[10px] text-loom-muted">{source.politicalLeaning}</span>
+        <span className="text-micro text-loom-muted">{source.politicalLeaning}</span>
       </div>
 
       {/* Reliability bar */}
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-3">
         <Shield size={10} className="text-loom-muted" />
         <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full ${
+            className={`h-full rounded-full transition-all duration-500 ${
               source.reliabilityScore >= 0.7
                 ? 'bg-emerald-500'
                 : source.reliabilityScore >= 0.5
@@ -156,7 +153,7 @@ function SourceCard({ source }: { source: SourceSummary }) {
             style={{ width: `${source.reliabilityScore * 100}%` }}
           />
         </div>
-        <span className={`text-[10px] font-mono ${reliabilityColor}`}>
+        <span className={`text-micro font-mono ${reliabilityColor}`}>
           {source.reliabilityScore.toFixed(2)}
         </span>
       </div>
@@ -164,7 +161,10 @@ function SourceCard({ source }: { source: SourceSummary }) {
       {/* Audience types */}
       <div className="flex flex-wrap gap-1">
         {source.audienceTypes.map((type) => (
-          <span key={type} className="text-[9px] px-1 py-0.5 rounded bg-white/5 text-loom-muted">
+          <span
+            key={type}
+            className="text-micro px-1.5 py-0.5 rounded bg-white/5 text-loom-muted group-hover:bg-white/8 transition-colors"
+          >
             {type}
           </span>
         ))}

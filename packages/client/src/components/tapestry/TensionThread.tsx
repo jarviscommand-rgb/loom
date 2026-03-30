@@ -9,23 +9,44 @@ interface TensionThreadProps {
   status: string;
 }
 
-/** Animated glowing tension curve with flowing energy particles */
+/**
+ * Compute thread color by blending intensity gradient (cool blue → hot red)
+ * with status hint. Intensity drives the hue; status adds a tint.
+ */
+function getThreadColor(intensity: number, status: string): THREE.Color {
+  const cool = new THREE.Color('#3b82f6'); // blue
+  const warm = new THREE.Color('#f59e0b'); // amber
+  const hot = new THREE.Color('#ef4444'); // red
+
+  // Base: intensity-driven gradient blue → amber → red
+  let base: THREE.Color;
+  if (intensity < 0.5) {
+    base = cool.clone().lerp(warm, intensity * 2);
+  } else {
+    base = warm.clone().lerp(hot, (intensity - 0.5) * 2);
+  }
+
+  // Status tint — blend 20% toward status color for visual hint
+  const statusColors: Record<string, string> = {
+    critical: '#ef4444',
+    escalating: '#f97316',
+    simmering: '#eab308',
+    resolving: '#22c55e',
+  };
+  const statusHex = statusColors[status];
+  if (statusHex) {
+    base.lerp(new THREE.Color(statusHex), 0.2);
+  }
+
+  return base;
+}
+
+/** Animated glowing tension curve with intensity-driven color and flowing energy */
 export default function TensionThread({ from, to, intensity, status }: TensionThreadProps) {
   const tubeRef = useRef<THREE.Mesh>(null);
   const particlesRef = useRef<THREE.Points>(null);
 
-  /** Color-code tension threads by severity:
-   *  green → yellow → orange → red → pulsing red for critical */
-  const color =
-    status === 'critical'
-      ? '#ef4444'
-      : status === 'escalating'
-        ? '#f97316'
-        : status === 'simmering'
-          ? '#eab308'
-          : status === 'resolving'
-            ? '#22c55e'
-            : '#6b7280';
+  const color = useMemo(() => getThreadColor(intensity, status), [intensity, status]);
 
   const { curve, tubeGeometry } = useMemo(() => {
     const mid: [number, number, number] = [
@@ -38,12 +59,12 @@ export default function TensionThread({ from, to, intensity, status }: TensionTh
       new THREE.Vector3(...mid),
       new THREE.Vector3(...to)
     );
-    const tube = new THREE.TubeGeometry(c, 64, 0.015 + intensity * 0.02, 8, false);
+    const tube = new THREE.TubeGeometry(c, 64, 0.015 + intensity * 0.025, 8, false);
     return { curve: c, tubeGeometry: tube };
   }, [from, to, intensity]);
 
-  /** Energy particles flowing along the curve */
-  const particleCount = 20 + Math.floor(intensity * 30);
+  /** Energy particles flowing along the curve — more for high intensity */
+  const particleCount = 20 + Math.floor(intensity * 35);
   const particlePositions = useMemo(() => {
     return new Float32Array(particleCount * 3);
   }, [particleCount]);
@@ -51,17 +72,18 @@ export default function TensionThread({ from, to, intensity, status }: TensionTh
   useFrame((state) => {
     const t = state.clock.elapsedTime;
 
-    // Pulse the tube
+    // Pulse the tube opacity — more aggressive for high intensity
     if (tubeRef.current) {
       const mat = tubeRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.3 + Math.sin(t * 2 + intensity * 5) * 0.15 * intensity;
+      mat.opacity = 0.3 + intensity * 0.15 + Math.sin(t * 2 + intensity * 5) * 0.15 * intensity;
     }
 
     // Animate particles along curve
     if (particlesRef.current) {
       const positions = particlesRef.current.geometry.attributes.position;
+      const speed = 0.15 + intensity * 0.15;
       for (let i = 0; i < particleCount; i++) {
-        const frac = (i / particleCount + t * (0.15 + intensity * 0.1)) % 1;
+        const frac = (i / particleCount + t * speed) % 1;
         const point = curve.getPoint(frac);
         const offset = Math.sin(t * 3 + i * 2) * 0.05;
         positions.array[i * 3] = point.x + offset;
@@ -86,7 +108,7 @@ export default function TensionThread({ from, to, intensity, status }: TensionTh
       </mesh>
 
       {/* Outer glow tube */}
-      <mesh geometry={new THREE.TubeGeometry(curve, 64, 0.06 + intensity * 0.04, 8, false)}>
+      <mesh geometry={new THREE.TubeGeometry(curve, 64, 0.06 + intensity * 0.05, 8, false)}>
         <meshBasicMaterial
           color={color}
           transparent

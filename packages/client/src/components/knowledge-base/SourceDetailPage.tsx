@@ -86,7 +86,7 @@ export default function SourceDetailPage() {
     return (
       <div className="max-w-5xl mx-auto p-6 text-center">
         <p className="text-loom-muted">Source not found.</p>
-        <Link to="/knowledge-base/sources" className="text-loom-accent text-sm">
+        <Link to="/knowledge-base/sources" className="text-loom-accent text-body">
           Back to sources
         </Link>
       </div>
@@ -105,14 +105,14 @@ export default function SourceDetailPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6 animate-fadeSlideIn">
+    <div className="max-w-5xl mx-auto p-6 space-y-6 page-enter">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-loom-muted">
-        <Link to="/knowledge-base" className="hover:text-loom-text">
+      <div className="flex items-center gap-2 text-body-sm text-loom-muted">
+        <Link to="/knowledge-base" className="hover:text-loom-text transition-colors">
           Knowledge Base
         </Link>
         <ChevronRight size={10} />
-        <Link to="/knowledge-base/sources" className="hover:text-loom-text">
+        <Link to="/knowledge-base/sources" className="hover:text-loom-text transition-colors">
           Sources
         </Link>
         <ChevronRight size={10} />
@@ -123,14 +123,14 @@ export default function SourceDetailPage() {
       <div className="border border-loom-border/50 rounded-xl p-6 bg-loom-surface/30">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-serif font-bold text-loom-text">{source.name}</h1>
-            <p className="text-sm text-loom-muted mt-1">{source.editorialGoal}</p>
+            <h1 className="text-heading-xl font-serif font-bold text-loom-text">{source.name}</h1>
+            <p className="text-body text-loom-muted mt-1">{source.editorialGoal}</p>
           </div>
           <a
             href={source.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-loom-accent flex items-center gap-1 hover:underline"
+            className="text-body-sm text-loom-accent flex items-center gap-1 hover:underline px-2 py-1 rounded hover:bg-loom-accent/10 transition-colors"
           >
             <Globe size={12} />
             Visit site
@@ -178,7 +178,7 @@ export default function SourceDetailPage() {
           <button
             key={section.id}
             onClick={() => setActiveSection(section.id)}
-            className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+            className={`text-body-sm px-3 py-1.5 rounded-lg whitespace-nowrap transition-all duration-200 ${
               activeSection === section.id
                 ? 'bg-loom-accent/20 text-loom-accent'
                 : 'text-loom-muted hover:text-loom-text hover:bg-white/5'
@@ -189,8 +189,11 @@ export default function SourceDetailPage() {
         ))}
       </div>
 
-      {/* Section content */}
-      <div className="border border-loom-border/30 rounded-xl p-5 bg-loom-bg/50 min-h-[300px]">
+      {/* Section content with transition */}
+      <div
+        className="border border-loom-border/30 rounded-xl p-5 bg-loom-bg/50 min-h-[300px] section-enter"
+        key={activeSection}
+      >
         {activeSection === 'overview' && <OverviewSection source={source} ext={ext} />}
         {activeSection === 'ownership' && ext && <OwnershipSection chain={ext.ownershipChain} />}
         {activeSection === 'political' && ext && (
@@ -221,12 +224,12 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-loom-bg/50 border border-loom-border/20 rounded-lg p-3">
+    <div className="bg-loom-bg/50 border border-loom-border/20 rounded-lg p-3 hover:border-loom-border/40 transition-colors">
       <div className="flex items-center gap-1.5 text-loom-muted mb-1">
         {icon}
-        <span className="text-[10px]">{label}</span>
+        <span className="text-micro">{label}</span>
       </div>
-      <span className={`text-sm font-semibold ${color}`}>{value}</span>
+      <span className={`text-heading-sm ${color}`}>{value}</span>
     </div>
   );
 }
@@ -242,19 +245,19 @@ function OverviewSection({
     <div className="space-y-6">
       {ext?.foundingContext && (
         <div>
-          <h3 className="text-sm font-semibold text-loom-text mb-2">Founding Context</h3>
-          <p className="text-xs text-loom-muted leading-relaxed">{ext.foundingContext}</p>
+          <h3 className="text-heading-sm text-loom-text mb-2">Founding Context</h3>
+          <p className="text-body-sm text-loom-muted leading-relaxed">{ext.foundingContext}</p>
         </div>
       )}
 
       <div>
-        <h3 className="text-sm font-semibold text-loom-text mb-2">Ownership Notes</h3>
-        <p className="text-xs text-loom-muted leading-relaxed">{source.ownership.notes}</p>
+        <h3 className="text-heading-sm text-loom-text mb-2">Ownership Notes</h3>
+        <p className="text-body-sm text-loom-muted leading-relaxed">{source.ownership.notes}</p>
       </div>
 
       {ext?.audienceDemographics && (
         <div>
-          <h3 className="text-sm font-semibold text-loom-text mb-2">Audience Demographics</h3>
+          <h3 className="text-heading-sm text-loom-text mb-2">Audience Demographics</h3>
           <div className="grid grid-cols-2 gap-3">
             <InfoRow label="Monthly Reach" value={ext.audienceDemographics.estimatedMonthlyReach} />
             <InfoRow label="Primary Demo" value={ext.audienceDemographics.primaryDemographic} />
@@ -268,13 +271,13 @@ function OverviewSection({
 
       {ext?.keyMilestones && ext.keyMilestones.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-loom-text mb-2">Key Milestones</h3>
-          <div className="space-y-2 border-l border-loom-border/30 pl-4">
+          <h3 className="text-heading-sm text-loom-text mb-2">Key Milestones</h3>
+          <div className="space-y-2 border-l-2 border-loom-border/30 pl-4">
             {ext.keyMilestones.map((m, i) => (
               <div key={i} className="relative">
                 <div className="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-loom-accent/50" />
-                <span className="text-[10px] font-mono text-loom-accent">{m.year}</span>
-                <p className="text-xs text-loom-muted">{m.event}</p>
+                <span className="text-micro font-mono text-loom-accent">{m.year}</span>
+                <p className="text-body-sm text-loom-muted">{m.event}</p>
               </div>
             ))}
           </div>
@@ -291,19 +294,19 @@ function OwnershipSection({
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-loom-text">Ownership Chain</h3>
+      <h3 className="text-heading-sm text-loom-text">Ownership Chain</h3>
       <div className="space-y-2">
         {chain.map((entry, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 border border-loom-border/20 rounded-lg p-3 bg-loom-surface/20"
+            className="flex items-center gap-3 border border-loom-border/20 rounded-lg p-3 bg-loom-surface/20 hover:bg-loom-surface/30 transition-colors"
           >
-            <div className="w-8 h-8 rounded bg-loom-accent/10 flex items-center justify-center text-xs text-loom-accent font-bold">
+            <div className="w-8 h-8 rounded bg-loom-accent/10 flex items-center justify-center text-body-sm text-loom-accent font-bold">
               {i + 1}
             </div>
             <div className="flex-1">
-              <div className="text-xs font-semibold text-loom-text">{entry.entity}</div>
-              <div className="text-[10px] text-loom-muted">
+              <div className="text-body-sm font-semibold text-loom-text">{entry.entity}</div>
+              <div className="text-micro text-loom-muted">
                 {entry.role}
                 {entry.stake && ` · ${entry.stake}`}
                 {entry.since && ` · since ${entry.since}`}
@@ -328,16 +331,19 @@ function PoliticalHistorySection({
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-loom-text">Political History</h3>
+      <h3 className="text-heading-sm text-loom-text">Political History</h3>
       <div className="space-y-3">
         {history.map((entry, i) => (
-          <div key={i} className="border border-loom-border/20 rounded-lg p-3 bg-loom-surface/10">
+          <div
+            key={i}
+            className="border border-loom-border/20 rounded-lg p-3 bg-loom-surface/10 hover:bg-loom-surface/20 transition-colors"
+          >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-mono text-loom-accent">{entry.period}</span>
-              <span className="text-[10px] text-loom-muted">{entry.administration}</span>
+              <span className="text-body-sm font-mono text-loom-accent">{entry.period}</span>
+              <span className="text-micro text-loom-muted">{entry.administration}</span>
             </div>
-            <div className="text-xs font-semibold text-loom-text mb-1">{entry.stance}</div>
-            <p className="text-[11px] text-loom-muted leading-relaxed">{entry.details}</p>
+            <div className="text-body-sm font-semibold text-loom-text mb-1">{entry.stance}</div>
+            <p className="text-body-sm text-loom-muted leading-relaxed">{entry.details}</p>
           </div>
         ))}
       </div>
@@ -357,22 +363,25 @@ function ReliabilitySection({
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-loom-text">Reliability Track Record</h3>
+      <h3 className="text-heading-sm text-loom-text">Reliability Track Record</h3>
       {record.length === 0 ? (
-        <p className="text-xs text-loom-muted">No incidents recorded.</p>
+        <p className="text-body-sm text-loom-muted">No incidents recorded.</p>
       ) : (
         <div className="space-y-2">
           {record.map((entry, i) => (
-            <div key={i} className="border border-loom-border/20 rounded-lg p-3 bg-loom-surface/10">
+            <div
+              key={i}
+              className="border border-loom-border/20 rounded-lg p-3 bg-loom-surface/10 hover:bg-loom-surface/20 transition-colors"
+            >
               <div className="flex items-center gap-2 mb-1">
                 <Calendar size={10} className="text-loom-muted" />
-                <span className="text-[10px] font-mono text-loom-muted">{entry.date}</span>
+                <span className="text-micro font-mono text-loom-muted">{entry.date}</span>
               </div>
-              <div className="text-xs text-loom-text mb-1">{entry.incident}</div>
-              <div className="text-[10px] text-loom-muted">
+              <div className="text-body-sm text-loom-text mb-1">{entry.incident}</div>
+              <div className="text-micro text-loom-muted">
                 <span className="text-amber-400">Impact:</span> {entry.impact}
               </div>
-              <div className="text-[10px] text-loom-muted">
+              <div className="text-micro text-loom-muted">
                 <span className="text-emerald-400">Outcome:</span> {entry.outcome}
               </div>
             </div>
@@ -395,12 +404,15 @@ function BiasSection({
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-loom-text">Bias Examples</h3>
+      <h3 className="text-heading-sm text-loom-text">Bias Examples</h3>
       <div className="space-y-2">
         {examples.map((ex, i) => (
-          <div key={i} className="border border-loom-border/20 rounded-lg p-3 bg-loom-surface/10">
-            <div className="text-xs font-semibold text-loom-text mb-2">{ex.topic}</div>
-            <div className="grid grid-cols-2 gap-3 text-[10px]">
+          <div
+            key={i}
+            className="border border-loom-border/20 rounded-lg p-3 bg-loom-surface/10 hover:bg-loom-surface/20 transition-colors"
+          >
+            <div className="text-body-sm font-semibold text-loom-text mb-2">{ex.topic}</div>
+            <div className="grid grid-cols-2 gap-3 text-micro">
               <div>
                 <span className="text-loom-muted block mb-0.5">Expected:</span>
                 <span className="text-loom-text">{ex.expectedCoverage}</span>
@@ -410,7 +422,7 @@ function BiasSection({
                 <span className="text-loom-text">{ex.actualCoverage}</span>
               </div>
             </div>
-            <p className="text-[10px] text-loom-muted mt-2 italic">{ex.analysis}</p>
+            <p className="text-micro text-loom-muted mt-2 italic">{ex.analysis}</p>
           </div>
         ))}
       </div>
@@ -425,13 +437,16 @@ function PressFreedomSection({
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-loom-text">Press Freedom Incidents</h3>
+      <h3 className="text-heading-sm text-loom-text">Press Freedom Incidents</h3>
       <div className="space-y-2">
         {incidents.map((inc, i) => (
-          <div key={i} className="border border-red-500/10 rounded-lg p-3 bg-red-500/5">
-            <span className="text-[10px] font-mono text-red-400">{inc.date}</span>
-            <p className="text-xs text-loom-text mt-1">{inc.description}</p>
-            <p className="text-[10px] text-loom-muted mt-1">Outcome: {inc.outcome}</p>
+          <div
+            key={i}
+            className="border border-red-500/10 rounded-lg p-3 bg-red-500/5 hover:bg-red-500/8 transition-colors"
+          >
+            <span className="text-micro font-mono text-red-400">{inc.date}</span>
+            <p className="text-body-sm text-loom-text mt-1">{inc.description}</p>
+            <p className="text-micro text-loom-muted mt-1">Outcome: {inc.outcome}</p>
           </div>
         ))}
       </div>
@@ -446,17 +461,17 @@ function AwardsSection({
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-loom-text">Awards & Recognition</h3>
+      <h3 className="text-heading-sm text-loom-text">Awards & Recognition</h3>
       <div className="space-y-2">
         {awards.map((award, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 border border-amber-500/10 rounded-lg p-3 bg-amber-500/5"
+            className="flex items-center gap-3 border border-amber-500/10 rounded-lg p-3 bg-amber-500/5 hover:bg-amber-500/8 transition-colors"
           >
             <Award size={16} className="text-amber-400 shrink-0" />
             <div>
-              <div className="text-xs text-loom-text">{award.name}</div>
-              <div className="text-[10px] text-loom-muted">
+              <div className="text-body-sm text-loom-text">{award.name}</div>
+              <div className="text-micro text-loom-muted">
                 {award.year}
                 {award.category && ` · ${award.category}`}
               </div>
@@ -470,7 +485,7 @@ function AwardsSection({
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="text-xs">
+    <div className="text-body-sm">
       <span className="text-loom-muted">{label}: </span>
       <span className="text-loom-text">{value}</span>
     </div>

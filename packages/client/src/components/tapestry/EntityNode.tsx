@@ -11,15 +11,17 @@ export const entityTypeColors: Record<string, string> = {
   concept: '#ec4899',
 };
 
-/** Particle halo orbiting an entity sphere */
+/** Importance-driven particle system orbiting an entity */
 function ParticleHalo({
   color,
   radius,
   count = 40,
+  speed = 0.8,
 }: {
   color: string;
   radius: number;
   count?: number;
+  speed?: number;
 }) {
   const ref = useRef<THREE.Points>(null);
 
@@ -27,9 +29,9 @@ function ParticleHalo({
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
-      const r = radius + (Math.random() - 0.5) * 0.15;
+      const r = radius + (Math.sin(i * 2.39) * 0.5 - 0.25) * 0.2;
       pos[i * 3] = Math.cos(angle) * r;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 0.2;
+      pos[i * 3 + 1] = (Math.sin(i * 1.73) * 0.5 - 0.25) * 0.25;
       pos[i * 3 + 2] = Math.sin(angle) * r;
     }
     return pos;
@@ -37,8 +39,9 @@ function ParticleHalo({
 
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.8;
-      ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.15;
+      const t = state.clock.elapsedTime;
+      ref.current.rotation.y = t * speed;
+      ref.current.rotation.x = Math.sin(t * 0.3) * 0.2;
     }
   });
 
@@ -60,17 +63,69 @@ function ParticleHalo({
   );
 }
 
+/** Secondary ring of sparse particles for high-importance entities */
+function ImportanceRing({
+  color,
+  radius,
+  count,
+}: {
+  color: string;
+  radius: number;
+  count: number;
+}) {
+  const ref = useRef<THREE.Points>(null);
+
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const r = radius + Math.sin(i * 3.7) * 0.08;
+      pos[i * 3] = Math.cos(angle) * r;
+      pos[i * 3 + 1] = Math.sin(i * 2.1) * 0.35;
+      pos[i * 3 + 2] = Math.sin(angle) * r;
+    }
+    return pos;
+  }, [count, radius]);
+
+  useFrame((state) => {
+    if (ref.current) {
+      const t = state.clock.elapsedTime;
+      ref.current.rotation.y = -t * 0.4;
+      ref.current.rotation.z = Math.sin(t * 0.2) * 0.1;
+    }
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.02}
+        color={color}
+        transparent
+        opacity={0.5}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
 interface EntityNodeProps {
   entity: Entity;
   position: [number, number, number];
+  connectionCount?: number;
   onPointerOver?: (e: ThreeEvent<PointerEvent>) => void;
   onPointerOut?: () => void;
 }
 
-/** Entity sphere with glow, particle halo, and label */
+/** Entity sphere with importance-driven glow, particle halos, and label */
 export default function EntityNode({
   entity,
   position,
+  connectionCount = 0,
   onPointerOver,
   onPointerOut,
 }: EntityNodeProps) {
@@ -78,26 +133,39 @@ export default function EntityNode({
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   const color = entityTypeColors[entity.type] || '#8b5cf6';
-  const baseRadius = entity.type === 'person' ? 0.3 : 0.4;
+
+  /** Importance factor: 0-1 scale based on connections (caps at 6+) */
+  const importance = Math.min(connectionCount / 6, 1);
+
+  /** Scale radius by importance: base 0.25-0.3, up to +40% for highly connected */
+  const typeRadius = entity.type === 'person' ? 0.28 : 0.35;
+  const baseRadius = typeRadius + importance * typeRadius * 0.4;
+
+  /** Particle count scales with importance */
+  const haloCount = 30 + Math.floor(importance * 40);
+
+  /** Glow sphere radius proportional to importance */
+  const glowScale = 1.8 + importance * 0.8;
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    // Subtle breathing float
-    const breathY = Math.sin(t * 0.5 + position[0]) * 0.15;
-    // Gentle scale pulse
-    const pulse = 1 + Math.sin(t * 0.8 + position[2] * 2) * 0.04;
+    const breathSpeed = 0.5 + importance * 0.2;
+    const breathAmp = 0.12 + importance * 0.08;
+    const breathY = Math.sin(t * breathSpeed + position[0]) * breathAmp;
+    const pulseAmp = 0.03 + importance * 0.04;
+    const pulse = 1 + Math.sin(t * 0.8 + position[2] * 2) * pulseAmp;
 
     if (meshRef.current) {
       meshRef.current.position.y = position[1] + breathY;
       meshRef.current.scale.setScalar(pulse);
       const mat = meshRef.current.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 0.5 + Math.sin(t * 1.2 + position[0]) * 0.15;
+      mat.emissiveIntensity = 0.5 + importance * 0.3 + Math.sin(t * 1.2 + position[0]) * 0.15;
     }
     if (glowRef.current) {
       glowRef.current.position.y = position[1] + breathY;
       glowRef.current.scale.setScalar(pulse * 1.05);
       const mat = glowRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.06 + Math.sin(t * 1.5 + position[2]) * 0.03;
+      mat.opacity = 0.05 + importance * 0.06 + Math.sin(t * 1.5 + position[2]) * 0.03;
     }
   });
 
@@ -114,7 +182,7 @@ export default function EntityNode({
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={0.5}
+          emissiveIntensity={0.5 + importance * 0.3}
           transparent
           opacity={0.85}
           roughness={0.2}
@@ -122,16 +190,32 @@ export default function EntityNode({
         />
       </mesh>
 
-      {/* Outer glow */}
+      {/* Outer glow — radius proportional to importance */}
       <mesh ref={glowRef} position={position}>
-        <sphereGeometry args={[baseRadius * 1.8, 16, 16]} />
+        <sphereGeometry args={[baseRadius * glowScale, 16, 16]} />
         <meshBasicMaterial color={color} transparent opacity={0.06} side={THREE.BackSide} />
       </mesh>
 
-      {/* Particle halo */}
+      {/* Primary particle halo */}
       <group position={position}>
-        <ParticleHalo color={color} radius={baseRadius * 1.6} />
+        <ParticleHalo
+          color={color}
+          radius={baseRadius * 1.6}
+          count={haloCount}
+          speed={0.6 + importance * 0.4}
+        />
       </group>
+
+      {/* Secondary importance ring — only for entities with 2+ connections */}
+      {connectionCount >= 2 && (
+        <group position={position}>
+          <ImportanceRing
+            color={color}
+            radius={baseRadius * 2.4}
+            count={15 + Math.floor(importance * 25)}
+          />
+        </group>
+      )}
 
       {/* Label */}
       <sprite
