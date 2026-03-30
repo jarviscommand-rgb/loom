@@ -29,6 +29,12 @@ const envSchema = z.object({
 
   /** Node environment. */
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+
+  /** SerpAPI key for Google search (optional). */
+  SERPAPI_KEY: z.string().optional(),
+
+  /** Firecrawl API key for web scraping (optional). */
+  FIRECRAWL_API_KEY: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -62,5 +68,7 @@ export const config: EnvConfig =
         RATE_LIMIT_MAX: 100,
         RATE_LIMIT_WINDOW_MINUTES: 15,
         NODE_ENV: 'test',
+        SERPAPI_KEY: process.env.SERPAPI_KEY,
+        FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
       }
     : validateEnv();

@@ -12,6 +12,8 @@ import { globalErrorHandler } from './middleware/error-handler.js';
 import { SentimentEngine } from './sentiment/sentiment-engine.js';
 import { createSentimentRoutes } from './sentiment/api/sentiment-routes.js';
 import { extractNarrativeStreaming } from './extraction/streaming-extractor.js';
+import { researchTopic } from './ingestion/auto-researcher.js';
+import type { ResearchProgressCallback } from './ingestion/types.js';
 
 const app = express();
 const server = createServer(app);
@@ -26,7 +28,13 @@ wss.on('connection', (ws) => {
 
   ws.on('message', async (data) => {
     try {
-      const msg = JSON.parse(data.toString()) as { type: string; text?: string };
+      const msg = JSON.parse(data.toString()) as {
+        type: string;
+        text?: string;
+        topic?: string;
+        country?: string;
+        maxArticles?: number;
+      };
 
       if (msg.type === 'extract-stream') {
         if (!msg.text || typeof msg.text !== 'string' || msg.text.trim().length === 0) {
@@ -60,6 +68,61 @@ wss.on('connection', (ws) => {
               JSON.stringify({
                 type: 'extraction-error',
                 error: err instanceof Error ? err.message : 'Extraction failed',
+              })
+            );
+          }
+        }
+      } else if (msg.type === 'research-topic') {
+        if (!msg.topic || typeof msg.topic !== 'string' || msg.topic.trim().length === 0) {
+          ws.send(JSON.stringify({ type: 'research-error', error: 'Topic is required' }));
+          return;
+        }
+
+        try {
+          const onProgress: ResearchProgressCallback = (progress) => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'research-progress', ...progress }));
+            }
+          };
+
+          const result = await researchTopic(
+            { topic: msg.topic, country: msg.country, maxArticles: msg.maxArticles },
+            onProgress
+          );
+
+          // Feed combined article text through narrative extraction
+          const combinedText = result.articles.map((a) => a.fullText).join('\n\n---\n\n');
+
+          if (combinedText.trim().length > 0) {
+            onProgress({ stage: 'extracting', message: 'Extracting narrative from articles...' });
+
+            const extraction = await extractNarrativeStreaming(combinedText, graph, (chunk) => {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                  JSON.stringify({
+                    type: 'extraction-progress',
+                    stage: chunk.stage,
+                    partial: chunk.partial,
+                    done: chunk.done,
+                  })
+                );
+              }
+            });
+
+            result.narrative = extraction;
+          }
+
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'research-complete', result }));
+          }
+
+          broadcast({ type: 'graph-updated', data: graph.getSnapshot() });
+        } catch (err) {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(
+              JSON.stringify({
+                type: 'research-error',
+                error: err instanceof Error ? err.message : 'Research failed',
               })
             );
           }

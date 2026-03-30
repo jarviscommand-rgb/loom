@@ -77,3 +77,11 @@ export class DreamGenerationError extends LoomError {
     this.name = 'DreamGenerationError';
   }
 }
+
+/** Thrown when auto-research topic ingestion fails. */
+export class ResearchError extends LoomError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, 'RESEARCH_FAILED', 500, details);
+    this.name = 'ResearchError';
+  }
+}

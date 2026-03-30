@@ -113,6 +113,13 @@ export const api = {
     }),
   loadDemo: () => request<GraphSnapshot>('/demo/load', { method: 'POST' }),
   reset: () => request<{ message: string }>('/demo/reset', { method: 'POST' }),
+
+  /** Run auto-research on a topic. */
+  research: (topic: string, country?: string, maxArticles?: number) =>
+    request<ApiResearchResult>('/research', {
+      method: 'POST',
+      body: JSON.stringify({ topic, country, maxArticles }),
+    }),
 };
 
 // Types mirrored from server
@@ -195,6 +202,37 @@ export interface ExtractionResult {
   events: NarrativeEvent[];
   tensions: Tension[];
   arcs: NarrativeArc[];
+}
+
+// --- Research Types ---
+
+/** A discovered research source. */
+export interface ApiResearchSource {
+  url: string;
+  title: string;
+  snippet: string;
+  sourceName: string;
+  publishedAt?: string;
+  provider: 'serpapi' | 'google-news-rss' | 'manual';
+}
+
+/** A scraped article from auto-research. */
+export interface ApiScrapedArticle {
+  source: ApiResearchSource;
+  fullText: string;
+  scrapedAt: string;
+  wordCount: number;
+}
+
+/** Complete auto-research result. */
+export interface ApiResearchResult {
+  topic: string;
+  country?: string;
+  sources: ApiResearchSource[];
+  articles: ApiScrapedArticle[];
+  narrative: unknown;
+  researchedAt: string;
+  cached: boolean;
 }
 
 // --- Sentiment Engine Types ---

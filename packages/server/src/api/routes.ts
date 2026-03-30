@@ -21,6 +21,7 @@ import { asyncHandler } from '../middleware/error-handler.js';
 import { validateBody } from '../middleware/validation.js';
 import { apiRateLimiter } from '../middleware/rate-limiter.js';
 import { ValidationError } from '../errors/index.js';
+import { researchTopic } from '../ingestion/auto-researcher.js';
 
 // ============================================================
 // Request validation schemas
@@ -28,6 +29,12 @@ import { ValidationError } from '../errors/index.js';
 
 const extractSchema = z.object({
   text: z.string().min(1, 'text field is required'),
+});
+
+const researchSchema = z.object({
+  topic: z.string().min(1, 'topic is required'),
+  country: z.string().optional(),
+  maxArticles: z.coerce.number().int().min(1).max(20).default(10),
 });
 
 const dreamSchema = z
@@ -187,6 +194,19 @@ export function createRoutes(graph: TemporalGraph, broadcast: (data: unknown) =>
       const { text } = req.body as z.infer<typeof extractSchema>;
       const result = await extractNarrative(text, graph);
       broadcast({ type: 'graph-updated', data: graph.getSnapshot() });
+      res.json(result);
+    })
+  );
+
+  // --- Research ---
+
+  router.post(
+    '/research',
+    apiRateLimiter,
+    validateBody(researchSchema),
+    asyncHandler(async (req: Request, res: Response) => {
+      const { topic, country, maxArticles } = req.body as z.infer<typeof researchSchema>;
+      const result = await researchTopic({ topic, country, maxArticles });
       res.json(result);
     })
   );
