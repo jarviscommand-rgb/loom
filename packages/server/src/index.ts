@@ -14,6 +14,7 @@ import { SentimentEngine } from './sentiment/sentiment-engine.js';
 import { createSentimentRoutes } from './sentiment/api/sentiment-routes.js';
 import { SocialMediaEngine } from './social/social-engine.js';
 import { createSocialRoutes } from './social/api/social-routes.js';
+import { NarrativeBridge } from './social/integration/narrative-bridge.js';
 import { extractNarrativeStreaming } from './extraction/streaming-extractor.js';
 import { researchTopic } from './ingestion/auto-researcher.js';
 import type { ResearchProgressCallback } from './ingestion/types.js';
@@ -171,7 +172,8 @@ app.use('/api/sentiment', createSentimentRoutes(sentimentEngine));
 
 // --- Social Media Intelligence Engine ---
 const socialMediaEngine = new SocialMediaEngine();
-app.use('/api/social', createSocialRoutes(socialMediaEngine));
+const narrativeBridge = new NarrativeBridge(socialMediaEngine, sentimentEngine, graph);
+app.use('/api/social', createSocialRoutes(socialMediaEngine, narrativeBridge));
 
 // Serve client static files in production
 if (config.NODE_ENV === 'production') {

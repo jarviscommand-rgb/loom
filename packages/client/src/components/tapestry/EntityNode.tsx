@@ -113,10 +113,53 @@ function ImportanceRing({
   );
 }
 
+/** Animated ring indicating social media engagement level around an entity node */
+function SocialEngagementRing({
+  color,
+  radius,
+  engagement,
+}: {
+  color: string;
+  radius: number;
+  engagement: number;
+}) {
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (ref.current) {
+      const t = state.clock.elapsedTime;
+      /* Pulse speed and intensity driven by engagement level */
+      const pulseSpeed = 0.8 + engagement * 1.5;
+      const pulseAmp = 0.02 + engagement * 0.06;
+      const scale = 1 + Math.sin(t * pulseSpeed) * pulseAmp;
+      ref.current.scale.set(scale, scale, scale);
+      ref.current.rotation.z = t * 0.3;
+      const mat = ref.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.15 + Math.sin(t * pulseSpeed * 0.5) * 0.1 * engagement;
+    }
+  });
+
+  return (
+    <mesh ref={ref} rotation={[Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[radius, radius * 0.05, 16, 64]} />
+      <meshBasicMaterial
+        color={color}
+        transparent
+        opacity={0.2}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
+
 interface EntityNodeProps {
   entity: Entity;
   position: [number, number, number];
   connectionCount?: number;
+  /** Social engagement level 0-1 — when set, shows a pulsing ring around the node. */
+  socialEngagement?: number;
   onPointerOver?: (e: ThreeEvent<PointerEvent>) => void;
   onPointerOut?: () => void;
 }
@@ -126,6 +169,7 @@ export default function EntityNode({
   entity,
   position,
   connectionCount = 0,
+  socialEngagement,
   onPointerOver,
   onPointerOut,
 }: EntityNodeProps) {
@@ -220,6 +264,17 @@ export default function EntityNode({
             color={color}
             radius={baseRadius * 2.4}
             count={15 + Math.floor(importance * 25)}
+          />
+        </group>
+      )}
+
+      {/* Social engagement ring — shows when entity has social data */}
+      {socialEngagement !== undefined && socialEngagement > 0 && (
+        <group position={position}>
+          <SocialEngagementRing
+            color="#22d3ee"
+            radius={baseRadius * 2.0}
+            engagement={socialEngagement}
           />
         </group>
       )}
