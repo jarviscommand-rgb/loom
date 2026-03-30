@@ -33,7 +33,7 @@ cp .env.example .env
 npm run dev
 
 # Verify everything works
-npm run test       # Should see 624 tests passing
+npm run test       # Should see 780 tests passing
 npm run lint       # Should pass clean
 npm run build      # Should succeed
 ```
@@ -72,12 +72,17 @@ loom/
 │   │       ├── middleware/    # Rate limiting, validation, error handling
 │   │       ├── config/        # Environment validation (fail-fast)
 │   │       ├── mcp/           # MCP server for AI agent integration (8 tools)
-│   │       ├── demo/          # 3 narrative demo scenarios
+│   │       ├── demo/          # 4 narrative demo scenarios
+│   │       ├── ingestion/     # Auto-researcher (SerpAPI, RSS, Firecrawl)
 │   │       ├── sentiment/     # Country Sentiment Engine
 │   │       │   ├── analysis/  # Scoring, classification, impact, trends
 │   │       │   ├── sources/   # Media source registry + profiles
 │   │       │   ├── api/       # Sentiment REST endpoints
 │   │       │   └── demo/      # Demo data (50+ Indonesian articles)
+│   │       ├── social/        # Social Media Intelligence (emerging)
+│   │       │   ├── analysis/  # Platform tracking, audience segmentation
+│   │       │   ├── api/       # Social intelligence endpoints
+│   │       │   └── demo/      # Demo data for social scenarios
 │   │       └── knowledge-base/ # Source profiles, entity profiles, methodology
 │   │
 │   └── client/                # Frontend — React + Three.js + D3
@@ -145,8 +150,8 @@ refactor: extract pressure calculation into pure function
 LOOM uses **Vitest** for all testing. Tests are colocated next to their source files.
 
 ```bash
-npm run test              # Run all 624 tests
-npm run test:cov          # Run with coverage report (70% target)
+npm run test              # Run all 780 tests
+npm run test:cov          # Run with coverage report (70% minimum target)
 npx vitest path/to/file   # Run a specific test file
 npx vitest --watch        # Watch mode for development
 ```
@@ -156,8 +161,8 @@ npx vitest --watch        # Watch mode for development
 ```
 packages/server/src/
 ├── analysis/
-│   ├── tension-radar.ts           # Source
-│   ├── tension-radar.test.ts      # Unit tests
+│   ├── tension-radar.ts              # Source
+│   ├── tension-radar.test.ts         # Unit tests
 │   ├── arc-detector.ts
 │   ├── arc-detector.test.ts
 │   ├── dream-engine.ts
@@ -173,6 +178,8 @@ packages/server/src/
 │   │   └── sentiment-engine.stress.test.ts # Stress/perf
 │   └── sources/
 │       └── source-registry.test.ts
+├── social/
+│   └── analysis/                          # Social module tests (emerging)
 └── ...
 ```
 
@@ -202,6 +209,18 @@ describe('calculateTensionScore', () => {
   });
 });
 ```
+
+### Testing Guidelines by Module
+
+| Module          | Focus Areas                                                   | Minimum Coverage |
+| --------------- | ------------------------------------------------------------- | ---------------- |
+| **analysis/**   | Algorithm correctness, edge cases, scoring bounds             | 85%              |
+| **extraction/** | LLM response parsing, error handling, retry logic             | 80%              |
+| **graph/**      | Data integrity, query performance, temporal correctness       | 90%              |
+| **sentiment/**  | Source weighting accuracy, NIS calculation, bilingual support | 85%              |
+| **social/**     | Platform tracking, audience segmentation, persona generation  | 80%              |
+| **api/**        | Route integration, Zod validation, error responses            | 85%              |
+| **mcp/**        | Tool registration, stdio transport, response format           | 90%              |
 
 ### Performance Tests
 
@@ -245,14 +264,11 @@ export const COUNTRY_SOURCES: MediaSource[] = [
     reliabilityScore: 0.80,           // 0.0 - 1.0
     signalWeight: 1.0,               // Base signal multiplier
     audienceTypes: ['urban', 'elite'],
-    // Extended profile with editorial history, ownership chains, etc.
     extendedProfile: { ... }
   },
-  // ... more sources
+  // ... more sources (minimum 8-10 spanning the political spectrum)
 ]
 ```
-
-**Research tips:** You need at minimum 8-10 sources spanning the political spectrum — pro-government, independent, opposition, state media. The signal weighting only works when you have sources with known biases to compare against.
 
 ### Step 2: Register Sources
 
@@ -260,22 +276,18 @@ In `packages/server/src/sentiment/sources/source-registry.ts`, import and regist
 
 ```typescript
 import { COUNTRY_SOURCES } from './profiles/<country>';
-
-// In the constructor or initialization:
 this.registerSources(COUNTRY_SOURCES);
 ```
 
 ### Step 3: Add Entity Profiles (Optional but Recommended)
 
-Create entity profiles in `packages/server/src/knowledge-base/entities/<country>.ts` for key political figures, business leaders, and media owners. These power the relationship mapping in the knowledge base UI.
+Create entity profiles in `packages/server/src/knowledge-base/entities/<country>.ts` for key political figures, business leaders, and media owners.
 
 ### Step 4: Create Demo Data
 
-Create `packages/server/src/sentiment/demo/<country>-demo.ts` with 20-50 realistic articles covering key topics. Include articles from different sources reporting on the same events with different tones — this demonstrates the source-weighting system.
+Create `packages/server/src/sentiment/demo/<country>-demo.ts` with 20-50 realistic articles. Include articles from different sources reporting on the same events with different tones to demonstrate source-weighting.
 
 ### Step 5: Add Tests
-
-Create test files for your source profiles and any country-specific scoring logic. At minimum:
 
 ```typescript
 describe('<Country> source profiles', () => {
@@ -288,8 +300,38 @@ describe('<Country> source profiles', () => {
 
 ### Step 6: Update Documentation
 
-- Add the country to the source profiles table in README.md
+- Add the country to the source profiles section in README.md
 - Add a demo scenario description
+
+---
+
+## How to Extend the Social Intelligence Module
+
+The `social/` module tracks how narratives propagate across social media platforms. It's structured similarly to the sentiment engine:
+
+### Directory Structure
+
+```
+packages/server/src/social/
+├── analysis/     # Platform tracking, audience segmentation, persona generation
+├── api/          # REST endpoints for social intelligence data
+└── demo/         # Demo data for social scenarios
+```
+
+### Key Concepts
+
+- **Platform Tracking** — Monitor how an announcement or narrative spreads across Twitter/X, Instagram, TikTok, Facebook, and news aggregators
+- **Audience Segmentation** — Classify audiences by demographic, political leaning, and engagement pattern
+- **Persona Generation** — AI-generated audience profiles that predict how different segments will react to narratives
+- **Engagement Patterns** — Track amplification, sentiment drift, and virality metrics across platforms
+
+### Adding a New Platform
+
+1. Create a platform adapter in `social/analysis/`
+2. Define the platform's audience taxonomy
+3. Add engagement metric extractors
+4. Write tests covering the platform's unique data patterns
+5. Register the platform in the social intelligence API
 
 ---
 
@@ -309,46 +351,16 @@ export const scenarioName = {
   name: 'Scenario Display Name',
   description: 'One-line description for the demo list',
   entities: [
-    {
-      id: 'ent-001',
-      name: 'Character Name',
-      type: 'person', // person, organization, country, concept
-      motivation: 'What drives them',
-      capability: 'What they can do',
-      alliances: ['ent-002'],
-      description: 'Brief description',
-      firstSeen: '2024-01-01T00:00:00.000Z',
-      lastSeen: '2024-03-01T00:00:00.000Z',
-    },
-    // 6-12 entities recommended
+    /* 6-12 entities recommended */
   ],
   events: [
-    {
-      id: 'evt-001',
-      title: 'Event Title',
-      description: 'What happened and why it matters',
-      timestamp: '2024-01-15T00:00:00.000Z',
-      participants: ['ent-001', 'ent-002'],
-      causalPredecessors: [], // IDs of events that caused this one
-      impact: 0.85, // 0-1
-      sentiment: -0.6, // -1 to 1
-    },
-    // 8-15 events recommended, with causal chains
+    /* 8-15 events with causal chains */
   ],
   tensions: [
-    {
-      id: 'ten-001',
-      name: 'Tension Name',
-      description: 'The core conflict',
-      parties: ['ent-001', 'ent-002'],
-      status: 'escalating', // simmering, escalating, critical, resolved
-      intensity: 0.7,
-      // ...
-    },
-    // 3-6 tensions recommended
+    /* 3-6 tensions */
   ],
   arcs: [
-    // 2-4 narrative arcs
+    /* 2-4 narrative arcs */
   ],
 };
 ```
@@ -363,6 +375,39 @@ Add your scenario to the demo loader in `packages/server/src/demo/` and expose i
 - **Build causal chains** — Events should reference their predecessors. LOOM's visualization shines when causality is explicit.
 - **Include multiple tension types** — Economic, political, personal, strategic. Different tensions interacting is where cascade risk gets interesting.
 - **Vary entity types** — Mix people, organizations, and countries. Alliance structures between different entity types create richer graphs.
+
+---
+
+## Visual Standards
+
+LOOM has a strong visual identity. All UI contributions should follow these standards:
+
+### Theme
+
+- **Dark theme throughout** — No bright or white backgrounds. All components use the dark palette.
+- **Accent colors** — Use the established glow/bloom palette for highlights (blues, purples, cyans).
+- **Typography** — Clean, readable fonts. Monospace for data, sans-serif for labels.
+
+### Animation & Performance
+
+- **60fps target** — All animations must be smooth. Profile and optimize before merging.
+- **Loading states** — Every async operation must show a loading indicator.
+- **Empty states** — Show helpful guidance when no data is loaded, not blank screens.
+- **Transitions** — Use smooth transitions between views. No jarring layout shifts.
+
+### The Tapestry (3D Visualization)
+
+- **Glow effects** — Entities should glow. Tensions should pulse. The scene should feel alive.
+- **Bloom post-processing** — Enabled by default for the cinematic look.
+- **Particle systems** — Use particles for ambient atmosphere.
+- **Camera motion** — Smooth, cinematic camera movement. No jerky transitions.
+- **Fog** — Depth fog to create the sense of a vast narrative space.
+
+### Dashboards & Charts
+
+- **D3 visualizations** — Use transitions for data updates. No jump-cuts.
+- **Score transparency** — Every metric shown to the user should be clickable to reveal its breakdown.
+- **Responsive** — Components should work at different viewport sizes.
 
 ---
 
@@ -383,7 +428,7 @@ Add your scenario to the demo loader in `packages/server/src/demo/` and expose i
 3. Ensure all checks pass:
    ```bash
    npm run lint      # Must pass clean
-   npm run test      # All 624+ tests must pass
+   npm run test      # All 780+ tests must pass
    npm run build     # Must compile without errors
    ```
 4. Open a PR with a clear description of **what** and **why**
@@ -407,7 +452,7 @@ Traditional analytics strips context. LOOM preserves narrative structure — cha
 
 ### Why in-memory graph?
 
-For v1, the in-memory temporal graph is simple, fast, and sufficient. It's benchmarked to handle 5,000+ entities without degradation. Future versions may add persistence (Neo4j, DGraph) but the interface is designed to be storage-agnostic.
+For v1, the in-memory temporal graph is simple, fast, and sufficient. It's benchmarked to handle 10,000+ entities without degradation. Future versions may add persistence (Neo4j, DGraph) but the interface is designed to be storage-agnostic.
 
 ### Why OpenAI for extraction?
 
@@ -416,6 +461,10 @@ GPT-4o provides the best balance of extraction quality and structured output rel
 ### Why source-weighted sentiment?
 
 Raw sentiment analysis is noisy. A positive article from state media means something completely different from a positive article from an investigative outlet. Source weighting turns noise into signal by treating the _source_ as part of the data.
+
+### Why social intelligence?
+
+Narratives don't exist in a vacuum — they propagate, mutate, and amplify through social platforms. Tracking how different audiences receive and reshape a narrative reveals the true impact that article-level analysis alone misses.
 
 ---
 

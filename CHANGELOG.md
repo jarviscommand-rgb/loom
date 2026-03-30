@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+- Social Media Intelligence module — platform tracking, audience segmentation, persona generation, engagement pattern analysis
+- Audience persona system with AI-generated profiles and reaction prediction
+- Social amplification tracking across Twitter/X, Instagram, TikTok, Facebook
+- Comprehensive README overhaul — compelling hero section, intelligence stack documentation, API examples
+- Updated CONTRIBUTING.md with social module guide, visual standards, and testing guidelines per module
 - Real tension radar algorithms with duration-weighted scoring, escalation tracking, convergence detection, and cascade risk analysis
 - Arc detector with phase transition detection, narrative pattern matching, and climax prediction
 - Dream engine with branching probability scoring, character motivation modeling, and constraint satisfaction
@@ -17,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment validation at startup
 - Rate limiting on extraction and dream endpoints
 - Input validation via Zod on all API routes
-- Unit tests for all core modules (70%+ coverage)
+- Unit tests for all core modules (93%+ coverage, 780 tests)
 - Integration tests for all API routes
 - ESLint + Prettier configuration
 - GitHub Actions CI/CD pipeline
@@ -29,14 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - .env.example with documented variables
 
 ### Changed
+
 - Upgraded Three.js Tapestry with particle effects, post-processing bloom, and smooth animations
 - Enhanced D3 visualizations with transitions and interactivity
+- Visual polish pass across all components — refined dark theme, improved loading states, smoother transitions
 - Refined dark theme across all components
 - Improved API response format with pagination support
 - Strengthened TypeScript strict mode — eliminated all `any` types
 
 ### Fixed
-- Graph engine now handles 1000+ entities efficiently
+
+- Graph engine now handles 10,000+ entities efficiently
 - Extraction pipeline handles long documents via chunking
 - WebSocket reconnection is more robust
 - Proper error responses on all API endpoints
@@ -44,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-12-01
 
 ### Added
+
 - Initial prototype
 - Basic narrative extraction via OpenAI GPT-4o
 - In-memory temporal causal graph

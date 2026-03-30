@@ -149,23 +149,30 @@ export default function EntityNode({
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    const breathSpeed = 0.5 + importance * 0.2;
-    const breathAmp = 0.12 + importance * 0.08;
+    const breathSpeed = 0.5 + importance * 0.3;
+    const breathAmp = 0.12 + importance * 0.1;
     const breathY = Math.sin(t * breathSpeed + position[0]) * breathAmp;
-    const pulseAmp = 0.03 + importance * 0.04;
-    const pulse = 1 + Math.sin(t * 0.8 + position[2] * 2) * pulseAmp;
+
+    // Dual-frequency pulse: slow breathing + fast heartbeat for high importance
+    const slowPulse = Math.sin(t * 0.8 + position[2] * 2) * (0.03 + importance * 0.04);
+    const fastPulse = importance > 0.5 ? Math.sin(t * 3 + position[0]) * 0.02 * importance : 0;
+    const pulse = 1 + slowPulse + fastPulse;
 
     if (meshRef.current) {
       meshRef.current.position.y = position[1] + breathY;
       meshRef.current.scale.setScalar(pulse);
       const mat = meshRef.current.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 0.5 + importance * 0.3 + Math.sin(t * 1.2 + position[0]) * 0.15;
+      // More dramatic emissive for high-importance entities
+      mat.emissiveIntensity =
+        0.5 + importance * 0.5 + Math.sin(t * 1.2 + position[0]) * (0.15 + importance * 0.15);
     }
     if (glowRef.current) {
       glowRef.current.position.y = position[1] + breathY;
-      glowRef.current.scale.setScalar(pulse * 1.05);
+      glowRef.current.scale.setScalar(pulse * 1.08);
       const mat = glowRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.05 + importance * 0.06 + Math.sin(t * 1.5 + position[2]) * 0.03;
+      // Stronger glow pulse for high-importance entities
+      mat.opacity =
+        0.06 + importance * 0.1 + Math.sin(t * 1.5 + position[2]) * (0.03 + importance * 0.04);
     }
   });
 

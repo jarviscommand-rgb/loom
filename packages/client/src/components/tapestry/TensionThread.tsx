@@ -10,35 +10,38 @@ interface TensionThreadProps {
 }
 
 /**
- * Compute thread color by blending intensity gradient (cool blue → hot red)
- * with status hint. Intensity drives the hue; status adds a tint.
+ * Compute thread color driven primarily by tension status, with intensity
+ * controlling saturation/brightness. Status sets the dominant hue:
+ *   simmering → amber, escalating → orange, critical → red, resolving → green
  */
 function getThreadColor(intensity: number, status: string): THREE.Color {
-  const cool = new THREE.Color('#3b82f6'); // blue
-  const warm = new THREE.Color('#f59e0b'); // amber
-  const hot = new THREE.Color('#ef4444'); // red
-
-  // Base: intensity-driven gradient blue → amber → red
-  let base: THREE.Color;
-  if (intensity < 0.5) {
-    base = cool.clone().lerp(warm, intensity * 2);
-  } else {
-    base = warm.clone().lerp(hot, (intensity - 0.5) * 2);
-  }
-
-  // Status tint — blend 20% toward status color for visual hint
+  // Status-driven primary colors
   const statusColors: Record<string, string> = {
-    critical: '#ef4444',
-    escalating: '#f97316',
-    simmering: '#eab308',
-    resolving: '#22c55e',
+    simmering: '#f59e0b', // amber
+    escalating: '#f97316', // orange
+    critical: '#ef4444', // red
+    resolving: '#22c55e', // green
+    resolved: '#22c55e', // green
   };
+
   const statusHex = statusColors[status];
   if (statusHex) {
-    base.lerp(new THREE.Color(statusHex), 0.2);
+    // Status sets the base color; intensity brightens it
+    const base = new THREE.Color(statusHex);
+    // Brighten proportionally to intensity for a vivid energy look
+    const bright = base.clone().lerp(new THREE.Color('#ffffff'), intensity * 0.15);
+    return bright;
   }
 
-  return base;
+  // Fallback: intensity-driven gradient blue → amber → red
+  const cool = new THREE.Color('#3b82f6');
+  const warm = new THREE.Color('#f59e0b');
+  const hot = new THREE.Color('#ef4444');
+
+  if (intensity < 0.5) {
+    return cool.clone().lerp(warm, intensity * 2);
+  }
+  return warm.clone().lerp(hot, (intensity - 0.5) * 2);
 }
 
 /** Animated glowing tension curve with intensity-driven color and flowing energy */
@@ -78,17 +81,21 @@ export default function TensionThread({ from, to, intensity, status }: TensionTh
       mat.opacity = 0.3 + intensity * 0.15 + Math.sin(t * 2 + intensity * 5) * 0.15 * intensity;
     }
 
-    // Animate particles along curve
+    // Animate particles along curve — electricity-like jitter
     if (particlesRef.current) {
       const positions = particlesRef.current.geometry.attributes.position;
-      const speed = 0.15 + intensity * 0.15;
+      const speed = 0.15 + intensity * 0.2;
       for (let i = 0; i < particleCount; i++) {
         const frac = (i / particleCount + t * speed) % 1;
         const point = curve.getPoint(frac);
-        const offset = Math.sin(t * 3 + i * 2) * 0.05;
-        positions.array[i * 3] = point.x + offset;
-        positions.array[i * 3 + 1] = point.y + offset;
-        positions.array[i * 3 + 2] = point.z;
+        // Electric jitter: lateral offset oscillates rapidly, scaled by intensity
+        const jitterFreq = 6 + intensity * 8;
+        const jitterAmp = 0.03 + intensity * 0.06;
+        const offsetX = Math.sin(t * jitterFreq + i * 3.7) * jitterAmp;
+        const offsetY = Math.cos(t * jitterFreq * 0.7 + i * 2.3) * jitterAmp;
+        positions.array[i * 3] = point.x + offsetX;
+        positions.array[i * 3 + 1] = point.y + offsetY;
+        positions.array[i * 3 + 2] = point.z + Math.sin(t * 4 + i) * jitterAmp * 0.5;
       }
       positions.needsUpdate = true;
     }

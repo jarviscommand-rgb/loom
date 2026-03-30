@@ -36,6 +36,39 @@ import {
 type TopTab = 'narrative' | 'sentiment' | 'knowledge-base';
 type ViewTab = 'timeline' | 'network' | 'tapestry' | 'dream' | 'tension';
 
+/** Animated number counter — smoothly counts up to target value */
+function AnimatedCounter({ value, className }: { value: number; className?: string }) {
+  const [display, setDisplay] = useState(0);
+  const prevRef = useRef(0);
+  const frameRef = useRef(0);
+
+  useEffect(() => {
+    const start = prevRef.current;
+    const end = value;
+    const duration = 500; // ms
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(start + (end - start) * eased));
+
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      } else {
+        prevRef.current = end;
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [value]);
+
+  return <span className={className}>{display}</span>;
+}
+
 export default function App() {
   const location = useLocation();
   const isKnowledgeBase = location.pathname.startsWith('/knowledge-base');
@@ -168,22 +201,28 @@ export default function App() {
             <div className="flex gap-4 text-xs text-loom-muted">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-loom-accent" />
-                <span className="text-loom-accent font-semibold">{entities.length}</span>
+                <AnimatedCounter
+                  value={entities.length}
+                  className="text-loom-accent font-semibold"
+                />
                 characters
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-loom-calm" />
-                <span className="text-loom-calm font-semibold">{events.length}</span>
+                <AnimatedCounter value={events.length} className="text-loom-calm font-semibold" />
                 events
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-loom-tension" />
-                <span className="text-loom-tension font-semibold">{tensions.length}</span>
+                <AnimatedCounter
+                  value={tensions.length}
+                  className="text-loom-tension font-semibold"
+                />
                 tensions
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-loom-glow" />
-                <span className="text-loom-glow font-semibold">{arcs.length}</span>
+                <AnimatedCounter value={arcs.length} className="text-loom-glow font-semibold" />
                 arcs
               </span>
             </div>
