@@ -362,7 +362,18 @@ export function checkConstraints(
     for (const tensionName of resolvedTensionNames) {
       if (narrativeLower.includes(tensionName)) {
         // Check if the context suggests the tension is still ongoing
-        const words = ['continues', 'escalates', 'intensifies', 'erupts', 'flares'];
+        const words = [
+          'continues',
+          'escalates',
+          'intensifies',
+          'erupts',
+          'flares',
+          'reignites',
+          'resurfaces',
+          'revives',
+          'renews',
+          'deepens',
+        ];
         const referencesAsActive = words.some(
           (w) =>
             narrativeLower.includes(`${tensionName} ${w}`) ||
