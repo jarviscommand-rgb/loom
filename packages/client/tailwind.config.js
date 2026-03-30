@@ -22,12 +22,13 @@ export default {
       },
       animation: {
         'pulse-slow': 'pulse 3s ease-in-out infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
+        glow: 'glow 2s ease-in-out infinite alternate',
+        'fade-in': 'fadeIn 0.25s ease-out',
       },
       keyframes: {
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(239, 68, 68, 0.3)' },
-          '100%': { boxShadow: '0 0 20px rgba(239, 68, 68, 0.6)' },
+          '0%': { boxShadow: '0 0 5px rgba(139, 92, 246, 0.3)' },
+          '100%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.6)' },
         },
       },
     },
