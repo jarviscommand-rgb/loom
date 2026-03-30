@@ -16,6 +16,7 @@ import TensionRadar from './components/TensionRadar';
 import DreamTree from './components/DreamTree';
 import Tapestry from './components/Tapestry';
 import SentimentDashboard from './components/SentimentDashboard';
+import SocialDashboard from './components/social/SocialDashboard';
 import KnowledgeBaseLanding from './components/knowledge-base/KnowledgeBaseLanding';
 import SourcesPage from './components/knowledge-base/SourcesPage';
 import SourceDetailPage from './components/knowledge-base/SourceDetailPage';
@@ -31,9 +32,10 @@ import {
   WifiOff,
   BarChart3,
   BookOpen,
+  Globe,
 } from 'lucide-react';
 
-type TopTab = 'narrative' | 'sentiment' | 'knowledge-base';
+type TopTab = 'narrative' | 'sentiment' | 'social' | 'knowledge-base';
 type ViewTab = 'timeline' | 'network' | 'tapestry' | 'dream' | 'tension';
 
 /** Animated number counter — smoothly counts up to target value */
@@ -155,6 +157,12 @@ export default function App() {
                 id: 'sentiment' as TopTab,
                 label: 'Sentiment',
                 icon: <BarChart3 size={12} />,
+                to: '/',
+              },
+              {
+                id: 'social' as TopTab,
+                label: 'Social',
+                icon: <Globe size={12} />,
                 to: '/',
               },
               {
@@ -330,6 +338,10 @@ export default function App() {
               {topTab === 'sentiment' ? (
                 <div className="flex-1 m-4 mt-0 overflow-hidden tab-content-enter" key="sentiment">
                   <SentimentDashboard />
+                </div>
+              ) : topTab === 'social' ? (
+                <div className="flex-1 m-4 mt-0 overflow-hidden tab-content-enter" key="social">
+                  <SocialDashboard />
                 </div>
               ) : !hasData ? (
                 <div

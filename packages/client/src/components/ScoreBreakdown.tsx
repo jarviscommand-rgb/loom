@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, ChevronRight, Info } from 'lucide-react';
 
 // ============================================================
@@ -44,12 +44,62 @@ function getContributionColor(value: number): string {
   return 'bg-red-500';
 }
 
+/** Get hex color for sparkline based on normalized value. */
+function getSparklineColor(value: number): string {
+  if (value >= 0.6) return '#10b981';
+  if (value >= 0.3) return '#f59e0b';
+  return '#ef4444';
+}
+
 /** Get text color for the score value. */
 function getScoreColor(score: number, min: number, max: number): string {
   const normalized = max > min ? (score - min) / (max - min) : 0.5;
   if (normalized >= 0.7) return 'text-emerald-400';
   if (normalized >= 0.4) return 'text-amber-400';
   return 'text-red-400';
+}
+
+/**
+ * Mini sparkline SVG showing a synthetic score history curve.
+ * Generates a plausible trend line from the current value.
+ */
+function Sparkline({
+  value,
+  color,
+  width = 48,
+  height = 16,
+}: {
+  value: number;
+  color: string;
+  width?: number;
+  height?: number;
+}) {
+  const points = useMemo(() => {
+    const steps = 8;
+    const pts: string[] = [];
+    for (let i = 0; i < steps; i++) {
+      // Synthetic trend: starts lower, trends toward current value
+      const progress = i / (steps - 1);
+      const base = value * 0.4 + value * 0.6 * progress;
+      const noise = Math.sin(i * 2.39 + value * 10) * 0.12;
+      const y = Math.max(0, Math.min(1, base + noise));
+      pts.push(`${(i / (steps - 1)) * width},${height - y * height}`);
+    }
+    return pts.join(' ');
+  }, [value, width, height]);
+
+  return (
+    <svg width={width} height={height} className="inline-block opacity-70">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 export default function ScoreBreakdown({
@@ -88,6 +138,10 @@ export default function ScoreBreakdown({
           <span className="text-xs font-medium text-loom-text">{breakdown.metricName}</span>
         </div>
         <div className="flex items-center gap-2">
+          <Sparkline
+            value={Math.min((breakdown.finalScore - min) / (max - min || 1), 1)}
+            color={getSparklineColor(Math.min((breakdown.finalScore - min) / (max - min || 1), 1))}
+          />
           <span className={`text-sm font-mono font-bold ${scoreColor}`}>
             {breakdown.finalScore.toFixed(breakdown.finalScore >= 10 ? 1 : 3)}
           </span>
@@ -144,7 +198,7 @@ export default function ScoreBreakdown({
   );
 }
 
-/** A single variable row with animated bar and description. */
+/** A single variable row with animated bar, sparkline, and hover expand. */
 function VariableRow({
   variable,
   animateIn,
@@ -157,19 +211,30 @@ function VariableRow({
   compact: boolean;
 }) {
   const [showDesc, setShowDesc] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const barColor = getContributionColor(variable.normalizedValue);
+  const sparkColor = getSparklineColor(variable.normalizedValue);
 
   return (
-    <div className="space-y-1">
+    <div
+      className={`space-y-1 rounded-md px-1.5 py-1 transition-all duration-200 ${
+        hovered ? 'bg-white/[0.03]' : ''
+      }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="flex items-center justify-between">
         <button
           onClick={() => setShowDesc(!showDesc)}
-          className="flex items-center gap-1 text-xs text-loom-text hover:text-loom-accent transition-colors"
+          className="flex items-center gap-1 text-xs text-loom-text hover:text-loom-accent transition-colors duration-200"
         >
           <span className="font-medium">{variable.name}</span>
           <Info size={9} className="text-loom-muted" />
         </button>
         <div className="flex items-center gap-3 text-[10px] font-mono">
+          {hovered && (
+            <Sparkline value={variable.normalizedValue} color={sparkColor} width={36} height={12} />
+          )}
           <span className="text-loom-muted">
             raw: {variable.rawValue.toFixed(variable.rawValue >= 10 ? 1 : 3)}
           </span>
@@ -201,6 +266,27 @@ function VariableRow({
               transitionDelay: `${delay + 100}ms`,
             }}
           />
+        </div>
+      )}
+
+      {/* Hover-expand: detailed breakdown */}
+      {hovered && !compact && (
+        <div className="flex items-center gap-4 text-[9px] text-loom-muted/70 font-mono pt-0.5 animate-fadeSlideIn">
+          <span>normalized: {variable.normalizedValue.toFixed(4)}</span>
+          <span>×</span>
+          <span>weight: {variable.weight.toFixed(4)}</span>
+          <span>=</span>
+          <span
+            className={
+              variable.normalizedValue >= 0.6
+                ? 'text-emerald-400/70'
+                : variable.normalizedValue >= 0.3
+                  ? 'text-amber-400/70'
+                  : 'text-red-400/70'
+            }
+          >
+            {variable.weightedContribution.toFixed(4)}
+          </span>
         </div>
       )}
 

@@ -1,5 +1,6 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import * as d3 from 'd3';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 import type { NarrativeEvent, Entity } from '../hooks/useApi';
 
 interface TimelineProps {
@@ -7,9 +8,58 @@ interface TimelineProps {
   entities: Entity[];
 }
 
+/**
+ * Build a map of event → all causal ancestors and descendants for chain highlighting.
+ */
+function buildCausalChains(events: NarrativeEvent[]) {
+  const ancestors = new Map<string, Set<string>>();
+  const descendants = new Map<string, Set<string>>();
+
+  for (const e of events) {
+    if (!ancestors.has(e.id)) ancestors.set(e.id, new Set());
+    if (!descendants.has(e.id)) descendants.set(e.id, new Set());
+    for (const predId of e.causalPredecessors) {
+      ancestors.get(e.id)!.add(predId);
+      if (!descendants.has(predId)) descendants.set(predId, new Set());
+      descendants.get(predId)!.add(e.id);
+    }
+  }
+
+  /** Get full chain (ancestors + descendants) for an event */
+  return (eventId: string): Set<string> => {
+    const chain = new Set<string>();
+    // Walk ancestors
+    const walkUp = (id: string) => {
+      for (const anc of ancestors.get(id) || []) {
+        if (!chain.has(anc)) {
+          chain.add(anc);
+          walkUp(anc);
+        }
+      }
+    };
+    // Walk descendants
+    const walkDown = (id: string) => {
+      for (const desc of descendants.get(id) || []) {
+        if (!chain.has(desc)) {
+          chain.add(desc);
+          walkDown(desc);
+        }
+      }
+    };
+    chain.add(eventId);
+    walkUp(eventId);
+    walkDown(eventId);
+    return chain;
+  };
+}
+
 export default function Timeline({ events, entities }: TimelineProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  const handleZoomIn = useCallback(() => setZoomLevel((z) => Math.min(z + 0.25, 3)), []);
+  const handleZoomOut = useCallback(() => setZoomLevel((z) => Math.max(z - 0.25, 0.5)), []);
 
   useEffect(() => {
     if (!svgRef.current || !containerRef.current || events.length === 0) return;
@@ -24,12 +74,18 @@ export default function Timeline({ events, entities }: TimelineProps) {
     svg.attr('width', width).attr('height', height);
 
     const entityMap = new Map(entities.map((e) => [e.id, e]));
+    const getCausalChain = buildCausalChains(events);
 
-    // Scales
+    // Scales — apply zoom to time range
     const timeExtent = d3.extent(events, (e) => new Date(e.timestamp)) as [Date, Date];
+    const timeMid = new Date((timeExtent[0].getTime() + timeExtent[1].getTime()) / 2);
+    const halfRange = (timeExtent[1].getTime() - timeExtent[0].getTime()) / 2;
+    const zoomedStart = new Date(timeMid.getTime() - halfRange / zoomLevel);
+    const zoomedEnd = new Date(timeMid.getTime() + halfRange / zoomLevel);
+
     const xScale = d3
       .scaleTime()
-      .domain(timeExtent)
+      .domain([zoomedStart, zoomedEnd])
       .range([margin.left, width - margin.right]);
 
     const yScale = d3
@@ -72,7 +128,20 @@ export default function Timeline({ events, entities }: TimelineProps) {
     hiMerge.append('feMergeNode').attr('in', 'blur');
     hiMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    // Clip path for brush
+    // Causal chain highlight glow
+    const chainGlow = defs
+      .append('filter')
+      .attr('id', 'chain-glow')
+      .attr('x', '-50%')
+      .attr('y', '-50%')
+      .attr('width', '200%')
+      .attr('height', '200%');
+    chainGlow.append('feGaussianBlur').attr('stdDeviation', '6').attr('result', 'blur');
+    const chainMerge = chainGlow.append('feMerge');
+    chainMerge.append('feMergeNode').attr('in', 'blur');
+    chainMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    // Clip path
     defs
       .append('clipPath')
       .attr('id', 'clip')
@@ -136,7 +205,10 @@ export default function Timeline({ events, entities }: TimelineProps) {
           .attr('stroke-width', 1.5)
           .attr('stroke-opacity', 0.25)
           .attr('stroke-dasharray', '5,4')
-          .style('animation', 'dash 15s linear infinite');
+          .attr('data-from', predId)
+          .attr('data-to', event.id)
+          .style('animation', 'dash 15s linear infinite')
+          .style('transition', 'stroke-opacity 0.3s ease, stroke-width 0.3s ease');
       });
     });
 
@@ -147,36 +219,39 @@ export default function Timeline({ events, entities }: TimelineProps) {
       .style('position', 'absolute')
       .style('pointer-events', 'none')
       .style('opacity', 0)
-      .style('background', 'rgba(10, 10, 15, 0.95)')
-      .style('border', '1px solid rgba(139, 92, 246, 0.3)')
-      .style('border-radius', '10px')
+      .style('background', 'rgba(10, 10, 20, 0.85)')
+      .style('border', '1px solid rgba(255, 255, 255, 0.08)')
+      .style('border-radius', '12px')
       .style('padding', '12px 14px')
       .style('font-size', '12px')
       .style('max-width', '280px')
       .style('z-index', '100')
-      .style('backdrop-filter', 'blur(8px)')
-      .style('box-shadow', '0 8px 32px rgba(0,0,0,0.5)')
+      .style('backdrop-filter', 'blur(16px) saturate(1.5)')
+      .style('-webkit-backdrop-filter', 'blur(16px) saturate(1.5)')
+      .style('box-shadow', '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)')
       .style('transition', 'opacity 0.15s ease');
 
     // Event dots — enter with animation
     const eventGroup = mainGroup.append('g').attr('class', 'events');
 
-    // Glow circles for high-impact events
+    // Glow circles for high-impact events — impact-based glow intensity
     eventGroup
       .selectAll('.glow-circle')
-      .data(events.filter((e) => e.impact >= 0.7))
+      .data(events.filter((e) => e.impact >= 0.5))
       .enter()
       .append('circle')
+      .attr('class', 'glow-circle')
       .attr('cx', (d) => xScale(new Date(d.timestamp)))
       .attr('cy', (d) => yScale(d.impact))
       .attr('r', 0)
       .attr('fill', (d) => colorScale(d.sentiment))
-      .attr('fill-opacity', 0.08)
+      .attr('fill-opacity', (d) => 0.04 + d.impact * 0.08)
       .attr('filter', 'url(#hi-glow)')
+      .attr('data-event-id', (d) => d.id)
       .transition()
       .duration(800)
       .delay((_, i) => i * 100)
-      .attr('r', (d) => 12 + d.impact * 20);
+      .attr('r', (d) => 10 + d.impact * 22);
 
     // Main event dots
     eventGroup
@@ -194,7 +269,9 @@ export default function Timeline({ events, entities }: TimelineProps) {
       .attr('stroke-width', 1.5)
       .attr('stroke-opacity', 0.5)
       .attr('filter', 'url(#event-glow)')
+      .attr('data-event-id', (d) => d.id)
       .style('cursor', 'pointer')
+      .style('transition', 'filter 0.3s ease')
       .transition()
       .duration(600)
       .delay((_, i) => i * 60)
@@ -205,12 +282,53 @@ export default function Timeline({ events, entities }: TimelineProps) {
     eventGroup
       .selectAll<SVGCircleElement, NarrativeEvent>('.event-dot')
       .on('mouseover', function (event, d) {
+        // Expand hovered dot
         d3.select(this)
           .transition()
           .duration(150)
           .attr('r', 6 + d.impact * 14)
           .attr('fill-opacity', 1)
           .attr('stroke-width', 3);
+
+        // Highlight causal chain
+        const chain = getCausalChain(d.id);
+
+        // Dim all dots not in chain
+        eventGroup
+          .selectAll<SVGCircleElement, NarrativeEvent>('.event-dot')
+          .transition()
+          .duration(200)
+          .attr('fill-opacity', (ev) => (chain.has(ev.id) ? 1 : 0.15))
+          .attr('stroke-opacity', (ev) => (chain.has(ev.id) ? 0.8 : 0.1));
+
+        // Highlight chain dots with glow
+        eventGroup
+          .selectAll<SVGCircleElement, NarrativeEvent>('.event-dot')
+          .filter((ev) => chain.has(ev.id) && ev.id !== d.id)
+          .attr('filter', 'url(#chain-glow)');
+
+        // Dim glow circles not in chain
+        eventGroup
+          .selectAll<SVGCircleElement, NarrativeEvent>('.glow-circle')
+          .transition()
+          .duration(200)
+          .attr('fill-opacity', (ev) => (chain.has(ev.id) ? 0.12 : 0.02));
+
+        // Highlight causal links in chain
+        linkGroup
+          .selectAll('path')
+          .transition()
+          .duration(200)
+          .attr('stroke-opacity', function () {
+            const from = d3.select(this).attr('data-from');
+            const to = d3.select(this).attr('data-to');
+            return chain.has(from) && chain.has(to) ? 0.7 : 0.05;
+          })
+          .attr('stroke-width', function () {
+            const from = d3.select(this).attr('data-from');
+            const to = d3.select(this).attr('data-to');
+            return chain.has(from) && chain.has(to) ? 2.5 : 1;
+          });
 
         const participants = d.participants.map((id) => entityMap.get(id)?.name || id).join(', ');
         tooltip
@@ -223,7 +341,8 @@ export default function Timeline({ events, entities }: TimelineProps) {
               <span>·</span>
               <span>${new Date(d.timestamp).toLocaleDateString()}</span>
             </div>
-            ${participants ? `<div style="color: #64748b; font-size: 10px; margin-top: 4px;">Characters: ${participants}</div>` : ''}`
+            ${participants ? `<div style="color: #64748b; font-size: 10px; margin-top: 4px;">Characters: ${participants}</div>` : ''}
+            ${d.causalPredecessors.length > 0 ? `<div style="color: #8b5cf6; font-size: 9px; margin-top: 4px; opacity: 0.7;">⚡ ${chain.size - 1} event${chain.size > 2 ? 's' : ''} in causal chain</div>` : ''}`
           )
           .style('left', `${event.offsetX + 15}px`)
           .style('top', `${event.offsetY - 10}px`);
@@ -235,6 +354,31 @@ export default function Timeline({ events, entities }: TimelineProps) {
           .attr('r', 4 + d.impact * 10)
           .attr('fill-opacity', 0.85)
           .attr('stroke-width', 1.5);
+
+        // Reset all dots
+        eventGroup
+          .selectAll<SVGCircleElement, NarrativeEvent>('.event-dot')
+          .transition()
+          .duration(300)
+          .attr('fill-opacity', 0.85)
+          .attr('stroke-opacity', 0.5)
+          .attr('filter', 'url(#event-glow)');
+
+        // Reset glow circles
+        eventGroup
+          .selectAll<SVGCircleElement, NarrativeEvent>('.glow-circle')
+          .transition()
+          .duration(300)
+          .attr('fill-opacity', (ev) => 0.04 + ev.impact * 0.08);
+
+        // Reset causal links
+        linkGroup
+          .selectAll('path')
+          .transition()
+          .duration(300)
+          .attr('stroke-opacity', 0.25)
+          .attr('stroke-width', 1.5);
+
         tooltip.style('opacity', 0);
       });
 
@@ -335,7 +479,7 @@ export default function Timeline({ events, entities }: TimelineProps) {
     return () => {
       tooltip.remove();
     };
-  }, [events, entities]);
+  }, [events, entities, zoomLevel]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative">
@@ -344,7 +488,29 @@ export default function Timeline({ events, entities }: TimelineProps) {
           No events yet. Load a narrative to see the timeline unfold...
         </div>
       ) : (
-        <svg ref={svgRef} className="w-full h-full" />
+        <>
+          <svg ref={svgRef} className="w-full h-full" />
+          {/* Zoom controls */}
+          <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-loom-surface/80 backdrop-blur-sm rounded-lg border border-loom-border/50 p-0.5">
+            <button
+              onClick={handleZoomOut}
+              className="p-1.5 text-loom-muted hover:text-loom-text hover:bg-white/5 rounded transition-colors duration-200"
+              title="Zoom out"
+            >
+              <ZoomOut size={14} />
+            </button>
+            <span className="text-[10px] text-loom-muted font-mono w-8 text-center">
+              {zoomLevel.toFixed(1)}x
+            </span>
+            <button
+              onClick={handleZoomIn}
+              className="p-1.5 text-loom-muted hover:text-loom-text hover:bg-white/5 rounded transition-colors duration-200"
+              title="Zoom in"
+            >
+              <ZoomIn size={14} />
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

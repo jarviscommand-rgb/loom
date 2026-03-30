@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.06);
+  }
+
   body {
     @apply bg-loom-bg text-loom-text font-mono antialiased;
     overflow: hidden;
@@ -25,9 +30,10 @@
     background-size: 256px 256px;
   }
 
-  /* Refined scrollbar */
+  /* Refined scrollbar — thin, glassy, fades on track */
   ::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -35,19 +41,32 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-loom-border rounded-full;
-    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-loom-muted/50;
+    background: rgba(255, 255, 255, 0.15);
   }
 
-  /* Custom focus styles for accessibility */
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  }
+
+  /* Custom focus styles for accessibility — glow ring */
   *:focus-visible {
     outline: 1px solid rgba(139, 92, 246, 0.5);
     outline-offset: 2px;
     border-radius: 4px;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 
   ::selection {
@@ -356,4 +375,38 @@
 
 .text-balance {
   text-wrap: balance;
+}
+
+/* ============================================================
+   Card hover lift — reusable subtle elevation on hover
+   ============================================================ */
+.hover-lift {
+  transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(139, 92, 246, 0.05);
+}
+
+/* ============================================================
+   Glass panel variant with CSS variables
+   ============================================================ */
+.glass-surface {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+}
+
+/* ============================================================
+   Smooth base transitions for interactive elements
+   ============================================================ */
+button, a, [role="button"] {
+  transition-timing-function: ease-out;
+}
+
+/* Animate-in for fade+slide (reusable utility) */
+.animate-fadeSlideIn {
+  animation: fadeSlideIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
