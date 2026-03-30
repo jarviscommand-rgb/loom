@@ -120,7 +120,7 @@ function SourceCard({ source }: { source: SourceSummary }) {
         : 'bg-gray-500/10 text-gray-400 border-gray-500/20';
 
   return (
-    <Link to={`/knowledge-base/sources/${source.id}`} className="group kb-card p-4">
+    <Link to={`/knowledge-base/sources/${source.id}`} className="group kb-card hover-lift p-4">
       <div className="flex items-start justify-between mb-2">
         <h3 className="text-heading-sm text-loom-text group-hover:text-loom-accent transition-colors">
           {source.name}

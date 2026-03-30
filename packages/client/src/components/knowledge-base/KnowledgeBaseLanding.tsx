@@ -65,11 +65,12 @@ export default function KnowledgeBaseLanding() {
 
       {/* Category cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {categories.map((cat) => (
+        {categories.map((cat, idx) => (
           <Link
             key={cat.to}
             to={cat.to}
-            className={`group border border-loom-border/50 rounded-xl p-5 bg-loom-surface/30 hover:bg-loom-surface/60 transition-all duration-300 hover:shadow-lg ${cat.borderHover} ${cat.glowColor}`}
+            className={`group kb-card-premium p-5 stagger-fade-in ${cat.borderHover} ${cat.glowColor}`}
+            style={{ animationDelay: `${idx * 120}ms` }}
           >
             <div
               className={`w-12 h-12 rounded-lg ${cat.bgColor} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110`}
@@ -92,10 +93,11 @@ export default function KnowledgeBaseLanding() {
           { label: 'Entity Profiles', value: '9', sublabel: 'key figures' },
           { label: 'Scoring Algorithms', value: '8', sublabel: 'documented' },
           { label: 'Score Variables', value: '40+', sublabel: 'transparent' },
-        ].map((stat) => (
+        ].map((stat, idx) => (
           <div
             key={stat.label}
-            className="border border-loom-border/30 rounded-lg p-3 bg-loom-bg/50 text-center hover:border-loom-border/50 transition-colors"
+            className="border border-loom-border/30 rounded-lg p-3 bg-loom-bg/50 text-center hover:border-loom-accent/20 hover:bg-loom-surface/20 transition-all duration-300 hover-lift stagger-fade-in"
+            style={{ animationDelay: `${300 + idx * 80}ms` }}
           >
             <div className="text-heading-lg font-mono font-bold text-loom-text">{stat.value}</div>
             <div className="text-body-sm text-loom-muted">{stat.label}</div>

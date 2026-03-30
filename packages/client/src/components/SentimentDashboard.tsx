@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   useSentimentDashboard,
   useSentimentArticles,
@@ -50,7 +50,7 @@ function SentimentGauge({ value, trend }: { value: number; trend: string }) {
   const color = value > 0.2 ? '#22c55e' : value > -0.2 ? '#f97316' : '#ef4444';
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center gauge-entrance">
       <svg viewBox="0 0 200 120" className="w-48 h-28">
         <defs>
           <linearGradient id="gauge-bg" x1="0" y1="0" x2="1" y2="0">
@@ -118,6 +118,13 @@ export default function SentimentDashboard() {
   const { data: articlesData } = useSentimentArticles(undefined, { limit: 10 });
   const { load: loadDemo, loading: demoLoading } = useLoadSentimentDemo();
   const [selectedArticle, setSelectedArticle] = useState<SentimentArticle | null>(null);
+
+  // Close panel on Escape key (via App keyboard nav)
+  useEffect(() => {
+    const handleClose = () => setSelectedArticle(null);
+    document.addEventListener('loom:close-panel', handleClose);
+    return () => document.removeEventListener('loom:close-panel', handleClose);
+  }, []);
 
   const handleLoadDemo = async () => {
     await loadDemo();
@@ -192,8 +199,12 @@ export default function SentimentDashboard() {
             <span className="text-xs font-semibold">Category Breakdown</span>
           </div>
           <div className="space-y-1.5">
-            {dashboard.categoryBreakdown.map((cat) => (
-              <div key={cat.category} className="flex items-center gap-2 text-[11px]">
+            {dashboard.categoryBreakdown.map((cat, idx) => (
+              <div
+                key={cat.category}
+                className="flex items-center gap-2 text-[11px] stagger-fade-in"
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
                 <span className="w-20 text-loom-muted truncate capitalize">{cat.category}</span>
                 <div className="flex-1 h-4 bg-loom-bg/50 rounded overflow-hidden">
                   <div
@@ -275,8 +286,12 @@ export default function SentimentDashboard() {
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
             <span className="text-xs font-semibold block mb-2">Source Signal</span>
             <div className="space-y-1.5">
-              {dashboard.topSources.slice(0, 5).map((src) => (
-                <div key={src.sourceId} className="flex items-center justify-between text-[11px]">
+              {dashboard.topSources.slice(0, 5).map((src, idx) => (
+                <div
+                  key={src.sourceId}
+                  className="flex items-center justify-between text-[11px] stagger-fade-in"
+                  style={{ animationDelay: `${idx * 80}ms` }}
+                >
                   <span className="text-loom-text truncate flex-1 mr-2">{src.sourceName}</span>
                   <div className="flex items-center gap-2">
                     <ReliabilityDots score={src.signalStrength} />
@@ -296,8 +311,18 @@ export default function SentimentDashboard() {
               <span className="text-xs font-semibold">Active Entities</span>
             </div>
             <div className="space-y-1.5">
-              {dashboard.activeEntities.slice(0, 8).map((ent) => (
-                <div key={ent.name} className="flex items-center justify-between text-[11px]">
+              {dashboard.activeEntities.slice(0, 8).map((ent, idx) => (
+                <div
+                  key={ent.name}
+                  className="flex items-center justify-between text-[11px] entity-breathe stagger-fade-in"
+                  style={
+                    {
+                      animationDelay: `${idx * 80}ms`,
+                      '--breathe-color':
+                        ent.sentiment > 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                    } as React.CSSProperties
+                  }
+                >
                   <span className="text-loom-text truncate flex-1 mr-2">{ent.name}</span>
                   <div className="flex items-center gap-1.5">
                     <TrendIcon trend={ent.trend} />

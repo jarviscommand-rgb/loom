@@ -224,7 +224,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-loom-bg/50 border border-loom-border/20 rounded-lg p-3 hover:border-loom-border/40 transition-colors">
+    <div className="bg-loom-bg/50 border border-loom-border/20 rounded-lg p-3 hover:border-loom-accent/20 hover:bg-loom-surface/20 transition-all duration-300 hover-lift">
       <div className="flex items-center gap-1.5 text-loom-muted mb-1">
         {icon}
         <span className="text-micro">{label}</span>

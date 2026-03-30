@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   api,
   type GraphSnapshot,
@@ -14,14 +14,7 @@ import Timeline from './components/Timeline';
 import NetworkGraph from './components/NetworkGraph';
 import TensionRadar from './components/TensionRadar';
 import DreamTree from './components/DreamTree';
-import Tapestry from './components/Tapestry';
-import SentimentDashboard from './components/SentimentDashboard';
-import SocialDashboard from './components/social/SocialDashboard';
-import KnowledgeBaseLanding from './components/knowledge-base/KnowledgeBaseLanding';
-import SourcesPage from './components/knowledge-base/SourcesPage';
-import SourceDetailPage from './components/knowledge-base/SourceDetailPage';
-import EntitiesPage from './components/knowledge-base/EntitiesPage';
-import MethodologyPage from './components/knowledge-base/MethodologyPage';
+import LoomLoader from './components/LoomLoader';
 import {
   Clock,
   Network,
@@ -34,6 +27,16 @@ import {
   BookOpen,
   Globe,
 } from 'lucide-react';
+
+/** Lazy-loaded heavy components for code splitting. */
+const Tapestry = lazy(() => import('./components/Tapestry'));
+const SentimentDashboard = lazy(() => import('./components/SentimentDashboard'));
+const SocialDashboard = lazy(() => import('./components/social/SocialDashboard'));
+const KnowledgeBaseLanding = lazy(() => import('./components/knowledge-base/KnowledgeBaseLanding'));
+const SourcesPage = lazy(() => import('./components/knowledge-base/SourcesPage'));
+const SourceDetailPage = lazy(() => import('./components/knowledge-base/SourceDetailPage'));
+const EntitiesPage = lazy(() => import('./components/knowledge-base/EntitiesPage'));
+const MethodologyPage = lazy(() => import('./components/knowledge-base/MethodologyPage'));
 
 type TopTab = 'narrative' | 'sentiment' | 'social' | 'knowledge-base';
 type ViewTab = 'timeline' | 'network' | 'tapestry' | 'dream' | 'tension';
@@ -71,8 +74,11 @@ function AnimatedCounter({ value, className }: { value: number; className?: stri
   return <span className={className}>{display}</span>;
 }
 
+const TOP_TABS: TopTab[] = ['narrative', 'sentiment', 'social', 'knowledge-base'];
+
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isKnowledgeBase = location.pathname.startsWith('/knowledge-base');
   const [entities, setEntities] = useState<Entity[]>([]);
   const [events, setEvents] = useState<NarrativeEvent[]>([]);
@@ -108,6 +114,8 @@ export default function App() {
   const [isLoading, _setIsLoading] = useState(false);
   const [tabTransitionKey, setTabTransitionKey] = useState(0);
   const prevTabRef = useRef<ViewTab>(activeTab);
+  const [topTabTransitionKey, setTopTabTransitionKey] = useState(0);
+  const prevTopTabRef = useRef<TopTab>(topTab);
 
   // Smooth tab transition
   useEffect(() => {
@@ -116,6 +124,55 @@ export default function App() {
       prevTabRef.current = activeTab;
     }
   }, [activeTab]);
+
+  // Top tab crossfade transition
+  useEffect(() => {
+    if (prevTopTabRef.current !== topTab) {
+      setTopTabTransitionKey((k) => k + 1);
+      prevTopTabRef.current = topTab;
+    }
+  }, [topTab]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      // Ignore when typing in inputs
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      // Number keys for top-level tabs
+      if (e.key >= '1' && e.key <= '4' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        const tabIndex = parseInt(e.key, 10) - 1;
+        const tab = TOP_TABS[tabIndex];
+        if (tab === 'knowledge-base') {
+          navigate('/knowledge-base');
+        } else {
+          if (isKnowledgeBase) navigate('/');
+          setTopTab(tab);
+        }
+        return;
+      }
+
+      // Escape to close detail panels
+      if (e.key === 'Escape') {
+        document.dispatchEvent(new CustomEvent('loom:close-panel'));
+        return;
+      }
+
+      // Arrow keys for timeline navigation
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        document.dispatchEvent(
+          new CustomEvent('loom:timeline-navigate', { detail: e.key === 'ArrowLeft' ? -1 : 1 })
+        );
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isKnowledgeBase, navigate]);
 
   const hasData = entities.length > 0;
 
@@ -152,24 +209,28 @@ export default function App() {
                 label: 'Narrative',
                 icon: <Layers size={12} />,
                 to: '/',
+                shortcut: '1',
               },
               {
                 id: 'sentiment' as TopTab,
                 label: 'Sentiment',
                 icon: <BarChart3 size={12} />,
                 to: '/',
+                shortcut: '2',
               },
               {
                 id: 'social' as TopTab,
                 label: 'Social',
                 icon: <Globe size={12} />,
                 to: '/',
+                shortcut: '3',
               },
               {
                 id: 'knowledge-base' as TopTab,
                 label: 'Knowledge Base',
                 icon: <BookOpen size={12} />,
                 to: '/knowledge-base',
+                shortcut: '4',
               },
             ].map((tab) => {
               const isActive =
@@ -185,9 +246,11 @@ export default function App() {
                       ? 'bg-loom-accent/20 text-loom-accent'
                       : 'text-loom-muted hover:text-loom-text'
                   }`}
+                  title={`${tab.label} (${tab.shortcut})`}
                 >
                   {tab.icon}
                   {tab.label}
+                  <kbd className="ml-1 text-[9px] opacity-40 font-mono">{tab.shortcut}</kbd>
                 </Link>
               ) : (
                 <button
@@ -198,9 +261,11 @@ export default function App() {
                       ? 'bg-loom-accent/20 text-loom-accent'
                       : 'text-loom-muted hover:text-loom-text'
                   }`}
+                  title={`${tab.label} (${tab.shortcut})`}
                 >
                   {tab.icon}
                   {tab.label}
+                  <kbd className="ml-1 text-[9px] opacity-40 font-mono">{tab.shortcut}</kbd>
                 </button>
               );
             })}
@@ -255,14 +320,16 @@ export default function App() {
       <div className="flex-1 flex overflow-hidden">
         {/* Knowledge Base routes (full-width, no sidebar) */}
         {isKnowledgeBase ? (
-          <main className="flex-1 overflow-y-auto page-enter" key={location.pathname}>
-            <Routes>
-              <Route path="/knowledge-base" element={<KnowledgeBaseLanding />} />
-              <Route path="/knowledge-base/sources" element={<SourcesPage />} />
-              <Route path="/knowledge-base/sources/:id" element={<SourceDetailPage />} />
-              <Route path="/knowledge-base/entities" element={<EntitiesPage />} />
-              <Route path="/knowledge-base/methodology" element={<MethodologyPage />} />
-            </Routes>
+          <main className="flex-1 overflow-y-auto crossfade-enter" key={location.pathname}>
+            <Suspense fallback={<LoomLoader />}>
+              <Routes>
+                <Route path="/knowledge-base" element={<KnowledgeBaseLanding />} />
+                <Route path="/knowledge-base/sources" element={<SourcesPage />} />
+                <Route path="/knowledge-base/sources/:id" element={<SourceDetailPage />} />
+                <Route path="/knowledge-base/entities" element={<EntitiesPage />} />
+                <Route path="/knowledge-base/methodology" element={<MethodologyPage />} />
+              </Routes>
+            </Suspense>
           </main>
         ) : (
           <>
@@ -334,18 +401,28 @@ export default function App() {
                 ))}
               </div>
 
-              {/* View content with smooth transitions */}
+              {/* View content with crossfade transitions */}
               {topTab === 'sentiment' ? (
-                <div className="flex-1 m-4 mt-0 overflow-hidden tab-content-enter" key="sentiment">
-                  <SentimentDashboard />
+                <div
+                  className="flex-1 m-4 mt-0 overflow-hidden crossfade-enter"
+                  key={`sentiment-${topTabTransitionKey}`}
+                >
+                  <Suspense fallback={<LoomLoader />}>
+                    <SentimentDashboard />
+                  </Suspense>
                 </div>
               ) : topTab === 'social' ? (
-                <div className="flex-1 m-4 mt-0 overflow-hidden tab-content-enter" key="social">
-                  <SocialDashboard />
+                <div
+                  className="flex-1 m-4 mt-0 overflow-hidden crossfade-enter"
+                  key={`social-${topTabTransitionKey}`}
+                >
+                  <Suspense fallback={<LoomLoader />}>
+                    <SocialDashboard />
+                  </Suspense>
                 </div>
               ) : !hasData ? (
                 <div
-                  className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden flex items-center justify-center tab-content-enter"
+                  className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden flex items-center justify-center crossfade-enter"
                   key="empty"
                 >
                   <div className="text-center space-y-4 max-w-sm">
@@ -365,7 +442,7 @@ export default function App() {
                 </div>
               ) : (
                 <div
-                  className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden tab-content-enter"
+                  className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden crossfade-enter"
                   key={`${activeTab}-${tabTransitionKey}`}
                 >
                   {isLoading ? (
@@ -376,7 +453,7 @@ export default function App() {
                       </div>
                     </div>
                   ) : (
-                    <>
+                    <Suspense fallback={<LoomLoader />}>
                       {activeTab === 'timeline' && <Timeline events={events} entities={entities} />}
                       {activeTab === 'network' && (
                         <NetworkGraph entities={entities} tensions={tensions} />
@@ -388,7 +465,7 @@ export default function App() {
                         <TensionRadar tensions={tensions} entities={entities} />
                       )}
                       {activeTab === 'dream' && <DreamTree hasData={hasData} />}
-                    </>
+                    </Suspense>
                   )}
                 </div>
               )}
