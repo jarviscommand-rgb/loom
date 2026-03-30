@@ -7,6 +7,8 @@ import { TemporalGraph } from './graph/temporal-graph.js';
 import { createRoutes } from './api/routes.js';
 import { config } from './config/env.js';
 import { globalErrorHandler } from './middleware/error-handler.js';
+import { SentimentEngine } from './sentiment/sentiment-engine.js';
+import { createSentimentRoutes } from './sentiment/api/sentiment-routes.js';
 
 const app = express();
 const server = createServer(app);
@@ -41,6 +43,10 @@ app.use(express.json({ limit: '5mb' }));
 const graph = new TemporalGraph();
 app.use('/api', createRoutes(graph, broadcast));
 
+// --- Sentiment Engine ---
+const sentimentEngine = new SentimentEngine();
+app.use('/api/sentiment', createSentimentRoutes(sentimentEngine));
+
 // Serve client static files in production
 if (config.NODE_ENV === 'production') {
   const clientDist = path.resolve(__dirname, '../../client/dist');
@@ -52,7 +58,11 @@ if (config.NODE_ENV === 'production') {
 
 // Health check
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', entities: graph.getAllEntities().length });
+  res.json({
+    status: 'ok',
+    entities: graph.getAllEntities().length,
+    sentimentArticles: sentimentEngine.getArticles().length,
+  });
 });
 
 // Global error handler (must be registered after all routes)

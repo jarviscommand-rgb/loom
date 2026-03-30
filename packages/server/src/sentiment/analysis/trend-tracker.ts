@@ -192,7 +192,7 @@ function computeMovingAverage(points: TimeSeriesPoint[], windowSize: number): nu
 }
 
 /** Detect the overall trend direction from data points. */
-function detectTrend(points: TimeSeriesPoint[]): TrendDirection {
+export function detectTrend(points: TimeSeriesPoint[]): TrendDirection {
   if (points.length < 3) return 'stable';
 
   // Use linear regression slope
