@@ -33,6 +33,16 @@ describe('Indonesia Source Profiles', () => {
     it('should return the same count as INDONESIA_SOURCES', () => {
       expect(getIndonesiaSources().length).toBe(INDONESIA_SOURCES.length);
     });
+
+    it('should return exactly 20 sources', () => {
+      expect(getIndonesiaSources()).toHaveLength(20);
+    });
+
+    it('should not allow mutation of the original array', () => {
+      const copy = getIndonesiaSources();
+      copy.pop();
+      expect(getIndonesiaSources()).toHaveLength(20);
+    });
   });
 
   // --------------------------------------------------------
@@ -190,6 +200,76 @@ describe('Indonesia Source Profiles', () => {
       for (const source of allSources) {
         expect(source.reliabilityScore).toBeGreaterThanOrEqual(0);
         expect(source.reliabilityScore).toBeLessThanOrEqual(1);
+      }
+    });
+
+    it('should have signalWeight within valid range (0, 2] for all sources', () => {
+      for (const source of allSources) {
+        expect(source.signalWeight).toBeGreaterThan(0);
+        expect(source.signalWeight).toBeLessThanOrEqual(2);
+      }
+    });
+
+    it('should have at least one feed URL per source', () => {
+      for (const source of allSources) {
+        expect(source.feedUrls.length).toBeGreaterThan(0);
+        for (const url of source.feedUrls) {
+          expect(url).toMatch(/^https?:\/\//);
+        }
+      }
+    });
+
+    it('should have valid audienceTypes from allowed set', () => {
+      const validAudiences = [
+        'elite-policy',
+        'urban-middle',
+        'rural-mass',
+        'diaspora',
+        'international',
+        'youth-digital',
+      ];
+      for (const source of allSources) {
+        expect(source.audienceTypes.length).toBeGreaterThan(0);
+        for (const audience of source.audienceTypes) {
+          expect(validAudiences).toContain(audience);
+        }
+      }
+    });
+
+    it('should have valid politicalLeaning from allowed set', () => {
+      const validLeanings = [
+        'pro-government',
+        'opposition',
+        'independent',
+        'military-aligned',
+        'oligarch-owned',
+        'state-media',
+        'centrist',
+        'islamic-conservative',
+        'progressive',
+      ];
+      for (const source of allSources) {
+        expect(validLeanings).toContain(source.politicalLeaning);
+      }
+    });
+
+    it('should have ownership with owner and notes for all sources', () => {
+      for (const source of allSources) {
+        expect(source.ownership).toBeDefined();
+        expect(source.ownership.owner).toBeTruthy();
+        expect(source.ownership.notes).toBeTruthy();
+      }
+    });
+
+    it('every source should have an extendedProfile', () => {
+      for (const source of allSources) {
+        expect(source.extendedProfile).toBeDefined();
+      }
+    });
+
+    it('all sources should be active', () => {
+      for (const source of allSources) {
+        expect(source.active).toBe(true);
       }
     });
   });

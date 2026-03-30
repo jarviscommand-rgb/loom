@@ -416,4 +416,170 @@ describe('Auto-Researcher Edge Cases', () => {
       expect(result.cached).toBe(false);
     });
   });
+
+  // --------------------------------------------------------
+  // extractXmlTag — CDATA handling (lines 336-338)
+  // --------------------------------------------------------
+
+  describe('extractXmlTag via RSS parsing (CDATA content)', () => {
+    it('should extract CDATA-wrapped content from RSS items', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              '<rss><channel>' +
+                '<item>' +
+                '<title><![CDATA[Breaking: CDATA Title]]></title>' +
+                '<link>https://example.com/cdata-article</link>' +
+                '<description><![CDATA[A description with <b>HTML</b> inside CDATA]]></description>' +
+                '<source>CDATA Source</source>' +
+                '<pubDate>Tue, 15 Jan 2024 10:00:00 GMT</pubDate>' +
+                '</item>' +
+                '</channel></rss>'
+            ),
+          json: () => Promise.resolve({ organic_results: [] }),
+        })
+      );
+
+      const result = await researchTopic({ topic: 'cdata test', maxArticles: 5 });
+      expect(result.sources.length).toBeGreaterThan(0);
+      expect(result.sources[0].title).toContain('CDATA Title');
+    });
+
+    it('should handle mixed CDATA and non-CDATA tags', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              '<rss><channel>' +
+                '<item>' +
+                '<title>Plain Title</title>' +
+                '<link>https://example.com/mixed</link>' +
+                '<description><![CDATA[CDATA description]]></description>' +
+                '<source>Mixed Source</source>' +
+                '<pubDate>2024-01-15</pubDate>' +
+                '</item>' +
+                '</channel></rss>'
+            ),
+          json: () => Promise.resolve({ organic_results: [] }),
+        })
+      );
+
+      const result = await researchTopic({ topic: 'mixed cdata test', maxArticles: 5 });
+      expect(result.sources.length).toBe(1);
+      expect(result.sources[0].title).toBe('Plain Title');
+    });
+  });
+
+  // --------------------------------------------------------
+  // fetchWithRetry — retry and error paths (lines 349-363)
+  // --------------------------------------------------------
+
+  describe('fetchWithRetry retry behavior', () => {
+    it('should retry on 429 status and eventually succeed', async () => {
+      let callCount = 0;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockImplementation(() => {
+          callCount++;
+          if (callCount <= 1) {
+            return Promise.resolve({
+              ok: false,
+              status: 429,
+              statusText: 'Too Many Requests',
+              text: () => Promise.resolve(''),
+              json: () => Promise.resolve({}),
+            });
+          }
+          return Promise.resolve({
+            ok: true,
+            text: () =>
+              Promise.resolve(
+                '<rss><channel>' +
+                  '<item><title>After Retry</title>' +
+                  '<link>https://example.com/retry</link>' +
+                  '<description>Retried</description>' +
+                  '<source>Retry Source</source>' +
+                  '<pubDate>2024-01-01</pubDate></item>' +
+                  '</channel></rss>'
+              ),
+            json: () => Promise.resolve({ organic_results: [] }),
+          });
+        })
+      );
+
+      const result = await researchTopic({ topic: 'retry 429 test', maxArticles: 3 });
+      expect(result.sources.length).toBeGreaterThan(0);
+      expect(callCount).toBeGreaterThan(1);
+    });
+
+    it('should handle non-ok non-429 status as an error', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          statusText: 'Internal Server Error',
+          text: () => Promise.resolve(''),
+          json: () => Promise.resolve({}),
+        })
+      );
+
+      // searchAllProviders catches errors, so we get empty results
+      const result = await researchTopic({ topic: 'server error test', maxArticles: 3 });
+      expect(result.sources).toHaveLength(0);
+      expect(result.articles).toHaveLength(0);
+    });
+
+    it('should exhaust retries and return empty when all attempts fail', async () => {
+      let callCount = 0;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockImplementation(() => {
+          callCount++;
+          return Promise.reject(new Error(`Attempt ${callCount} failed`));
+        })
+      );
+
+      const result = await researchTopic({ topic: 'exhaust retries test', maxArticles: 2 });
+      expect(result.sources).toHaveLength(0);
+      expect(result.articles).toHaveLength(0);
+      // MAX_RETRIES is 2, so 3 total attempts per provider
+      expect(callCount).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should retry on network error then succeed on second attempt', async () => {
+      let callCount = 0;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.reject(new Error('ECONNRESET'));
+          }
+          return Promise.resolve({
+            ok: true,
+            text: () =>
+              Promise.resolve(
+                '<rss><channel>' +
+                  '<item><title>Recovered</title>' +
+                  '<link>https://example.com/recovered</link>' +
+                  '<description>After network error</description>' +
+                  '<source>Recovery</source>' +
+                  '<pubDate>2024-01-01</pubDate></item>' +
+                  '</channel></rss>'
+              ),
+            json: () => Promise.resolve({ organic_results: [] }),
+          });
+        })
+      );
+
+      const result = await researchTopic({ topic: 'network recovery test', maxArticles: 3 });
+      expect(result.sources.length).toBeGreaterThan(0);
+    });
+  });
 });
