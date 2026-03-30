@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { v4 as uuid } from 'uuid';
 import type { Entity, NarrativeEvent, Tension, NarrativeArc } from '../graph/types.js';
-import { TemporalGraph } from '../graph/temporal-graph.js';
+import type { TemporalGraph } from '../graph/temporal-graph.js';
 import { NARRATIVE_EXTRACTION_PROMPT } from './prompts.js';
 
 // ============================================================
@@ -153,9 +153,7 @@ function chunkText(text: string): string[] {
   let overlapBuffer = '';
 
   for (const paragraph of paragraphs) {
-    const candidate = currentChunk
-      ? currentChunk + '\n\n' + paragraph
-      : overlapBuffer + paragraph;
+    const candidate = currentChunk ? currentChunk + '\n\n' + paragraph : overlapBuffer + paragraph;
 
     if (candidate.length > CHUNK_CHAR_LIMIT && currentChunk.length > 0) {
       chunks.push(currentChunk);
@@ -178,10 +176,7 @@ function chunkText(text: string): string[] {
 // LLM extraction with retry
 // ============================================================
 
-async function extractChunkWithRetry(
-  openai: OpenAI,
-  text: string
-): Promise<RawExtraction> {
+async function extractChunkWithRetry(openai: OpenAI, text: string): Promise<RawExtraction> {
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -210,9 +205,7 @@ async function extractChunkWithRetry(
     }
   }
 
-  throw new Error(
-    `Extraction failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`
-  );
+  throw new Error(`Extraction failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`);
 }
 
 // ============================================================
@@ -281,7 +274,9 @@ function mergeExtractions(extractions: RawExtraction[]): RawExtraction {
             relatedEvents: [...new Set([...existing.relatedEvents, ...tension.relatedEvents])],
           };
         } else {
-          existing.relatedEvents = [...new Set([...existing.relatedEvents, ...tension.relatedEvents])];
+          existing.relatedEvents = [
+            ...new Set([...existing.relatedEvents, ...tension.relatedEvents]),
+          ];
         }
       } else {
         seenTensions.set(key, merged.tensions.length);
@@ -291,9 +286,7 @@ function mergeExtractions(extractions: RawExtraction[]): RawExtraction {
 
     // Merge arcs (take the most complete version)
     for (const arc of extraction.arcs) {
-      const existing = merged.arcs.find(
-        (a) => a.name.toLowerCase() === arc.name.toLowerCase()
-      );
+      const existing = merged.arcs.find((a) => a.name.toLowerCase() === arc.name.toLowerCase());
       if (existing) {
         existing.events = [...new Set([...existing.events, ...arc.events])];
         existing.characters = [...new Set([...existing.characters, ...arc.characters])];
@@ -338,9 +331,7 @@ function deduplicateEntities(raw: RawExtraction): RawExtraction {
 
     if (seenCanonical.has(canonical)) {
       // Merge with existing
-      const existing = deduplicatedChars.find(
-        (c) => c.name === canonical
-      );
+      const existing = deduplicatedChars.find((c) => c.name === canonical);
       if (existing) {
         existing.alliances = [...new Set([...existing.alliances, ...char.alliances])];
         // Keep longer description
@@ -355,8 +346,7 @@ function deduplicateEntities(raw: RawExtraction): RawExtraction {
   }
 
   // Update all references to use canonical names
-  const replaceNames = (names: string[]): string[] =>
-    names.map((n) => canonicalMap.get(n) || n);
+  const replaceNames = (names: string[]): string[] => names.map((n) => canonicalMap.get(n) || n);
 
   return {
     characters: deduplicatedChars.map((c) => ({
@@ -454,10 +444,7 @@ function namesMatch(a: string, b: string): boolean {
 // Reference resolution and graph integration
 // ============================================================
 
-function resolveAndAddToGraph(
-  raw: RawExtraction,
-  graph: TemporalGraph
-): ExtractionResult {
+function resolveAndAddToGraph(raw: RawExtraction, graph: TemporalGraph): ExtractionResult {
   const nameToEntityId = new Map<string, string>();
   const titleToEventId = new Map<string, string>();
   const nameToTensionId = new Map<string, string>();
@@ -514,9 +501,7 @@ function resolveAndAddToGraph(
 
   // Re-resolve causal predecessors now that all events have IDs
   for (const event of events) {
-    event.causalPredecessors = event.causalPredecessors.map(
-      (p) => titleToEventId.get(p) || p
-    );
+    event.causalPredecessors = event.causalPredecessors.map((p) => titleToEventId.get(p) || p);
   }
 
   // Process tensions
@@ -525,13 +510,9 @@ function resolveAndAddToGraph(
     nameToTensionId.set(t.name, id);
 
     const firstEvent = t.relatedEvents[0];
-    const firstEventObj = firstEvent
-      ? raw.events.find((e) => e.title === firstEvent)
-      : undefined;
+    const firstEventObj = firstEvent ? raw.events.find((e) => e.title === firstEvent) : undefined;
     const lastEvent = t.relatedEvents[t.relatedEvents.length - 1];
-    const lastEventObj = lastEvent
-      ? raw.events.find((e) => e.title === lastEvent)
-      : undefined;
+    const lastEventObj = lastEvent ? raw.events.find((e) => e.title === lastEvent) : undefined;
 
     const validFrom = firstEventObj?.timestamp || new Date().toISOString();
     const duration =

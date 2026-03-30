@@ -9,8 +9,6 @@ import type {
   ConstraintViolation,
   BranchDependency,
   Entity,
-  NarrativeEvent,
-  Tension,
   GraphSnapshot,
 } from '../graph/types.js';
 import { DREAM_MODE_PROMPT } from '../extraction/prompts.js';
@@ -103,7 +101,7 @@ interface GenerationResult {
 async function generateForStrategy(
   snapshot: GraphSnapshot,
   strategy: DreamStrategy,
-  graph: TemporalGraph
+  _graph: TemporalGraph
 ): Promise<GenerationResult> {
   const stateDescription = buildStateDescription(snapshot, strategy);
   const prompt = buildStrategyPrompt(strategy, stateDescription);
@@ -162,24 +160,39 @@ function buildStateDescription(snapshot: GraphSnapshot, strategy: DreamStrategy)
 
   // Strategy-specific additions
   if (strategy === 'conservative') {
-    return JSON.stringify({
-      ...base,
-      instruction: 'Focus on the most likely next steps given current momentum. Stay close to established patterns.',
-    }, null, 2);
+    return JSON.stringify(
+      {
+        ...base,
+        instruction:
+          'Focus on the most likely next steps given current momentum. Stay close to established patterns.',
+      },
+      null,
+      2
+    );
   }
 
   if (strategy === 'wild_card') {
-    return JSON.stringify({
-      ...base,
-      instruction: 'Explore unlikely but plausible disruptions. Think about black swan events, betrayals, external shocks, or hidden motivations surfacing.',
-    }, null, 2);
+    return JSON.stringify(
+      {
+        ...base,
+        instruction:
+          'Explore unlikely but plausible disruptions. Think about black swan events, betrayals, external shocks, or hidden motivations surfacing.',
+      },
+      null,
+      2
+    );
   }
 
   // pattern_based
-  return JSON.stringify({
-    ...base,
-    instruction: 'Identify recurring patterns in the narrative (cycles, escalation spirals, alliance shifts) and project them forward.',
-  }, null, 2);
+  return JSON.stringify(
+    {
+      ...base,
+      instruction:
+        'Identify recurring patterns in the narrative (cycles, escalation spirals, alliance shifts) and project them forward.',
+    },
+    null,
+    2
+  );
 }
 
 /** Build the prompt for a specific strategy. */
@@ -240,7 +253,9 @@ async function callLLMWithRetry(prompt: string): Promise<RawBranch[]> {
     }
   }
 
-  throw new Error(`Dream generation failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`);
+  throw new Error(
+    `Dream generation failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`
+  );
 }
 
 // ============================================================
@@ -276,10 +291,7 @@ function normalizeProbabilities(branches: DreamBranch[]): void {
  * Score how well each branch aligns with character motivations.
  * Higher score = characters are acting in-character.
  */
-function applyMotivationAlignment(
-  branches: DreamBranch[],
-  snapshot: GraphSnapshot
-): void {
+function applyMotivationAlignment(branches: DreamBranch[], snapshot: GraphSnapshot): void {
   const entityMap = new Map<string, Entity>();
   for (const e of snapshot.entities) {
     entityMap.set(e.name.toLowerCase(), e);
@@ -306,17 +318,16 @@ function applyMotivationAlignment(
         }
       }
 
-      const alignment = motivationWords.length > 0
-        ? Math.min(matches / Math.max(motivationWords.length * 0.3, 1), 1)
-        : 0.5;
+      const alignment =
+        motivationWords.length > 0
+          ? Math.min(matches / Math.max(motivationWords.length * 0.3, 1), 1)
+          : 0.5;
 
       alignmentSum += alignment;
       alignmentCount++;
     }
 
-    branch.motivationAlignment = alignmentCount > 0
-      ? alignmentSum / alignmentCount
-      : 0.5; // neutral if no entities to check
+    branch.motivationAlignment = alignmentCount > 0 ? alignmentSum / alignmentCount : 0.5; // neutral if no entities to check
   }
 }
 
@@ -331,7 +342,7 @@ function applyMotivationAlignment(
 function checkConstraints(
   branches: DreamBranch[],
   snapshot: GraphSnapshot,
-  graph: TemporalGraph
+  _graph: TemporalGraph
 ): ConstraintViolation[] {
   const violations: ConstraintViolation[] = [];
   const resolvedTensions = snapshot.tensions.filter((t) => t.status === 'resolved');
@@ -346,8 +357,9 @@ function checkConstraints(
         // Check if the context suggests the tension is still ongoing
         const words = ['continues', 'escalates', 'intensifies', 'erupts', 'flares'];
         const referencesAsActive = words.some(
-          (w) => narrativeLower.includes(`${tensionName} ${w}`) ||
-                 narrativeLower.includes(`${w} ${tensionName}`)
+          (w) =>
+            narrativeLower.includes(`${tensionName} ${w}`) ||
+            narrativeLower.includes(`${w} ${tensionName}`)
         );
 
         if (referencesAsActive) {
@@ -395,17 +407,11 @@ function checkConstraints(
  * Validate that branches follow from the timeline.
  * Marks each branch's temporallyCoherent flag.
  */
-function validateTemporalCoherence(
-  branches: DreamBranch[],
-  snapshot: GraphSnapshot
-): void {
+function validateTemporalCoherence(branches: DreamBranch[], snapshot: GraphSnapshot): void {
   if (snapshot.events.length === 0) {
     for (const b of branches) b.temporallyCoherent = true;
     return;
   }
-
-  const latestEvent = snapshot.events[snapshot.events.length - 1];
-  const latestEventTime = new Date(latestEvent.timestamp).getTime();
 
   for (const branch of branches) {
     // A branch is temporally coherent if:
@@ -421,9 +427,7 @@ function validateTemporalCoherence(
     // Check for trigger events that reference the recent timeline
     const referencesRecentContext = branch.triggerEvents.some((te) => {
       const teLower = te.toLowerCase();
-      return snapshot.events.some((e) =>
-        teLower.includes(e.title.toLowerCase().slice(0, 20))
-      );
+      return snapshot.events.some((e) => teLower.includes(e.title.toLowerCase().slice(0, 20)));
     });
 
     branch.temporallyCoherent = !hasPastReference || referencesRecentContext;
@@ -448,25 +452,15 @@ function analyzeInterBranchDependencies(branches: DreamBranch[]): BranchDependen
 
       // Check entity overlap
       const sharedEntities = a.affectedEntities.filter((e) =>
-        b.affectedEntities.some(
-          (be) => be.toLowerCase() === e.toLowerCase()
-        )
+        b.affectedEntities.some((be) => be.toLowerCase() === e.toLowerCase())
       );
 
       if (sharedEntities.length === 0) continue;
 
       // Check if consequences of one match triggers of another
-      const aTriggersB = a.consequences.some((c) =>
-        b.triggerEvents.some((t) =>
-          similarText(c, t)
-        )
-      );
+      const aTriggersB = a.consequences.some((c) => b.triggerEvents.some((t) => similarText(c, t)));
 
-      const bTriggersA = b.consequences.some((c) =>
-        a.triggerEvents.some((t) =>
-          similarText(c, t)
-        )
-      );
+      const bTriggersA = b.consequences.some((c) => a.triggerEvents.some((t) => similarText(c, t)));
 
       if (aTriggersB) {
         dependencies.push({
@@ -520,10 +514,16 @@ function parseJsonResponse<T>(content: string): T {
 /** Simple text similarity check based on shared significant words. */
 function similarText(a: string, b: string): boolean {
   const wordsA = new Set(
-    a.toLowerCase().split(/\s+/).filter((w) => w.length > 4)
+    a
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 4)
   );
   const wordsB = new Set(
-    b.toLowerCase().split(/\s+/).filter((w) => w.length > 4)
+    b
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 4)
   );
 
   let shared = 0;

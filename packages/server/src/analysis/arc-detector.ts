@@ -69,7 +69,10 @@ function analyzeArc(arc: NarrativeArc, graph: TemporalGraph): ArcAnalysis {
   const healthScore = aggregateHealth(healthFactors);
   const subplots = detectSubplots(events, graph);
   const { predictedClimaxDate, climaxConfidence } = predictClimax(
-    arc, events, tensions, detectedPhase
+    arc,
+    events,
+    tensions,
+    detectedPhase
   );
 
   return {
@@ -101,9 +104,10 @@ function detectPhase(events: NarrativeEvent[], tensions: Tension[]): ArcPhase {
   if (events.length === 0) return 'setup';
 
   const n = events.length;
-  const resolvedRatio = tensions.length > 0
-    ? tensions.filter((t) => t.status === 'resolved').length / tensions.length
-    : 0;
+  const resolvedRatio =
+    tensions.length > 0
+      ? tensions.filter((t) => t.status === 'resolved').length / tensions.length
+      : 0;
 
   // Resolution: most tensions resolved
   if (resolvedRatio >= PHASE_THRESHOLDS.resolutionThreshold && n >= 3) {
@@ -176,7 +180,8 @@ function computePhaseProgress(
   switch (phase) {
     case 'setup': {
       // Progress based on how many entities and causal links are established
-      const linkedRatio = events.filter((e) => e.causalPredecessors.length > 0).length / events.length;
+      const linkedRatio =
+        events.filter((e) => e.causalPredecessors.length > 0).length / events.length;
       return Math.min(linkedRatio * 2, 1);
     }
     case 'rising_action': {
@@ -218,10 +223,7 @@ interface ArchetypeMatch {
  * Match the arc's trajectory against common narrative archetypes
  * using sentiment and impact curve shapes.
  */
-function detectArchetype(
-  sentiment: number[],
-  impact: number[]
-): ArchetypeMatch {
+function detectArchetype(sentiment: number[], impact: number[]): ArchetypeMatch {
   if (sentiment.length < 3) {
     return { type: 'unknown', confidence: 0 };
   }
@@ -257,20 +259,21 @@ function scoreTragedyFit(sentiment: number[], impact: number[]): number {
   const sentimentDrop = firstThird - lastThird; // positive = tragedy
   const highImpactEnding = lateImpact;
 
-  return clamp((sentimentDrop * 0.6 + highImpactEnding * 0.4), 0, 1);
+  return clamp(sentimentDrop * 0.6 + highImpactEnding * 0.4, 0, 1);
 }
 
 /** Comedy: sentiment starts low/mixed, ends high; tensions resolve. */
 function scoreComedyFit(sentiment: number[], impact: number[]): number {
   const firstThird = mean(sentiment.slice(0, Math.ceil(sentiment.length / 3)));
   const lastThird = mean(sentiment.slice(-Math.ceil(sentiment.length / 3)));
-  const impactDecline = mean(impact.slice(0, Math.ceil(impact.length / 2))) -
+  const impactDecline =
+    mean(impact.slice(0, Math.ceil(impact.length / 2))) -
     mean(impact.slice(-Math.ceil(impact.length / 3)));
 
   const sentimentRise = lastThird - firstThird; // positive = comedy
   const calmEnding = Math.max(0, impactDecline); // impact decreases
 
-  return clamp((sentimentRise * 0.6 + calmEnding * 0.4), 0, 1);
+  return clamp(sentimentRise * 0.6 + calmEnding * 0.4, 0, 1);
 }
 
 /** Hero's journey: dip in the middle (ordeal), recovery at end. */
@@ -287,10 +290,9 @@ function scoreHerosJourneyFit(sentiment: number[], impact: number[]): number {
   const midImpact = mean(impact.slice(third, third * 2)); // high impact in middle
 
   return clamp(
-    (midDip > 0 ? midDip * 0.3 : 0) +
-    (recovery > 0 ? recovery * 0.3 : 0) +
-    midImpact * 0.4,
-    0, 1
+    (midDip > 0 ? midDip * 0.3 : 0) + (recovery > 0 ? recovery * 0.3 : 0) + midImpact * 0.4,
+    0,
+    1
   );
 }
 
@@ -310,18 +312,16 @@ function scoreRagsToRichesFit(sentiment: number[]): number {
 function scoreRebirthFit(sentiment: number[]): number {
   const minIdx = sentiment.indexOf(Math.min(...sentiment));
   const minInLaterHalf = minIdx >= sentiment.length / 3;
-  const riseAfterMin = minIdx < sentiment.length - 1
-    ? sentiment[sentiment.length - 1] - sentiment[minIdx]
-    : 0;
-  const fallBeforeMin = minIdx > 0
-    ? sentiment[0] - sentiment[minIdx]
-    : 0;
+  const riseAfterMin =
+    minIdx < sentiment.length - 1 ? sentiment[sentiment.length - 1] - sentiment[minIdx] : 0;
+  const fallBeforeMin = minIdx > 0 ? sentiment[0] - sentiment[minIdx] : 0;
 
   return clamp(
     (minInLaterHalf ? 0.2 : 0) +
-    (fallBeforeMin > 0 ? fallBeforeMin * 0.3 : 0) +
-    (riseAfterMin > 0 ? riseAfterMin * 0.5 : 0),
-    0, 1
+      (fallBeforeMin > 0 ? fallBeforeMin * 0.3 : 0) +
+      (riseAfterMin > 0 ? riseAfterMin * 0.5 : 0),
+    0,
+    1
   );
 }
 
@@ -334,7 +334,8 @@ function scoreOvercomingMonsterFit(sentiment: number[], impact: number[]): numbe
 
   return clamp(
     maxImpact * 0.5 + (posResolution ? 0.3 : 0) + (maxIdx > impact.length / 3 ? 0.2 : 0),
-    0, 1
+    0,
+    1
   );
 }
 
@@ -362,8 +363,8 @@ function computeEventPacing(events: NarrativeEvent[]): number {
 
   const gaps: number[] = [];
   for (let i = 1; i < events.length; i++) {
-    const gap = new Date(events[i].timestamp).getTime() -
-      new Date(events[i - 1].timestamp).getTime();
+    const gap =
+      new Date(events[i].timestamp).getTime() - new Date(events[i - 1].timestamp).getTime();
     gaps.push(gap);
   }
 
@@ -397,7 +398,7 @@ function computeTensionProgression(tensions: Tension[]): number {
 function computeCharacterDevelopment(
   arc: NarrativeArc,
   events: NarrativeEvent[],
-  graph: TemporalGraph
+  _graph: TemporalGraph
 ): number {
   if (arc.characters.length === 0 || events.length === 0) return 0.5;
 
@@ -438,7 +439,7 @@ function aggregateHealth(factors: ArcHealthFactors): number {
  * Detect subplots by finding clusters of co-participating entities
  * that form their own mini-arc within the larger arc.
  */
-function detectSubplots(events: NarrativeEvent[], graph: TemporalGraph): SubplotInfo[] {
+function detectSubplots(events: NarrativeEvent[], _graph: TemporalGraph): SubplotInfo[] {
   if (events.length < 3) return [];
 
   // Build entity co-occurrence matrix
@@ -491,14 +492,10 @@ function detectSubplots(events: NarrativeEvent[], graph: TemporalGraph): Subplot
 
   // Filter to clusters that don't span the entire participant set
   // (otherwise it's the main arc, not a subplot)
-  const subplotClusters = clusters.filter(
-    (c) => c.size < allParticipants.size * 0.8
-  );
+  const subplotClusters = clusters.filter((c) => c.size < allParticipants.size * 0.8);
 
   return subplotClusters.map((cluster) => {
-    const clusterEvents = events.filter((e) =>
-      e.participants.some((p) => cluster.has(p))
-    );
+    const clusterEvents = events.filter((e) => e.participants.some((p) => cluster.has(p)));
     const phase = detectPhase(clusterEvents, []);
     const strength = clusterEvents.length / events.length;
 
@@ -526,7 +523,11 @@ function predictClimax(
   currentPhase: ArcPhase
 ): { predictedClimaxDate: string | null; climaxConfidence: number } {
   // No prediction needed if already past climax
-  if (currentPhase === 'climax' || currentPhase === 'falling_action' || currentPhase === 'resolution') {
+  if (
+    currentPhase === 'climax' ||
+    currentPhase === 'falling_action' ||
+    currentPhase === 'resolution'
+  ) {
     return { predictedClimaxDate: null, climaxConfidence: 0 };
   }
 
@@ -535,12 +536,10 @@ function predictClimax(
   }
 
   // Estimate based on escalation trend
-  const escalatingTensions = tensions.filter((t) =>
-    t.status === 'escalating' || t.status === 'critical'
+  const escalatingTensions = tensions.filter(
+    (t) => t.status === 'escalating' || t.status === 'critical'
   );
-  const escalationRatio = tensions.length > 0
-    ? escalatingTensions.length / tensions.length
-    : 0;
+  const escalationRatio = tensions.length > 0 ? escalatingTensions.length / tensions.length : 0;
 
   // Compute event acceleration
   const recentEvents = events.slice(-Math.ceil(events.length / 2));
@@ -564,7 +563,8 @@ function predictClimax(
   // Confidence based on data quality
   const confidence = clamp(
     0.2 + escalationRatio * 0.3 + Math.min(events.length / 10, 0.3) + (acceleration > 1 ? 0.2 : 0),
-    0, 1
+    0,
+    1
   );
 
   return {
@@ -585,9 +585,7 @@ function resolveEvents(eventIds: string[], graph: TemporalGraph): NarrativeEvent
 }
 
 function resolveTensions(tensionIds: string[], graph: TemporalGraph): Tension[] {
-  return tensionIds
-    .map((id) => graph.getTension(id))
-    .filter((t): t is Tension => t !== undefined);
+  return tensionIds.map((id) => graph.getTension(id)).filter((t): t is Tension => t !== undefined);
 }
 
 function mean(values: number[]): number {
@@ -599,11 +597,7 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function increment(
-  map: Map<string, Map<string, number>>,
-  a: string,
-  b: string
-): void {
+function increment(map: Map<string, Map<string, number>>, a: string, b: string): void {
   let inner = map.get(a);
   if (!inner) {
     inner = new Map();
