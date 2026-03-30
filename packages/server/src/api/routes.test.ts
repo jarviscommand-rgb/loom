@@ -311,7 +311,7 @@ describe('API Routes', () => {
     it('should load demo dataset and broadcast', async () => {
       const res = await request(app, 'POST', '/api/demo/load');
       expect(res.status).toBe(200);
-      expect((res.body as { message: string }).message).toBe('Demo dataset loaded');
+      expect((res.body as { message: string }).message).toContain('Demo loaded');
       expect(broadcasts.length).toBe(1);
       expect(graph.getAllEntities().length).toBeGreaterThan(0);
     });

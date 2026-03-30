@@ -5,6 +5,18 @@ import { extractNarrative } from '../extraction/narrative-extractor.js';
 import { scanTensions } from '../analysis/tension-radar.js';
 import { generateDreams } from '../analysis/dream-engine.js';
 import { demoEntities, demoEvents, demoTensions, demoArcs } from '../demo/openai-crisis.js';
+import {
+  techWarEntities,
+  techWarEvents,
+  techWarTensions,
+  techWarArcs,
+} from '../demo/us-china-tech-war.js';
+import {
+  aiBubbleEntities,
+  aiBubbleEvents,
+  aiBubbleTensions,
+  aiBubbleArcs,
+} from '../demo/nvidia-ai-bubble.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { validateBody } from '../middleware/validation.js';
 import { apiRateLimiter } from '../middleware/rate-limiter.js';
@@ -181,16 +193,77 @@ export function createRoutes(graph: TemporalGraph, broadcast: (data: unknown) =>
 
   // --- Demo ---
 
-  router.post('/demo/load', (_req: Request, res: Response) => {
-    graph.clear();
-    graph.load({
+  /** Available demo scenarios. */
+  const demoScenarios: Record<
+    string,
+    {
+      name: string;
+      entities: typeof demoEntities;
+      events: typeof demoEvents;
+      tensions: typeof demoTensions;
+      arcs: typeof demoArcs;
+    }
+  > = {
+    'openai-crisis': {
+      name: 'OpenAI Board Crisis (Nov 2023)',
       entities: demoEntities,
       events: demoEvents,
       tensions: demoTensions,
       arcs: demoArcs,
+    },
+    'us-china-tech-war': {
+      name: 'US-China Semiconductor War',
+      entities: techWarEntities,
+      events: techWarEvents,
+      tensions: techWarTensions,
+      arcs: techWarArcs,
+    },
+    'ai-bubble': {
+      name: 'NVIDIA & The AI Bubble Question',
+      entities: aiBubbleEntities,
+      events: aiBubbleEvents,
+      tensions: aiBubbleTensions,
+      arcs: aiBubbleArcs,
+    },
+  };
+
+  /** List available demo scenarios. */
+  router.get('/demo/list', (_req: Request, res: Response) => {
+    const scenarios = Object.entries(demoScenarios).map(([id, scenario]) => ({
+      id,
+      name: scenario.name,
+      entities: scenario.entities.length,
+      events: scenario.events.length,
+      tensions: scenario.tensions.length,
+      arcs: scenario.arcs.length,
+    }));
+    res.json({ scenarios });
+  });
+
+  /** Load a specific demo scenario (default: openai-crisis). */
+  router.post('/demo/load', (req: Request, res: Response) => {
+    const scenarioId = (req.query.scenario as string) || 'openai-crisis';
+    const scenario = demoScenarios[scenarioId];
+
+    if (!scenario) {
+      throw new ValidationError(`Unknown demo scenario: ${scenarioId}`, {
+        available: Object.keys(demoScenarios),
+      });
+    }
+
+    graph.clear();
+    graph.load({
+      entities: scenario.entities,
+      events: scenario.events,
+      tensions: scenario.tensions,
+      arcs: scenario.arcs,
     });
     broadcast({ type: 'graph-updated', data: graph.getSnapshot() });
-    res.json({ message: 'Demo dataset loaded', ...graph.getSnapshot() });
+    res.json({
+      message: `Demo loaded: ${scenario.name}`,
+      scenario: scenarioId,
+      ...graph.getSnapshot(),
+    });
   });
 
   router.post('/demo/reset', (_req: Request, res: Response) => {
