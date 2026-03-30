@@ -2,7 +2,7 @@
 
 > **What if you could read the plot of reality in real-time?**
 
-**33,700+ lines of TypeScript. 624 passing tests. 16 source profiles. MCP-enabled. Zero `any` types.**
+**36,000+ lines of TypeScript. 780 passing tests. 93%+ test coverage. 20 source profiles. 15 entity profiles. MCP-enabled. Zero `any` types.**
 
 Most analytics tools show you _what happened_. LOOM shows you _the story_ — who the characters are, what tensions are building, which subplots everyone stopped watching, and what happens next.
 
@@ -702,12 +702,12 @@ Uses GPT-4o with retry logic and exponential backoff for resilient generation.
 | Knowledge Base     | Structured source profiles, entity profiles, methodology docs   |
 | Score Transparency | Universal score breakdown system (40+ variables, full receipts) |
 | API Docs           | Swagger UI (auto-generated OpenAPI 3.0)                         |
-| Testing            | Vitest (624 tests passing)                                      |
+| Testing            | Vitest (780 tests passing, 93%+ coverage)                       |
 | Linting            | ESLint + Prettier (enforced via Husky pre-commit hooks)         |
 | CI/CD              | GitHub Actions (lint → test → build)                            |
 | Containerization   | Docker + Docker Compose                                         |
 
-**33,700+ lines across 90+ TypeScript files.** Full lint, build, and test pipeline. Production-quality error handling with custom error classes, rate limiting, input validation, and environment validation at startup. Knowledge base with 16 source profiles and 9+ entity profiles. Score transparency system with 40+ decomposable variables. MCP server for AI agent integration. Performance benchmarked at 5,000+ entities.
+**36,000+ lines across 100+ TypeScript files.** 93%+ test coverage. Full lint, build, and test pipeline. Production-quality error handling with custom error classes, rate limiting, input validation, and environment validation at startup. Knowledge base with 20 source profiles and 15 entity profiles. Score transparency system with 40+ decomposable variables. MCP server with 100% test coverage for AI agent integration. Performance benchmarked at 10,000+ entities.
 
 ---
 
