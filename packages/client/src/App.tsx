@@ -14,8 +14,19 @@ import NetworkGraph from './components/NetworkGraph';
 import TensionRadar from './components/TensionRadar';
 import DreamTree from './components/DreamTree';
 import Tapestry from './components/Tapestry';
-import { Clock, Network, Layers, Sparkles, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
+import SentimentDashboard from './components/SentimentDashboard';
+import {
+  Clock,
+  Network,
+  Layers,
+  Sparkles,
+  AlertTriangle,
+  Wifi,
+  WifiOff,
+  BarChart3,
+} from 'lucide-react';
 
+type TopTab = 'narrative' | 'sentiment';
 type ViewTab = 'timeline' | 'network' | 'tapestry' | 'dream' | 'tension';
 
 export default function App() {
@@ -23,6 +34,7 @@ export default function App() {
   const [events, setEvents] = useState<NarrativeEvent[]>([]);
   const [tensions, setTensions] = useState<Tension[]>([]);
   const [arcs, setArcs] = useState<NarrativeArc[]>([]);
+  const [topTab, setTopTab] = useState<TopTab>('narrative');
   const [activeTab, setActiveTab] = useState<ViewTab>('timeline');
 
   const handleWsMessage = useCallback((data: unknown) => {
@@ -76,7 +88,27 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-4">
-          {hasData && (
+          {/* Top-level tab switcher */}
+          <div className="flex rounded-lg bg-white/5 p-0.5">
+            {[
+              { id: 'narrative' as TopTab, label: 'Narrative', icon: <Layers size={12} /> },
+              { id: 'sentiment' as TopTab, label: 'Sentiment', icon: <BarChart3 size={12} /> },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setTopTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-md transition-all duration-200 ${
+                  topTab === tab.id
+                    ? 'bg-loom-accent/20 text-loom-accent'
+                    : 'text-loom-muted hover:text-loom-text'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {hasData && topTab === 'narrative' && (
             <div className="flex gap-4 text-xs text-loom-muted">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-loom-accent" />
@@ -187,18 +219,24 @@ export default function App() {
           </div>
 
           {/* View content with fade transition */}
-          <div
-            className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden tab-content-enter"
-            key={activeTab}
-          >
-            {activeTab === 'timeline' && <Timeline events={events} entities={entities} />}
-            {activeTab === 'network' && <NetworkGraph entities={entities} tensions={tensions} />}
-            {activeTab === 'tapestry' && (
-              <Tapestry entities={entities} events={events} tensions={tensions} />
-            )}
-            {activeTab === 'tension' && <TensionRadar tensions={tensions} entities={entities} />}
-            {activeTab === 'dream' && <DreamTree hasData={hasData} />}
-          </div>
+          {topTab === 'sentiment' ? (
+            <div className="flex-1 m-4 mt-0 overflow-hidden tab-content-enter">
+              <SentimentDashboard />
+            </div>
+          ) : (
+            <div
+              className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden tab-content-enter"
+              key={activeTab}
+            >
+              {activeTab === 'timeline' && <Timeline events={events} entities={entities} />}
+              {activeTab === 'network' && <NetworkGraph entities={entities} tensions={tensions} />}
+              {activeTab === 'tapestry' && (
+                <Tapestry entities={entities} events={events} tensions={tensions} />
+              )}
+              {activeTab === 'tension' && <TensionRadar tensions={tensions} entities={entities} />}
+              {activeTab === 'dream' && <DreamTree hasData={hasData} />}
+            </div>
+          )}
         </main>
       </div>
     </div>

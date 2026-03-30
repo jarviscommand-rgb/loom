@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
-  sentimentApi,
-  type SentimentDashboardData,
-  type SentimentEvent,
-  type SentimentFilters,
-  type EventCategory,
-} from '../hooks/useApi';
+  useSentimentDashboard,
+  useSentimentArticles,
+  useLoadSentimentDemo,
+} from '../hooks/useSentiment';
+import type { SentimentArticle } from '../hooks/useApi';
+import EventDetailPanel from './EventDetailPanel';
 import {
   Activity,
   TrendingUp,
@@ -13,13 +13,11 @@ import {
   Minus,
   Zap,
   Loader2,
-  Filter,
   BarChart3,
   Users,
   Newspaper,
-  ChevronDown,
+  Download,
 } from 'lucide-react';
-import EventDetailPanel from './EventDetailPanel';
 
 /** Category colors for the bar chart. */
 const CATEGORY_COLORS: Record<string, string> = {
@@ -100,30 +98,31 @@ function SentimentGauge({ value, trend }: { value: number; trend: string }) {
   );
 }
 
+/** Reliability dots (1-5 from reliabilityScore 0-1). */
+function ReliabilityDots({ score }: { score: number }) {
+  const filled = Math.round(score * 5);
+  return (
+    <div className="flex gap-0.5">
+      {Array.from({ length: 5 }, (_, i) => (
+        <div
+          key={i}
+          className={`w-1.5 h-1.5 rounded-full ${i < filled ? 'bg-loom-accent' : 'bg-white/10'}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function SentimentDashboard() {
-  const [dashboard, setDashboard] = useState<SentimentDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<SentimentEvent | null>(null);
-  const [filters, setFilters] = useState<SentimentFilters>({});
-  const [showFilters, setShowFilters] = useState(false);
+  const { data: dashboard, loading, error, refetch } = useSentimentDashboard();
+  const { data: articlesData } = useSentimentArticles(undefined, { limit: 10 });
+  const { load: loadDemo, loading: demoLoading } = useLoadSentimentDemo();
+  const [selectedArticle, setSelectedArticle] = useState<SentimentArticle | null>(null);
 
-  const fetchDashboard = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await sentimentApi.getDashboard();
-      setDashboard(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+  const handleLoadDemo = async () => {
+    await loadDemo();
+    refetch();
+  };
 
   if (loading) {
     return (
@@ -136,12 +135,23 @@ export default function SentimentDashboard() {
 
   if (error || !dashboard) {
     return (
-      <div className="flex items-center justify-center h-full text-sm text-red-400">
-        {error || 'No data available'}
+      <div className="flex flex-col items-center justify-center h-full gap-4">
+        <p className="text-loom-muted text-sm font-serif italic">
+          {error || 'No sentiment data available.'}
+        </p>
+        <button
+          onClick={handleLoadDemo}
+          disabled={demoLoading}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-loom-accent/20 text-loom-accent hover:bg-loom-accent/30 transition-colors text-sm disabled:opacity-50"
+        >
+          {demoLoading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+          Load Indonesia Demo
+        </button>
       </div>
     );
   }
 
+  const articles = articlesData?.data ?? [];
   const maxCategoryCount = Math.max(...dashboard.categoryBreakdown.map((c) => c.articleCount), 1);
 
   return (
@@ -156,69 +166,19 @@ export default function SentimentDashboard() {
           </span>
         </div>
         <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-1 text-xs text-loom-muted hover:text-loom-text transition-colors px-2 py-1 rounded bg-white/5"
+          onClick={handleLoadDemo}
+          disabled={demoLoading}
+          className="flex items-center gap-1.5 text-xs text-loom-muted hover:text-loom-accent transition-colors px-2 py-1 rounded bg-white/5"
         >
-          <Filter size={12} />
-          Filters
-          <ChevronDown
-            size={10}
-            className={`transition-transform ${showFilters ? 'rotate-180' : ''}`}
-          />
+          {demoLoading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+          Reload Demo
         </button>
       </div>
-
-      {/* Filter bar */}
-      {showFilters && (
-        <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-white/5 backdrop-blur-xl border border-white/10 animate-fade-in">
-          <select
-            value={filters.category || ''}
-            onChange={(e) =>
-              setFilters({
-                ...filters,
-                category: (e.target.value || undefined) as EventCategory | undefined,
-              })
-            }
-            className="bg-loom-bg border border-loom-border rounded px-2 py-1 text-xs text-loom-text"
-          >
-            <option value="">All Categories</option>
-            {Object.keys(CATEGORY_COLORS).map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.sourceId || ''}
-            onChange={(e) => setFilters({ ...filters, sourceId: e.target.value || undefined })}
-            className="bg-loom-bg border border-loom-border rounded px-2 py-1 text-xs text-loom-text"
-          >
-            <option value="">All Sources</option>
-            {dashboard.topSources.map((s) => (
-              <option key={s.sourceId} value={s.sourceId}>
-                {s.sourceName}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.entity || ''}
-            onChange={(e) => setFilters({ ...filters, entity: e.target.value || undefined })}
-            className="bg-loom-bg border border-loom-border rounded px-2 py-1 text-xs text-loom-text"
-          >
-            <option value="">All Entities</option>
-            {dashboard.activeEntities.map((ent) => (
-              <option key={ent.name} value={ent.name}>
-                {ent.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       {/* Top row: Gauge + Category breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Sentiment Gauge */}
-        <div className="glass-panel p-4 flex flex-col items-center justify-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center">
           <span className="text-[10px] text-loom-muted uppercase tracking-wider mb-2">
             Overall Sentiment
           </span>
@@ -226,7 +186,7 @@ export default function SentimentDashboard() {
         </div>
 
         {/* Category Breakdown */}
-        <div className="lg:col-span-2 glass-panel p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl">
+        <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <BarChart3 size={14} className="text-loom-calm" />
             <span className="text-xs font-semibold">Category Breakdown</span>
@@ -259,50 +219,47 @@ export default function SentimentDashboard() {
         </div>
       </div>
 
-      {/* Second row: Top Events + Sources + Entities */}
+      {/* Second row: Top Articles + Sources + Entities */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Top Events by NIS */}
-        <div className="lg:col-span-2 glass-panel p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl">
+        {/* Top Articles by NIS */}
+        <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <Newspaper size={14} className="text-loom-glow" />
-            <span className="text-xs font-semibold">Top Events by NIS</span>
+            <span className="text-xs font-semibold">Top Articles by NIS</span>
           </div>
           <div className="space-y-2">
-            {dashboard.topEvents
-              .filter((ev) => !filters.category || ev.category === filters.category)
+            {articles
+              .sort((a, b) => b.nis.score - a.nis.score)
               .slice(0, 8)
-              .map((event) => (
+              .map((article) => (
                 <button
-                  key={event.id}
-                  onClick={() => setSelectedEvent(event)}
+                  key={article.id}
+                  onClick={() => setSelectedArticle(article)}
                   className="w-full text-left p-2.5 rounded-lg bg-loom-bg/30 hover:bg-loom-bg/60 border border-transparent hover:border-loom-accent/30 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <span className="text-xs font-medium text-loom-text group-hover:text-loom-accent transition-colors line-clamp-1">
-                        {event.title}
+                        {article.title}
                       </span>
                       <div className="flex items-center gap-2 mt-1">
                         <span
                           className="text-[9px] px-1.5 py-0.5 rounded-full capitalize"
                           style={{
-                            backgroundColor: `${CATEGORY_COLORS[event.category] || '#64748b'}20`,
-                            color: CATEGORY_COLORS[event.category] || '#64748b',
+                            backgroundColor: `${CATEGORY_COLORS[article.category] || '#64748b'}20`,
+                            color: CATEGORY_COLORS[article.category] || '#64748b',
                           }}
                         >
-                          {event.category}
+                          {article.category}
                         </span>
-                        <span
-                          className={`text-[10px] font-mono ${event.sentimentDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
-                        >
-                          Δ {event.sentimentDelta > 0 ? '+' : ''}
-                          {event.sentimentDelta.toFixed(2)}
+                        <span className="text-[9px] text-loom-muted">
+                          {new Date(article.publishedAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end">
                       <span className="text-lg font-bold text-loom-accent font-mono leading-none">
-                        {Math.round(event.nis.score)}
+                        {Math.round(article.nis.score)}
                       </span>
                       <span className="text-[9px] text-loom-muted">NIS</span>
                     </div>
@@ -315,19 +272,14 @@ export default function SentimentDashboard() {
         {/* Right column: Sources + Entities */}
         <div className="space-y-4">
           {/* Source Reliability */}
-          <div className="glass-panel p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
             <span className="text-xs font-semibold block mb-2">Source Signal</span>
             <div className="space-y-1.5">
               {dashboard.topSources.slice(0, 5).map((src) => (
                 <div key={src.sourceId} className="flex items-center justify-between text-[11px]">
                   <span className="text-loom-text truncate flex-1 mr-2">{src.sourceName}</span>
                   <div className="flex items-center gap-2">
-                    <div className="w-12 h-1.5 bg-loom-bg/50 rounded overflow-hidden">
-                      <div
-                        className="h-full rounded bg-loom-calm transition-all duration-500"
-                        style={{ width: `${src.signalStrength * 100}%` }}
-                      />
-                    </div>
+                    <ReliabilityDots score={src.signalStrength} />
                     <span className="text-loom-muted font-mono w-6 text-right">
                       {src.articleCount}
                     </span>
@@ -338,7 +290,7 @@ export default function SentimentDashboard() {
           </div>
 
           {/* Active Entities */}
-          <div className="glass-panel p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Users size={14} className="text-loom-accent" />
               <span className="text-xs font-semibold">Active Entities</span>
@@ -364,7 +316,9 @@ export default function SentimentDashboard() {
       </div>
 
       {/* Event Detail Panel (slide-in) */}
-      <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+      {selectedArticle && (
+        <EventDetailPanel article={selectedArticle} onClose={() => setSelectedArticle(null)} />
+      )}
     </div>
   );
 }
