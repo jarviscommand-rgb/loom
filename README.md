@@ -2,11 +2,35 @@
 
 > _"Every dataset tells a story. LOOM reads the plot, tracks the tension, and dreams the next chapter."_
 
-**12,000+ lines of TypeScript. 400+ passing tests. One narrative lens.**
+**20,000+ lines of TypeScript. 520+ passing tests. MCP-enabled. One narrative lens.**
 
 LOOM is a full-stack intelligence engine that treats real-world data as **living narrative** — extracting characters, tracking tensions, detecting story arcs, and generating speculative futures using the deep structure of storytelling.
 
 Feed it news articles, earnings calls, intelligence reports, or any unstructured text. LOOM doesn't give you dashboards. It gives you the **story your data is telling** — and what happens next.
+
+---
+
+## Screenshots
+
+### Timeline View — Causal Event Chains
+
+![Timeline View](docs/screenshots/timeline.png)
+
+### Network Graph — Entity Relationships
+
+![Network Graph](docs/screenshots/network.png)
+
+### 3D Tapestry — Cinematic Narrative Space
+
+![Tapestry View](docs/screenshots/tapestry.png)
+
+### Tension Radar — Pressure Points
+
+![Tension Radar](docs/screenshots/tensions.png)
+
+### Sentiment Dashboard — Country-Level Analysis
+
+![Sentiment Dashboard](docs/screenshots/sentiment.png)
 
 ---
 
@@ -206,6 +230,7 @@ packages/
 │   ├── errors/           # Custom error classes (LoomError hierarchy)
 │   ├── middleware/        # Rate limiting, validation, error handling
 │   ├── config/           # Environment validation (fail-fast on missing vars)
+│   ├── mcp/              # MCP server for AI agent integration (8 tools)
 │   ├── demo/             # 3 narrative scenarios (OpenAI, US-China, AI Bubble)
 │   ├── sentiment/        # Country Sentiment Engine
 │   │   ├── analysis/     # Scoring, classification, impact, trend tracking
@@ -225,9 +250,10 @@ packages/
     │   ├── SentimentDashboard.tsx # Country sentiment dashboard
     │   └── EventDetailPanel.tsx   # Article/event detail slide-out
     ├── hooks/
-    │   ├── useApi.ts         # Typed API client with pagination support
-    │   ├── useSentiment.ts   # Sentiment engine hooks
-    │   └── useWebSocket.ts   # Real-time graph update subscription
+    │   ├── useApi.ts                  # Typed API client with pagination support
+    │   ├── useSentiment.ts            # Sentiment engine hooks
+    │   ├── useWebSocket.ts            # Real-time graph update subscription
+    │   └── useStreamingExtraction.ts  # WebSocket streaming extraction hook
     └── App.tsx               # Main app with Narrative | Sentiment tabs
 ```
 
@@ -442,9 +468,64 @@ Parameters: `limit` (1–1000, default 100), `offset` (default 0).
 
 Extraction and dream endpoints are rate-limited (default: 10 requests per minute). Rate limit headers are included in responses.
 
-### Real-Time Updates
+### Real-Time Updates & Streaming Extraction
 
-LOOM uses WebSocket (port 3001) for real-time graph updates. Connect to receive live notifications when the narrative graph changes.
+LOOM uses WebSocket (port 3001) for real-time graph updates and streaming extraction:
+
+**Graph Updates:** Connect to receive live notifications when the narrative graph changes.
+
+**Streaming Extraction:** Send `{ type: 'extract-stream', text: '...' }` over WebSocket to receive extraction progress in real-time:
+
+- `{ type: 'extraction-progress', stage: 'entities' | 'events' | 'tensions', partial: {...} }` — Stage-by-stage progress
+- `{ type: 'extraction-complete', result: {...} }` — Final result
+- `{ type: 'extraction-error', error: '...' }` — Error during extraction
+
+The client includes a toggle between REST (standard) and Stream (WebSocket) modes in the input panel.
+
+---
+
+## MCP Server (AI Agent Integration)
+
+LOOM exposes its full capabilities as an **MCP (Model Context Protocol)** server, allowing other AI agents (Claude, GPT, etc.) to call LOOM for narrative analysis.
+
+### Available Tools
+
+| Tool                       | Description                                                   |
+| -------------------------- | ------------------------------------------------------------- |
+| `loom_extract`             | Extract entities, events, tensions, arcs from text            |
+| `loom_graph_snapshot`      | Get current graph state with statistics                       |
+| `loom_tensions`            | Get active tensions with scores and cascade risk              |
+| `loom_dream`               | Generate speculative future branches                          |
+| `loom_arcs`                | Detect and analyze narrative arcs                             |
+| `loom_sentiment_ingest`    | Ingest articles for sentiment analysis                        |
+| `loom_sentiment_dashboard` | Get sentiment dashboard for a country                         |
+| `loom_demo_load`           | Load a demo scenario (openai-crisis, us-china-tech-war, etc.) |
+
+### Quick Start
+
+```bash
+# Start the MCP server (uses stdio transport)
+cd packages/server
+npx tsx src/mcp/index.ts
+```
+
+### Claude Desktop Configuration
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "loom": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/index.ts"],
+      "cwd": "/path/to/loom/packages/server"
+    }
+  }
+}
+```
+
+Then ask Claude: _"Use LOOM to load the OpenAI crisis demo and analyze the tensions"_
 
 ---
 
@@ -511,12 +592,14 @@ Uses GPT-4o with retry logic and exponential backoff for resilient generation.
 | AI               | OpenAI GPT-4o (extraction + dream engine)                     |
 | Validation       | Zod (runtime schema validation on all endpoints)              |
 | Styling          | Tailwind CSS (dark theme throughout)                          |
-| Testing          | Vitest (75 tests passing)                                     |
+| MCP              | @modelcontextprotocol/sdk (AI agent integration)              |
+| API Docs         | Swagger UI (auto-generated OpenAPI 3.0)                       |
+| Testing          | Vitest (520+ tests passing)                                   |
 | Linting          | ESLint + Prettier (enforced via Husky pre-commit hooks)       |
 | CI/CD            | GitHub Actions (lint → test → build)                          |
 | Containerization | Docker + Docker Compose                                       |
 
-**8,434 lines across 35 TypeScript files.** Full lint, build, and test pipeline. Production-quality error handling with custom error classes, rate limiting, input validation, and environment validation at startup.
+**20,000+ lines across 90+ TypeScript files.** Full lint, build, and test pipeline. Production-quality error handling with custom error classes, rate limiting, input validation, and environment validation at startup. MCP server for AI agent integration. Performance benchmarked at 5,000+ entities.
 
 ---
 
