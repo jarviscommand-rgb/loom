@@ -311,7 +311,9 @@ export default function EngagementTimeline({
                   style={{ backgroundColor: PLATFORM_COLORS[platform] || '#64748b' }}
                 />
                 <span className="text-loom-muted capitalize">{platform}</span>
-                <span className="text-loom-text font-mono ml-auto">{value.toLocaleString()}</span>
+                <span className="text-loom-text font-mono ml-auto">
+                  {(value as number).toLocaleString()}
+                </span>
               </div>
             ))}
           </div>

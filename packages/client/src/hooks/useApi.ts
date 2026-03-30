@@ -567,3 +567,185 @@ export const sentimentApi = {
   loadDemo: () =>
     request<{ message: string; articles: number }>('/sentiment/demo/load', { method: 'POST' }),
 };
+
+// --- Social Media Intelligence Types ---
+
+/** Social media platform identifier. */
+export type SocialPlatform = 'twitter' | 'instagram' | 'tiktok' | 'facebook' | 'reddit' | 'youtube';
+
+/** Engagement metrics for a single data point. */
+export interface EngagementDataPoint {
+  timestamp: string;
+  totalEngagement: number;
+  byPlatform: Record<string, number>;
+}
+
+/** A social media announcement tracked across platforms. */
+export interface SocialAnnouncement {
+  id: string;
+  title: string;
+  content: string;
+  publishedAt: string;
+  sourceEntityId: string;
+  platforms: SocialPlatform[];
+  totalReach: number;
+  totalEngagement: number;
+  sentiment: number;
+  engagementTimeline: EngagementDataPoint[];
+  topInfluencers: string[];
+  category: EventCategory;
+}
+
+/** Platform activity for a persona. */
+export interface PersonaPlatformActivity {
+  name: string;
+  activityLevel: string;
+}
+
+/** Audience persona profile. */
+export interface AudiencePersona {
+  id: string;
+  name: string;
+  type: string;
+  demographics: string;
+  platforms: PersonaPlatformActivity[];
+  interests: string[];
+  politicalLeaning: string;
+  predictedReaction: string;
+  engagementRate: number;
+  engagementQuality: number;
+  estimatedReach: number;
+}
+
+/** Audience segmentation data for an entity. */
+export interface AudienceSegmentation {
+  entityId: string;
+  entityName: string;
+  segments: Array<{
+    name: string;
+    size: number;
+    engagement: number;
+    sentiment: number;
+    topPlatform: SocialPlatform;
+  }>;
+  heatmapData: {
+    cells: HeatmapCell[];
+    segments: string[];
+    topics: string[];
+  };
+}
+
+/** Heatmap cell for audience engagement matrix. */
+export interface HeatmapCell {
+  segment: string;
+  topic: string;
+  engagement: number;
+  sentiment: number;
+}
+
+/** Social media influencer profile. */
+export interface SocialInfluencer {
+  id: string;
+  name: string;
+  handle: string;
+  platform: SocialPlatform;
+  followers: number;
+  engagementRate: number;
+  amplificationScore: number;
+  authenticity: number;
+  topTopics: string[];
+  recentActivity: string;
+}
+
+/** Node in the amplification flow diagram. */
+export interface AmplificationNode {
+  id: string;
+  name: string;
+  tier: 'source' | 'influencer' | 'audience';
+  reach: number;
+  engagementRate: number;
+  quality: 'genuine' | 'mixed' | 'bot';
+}
+
+/** Link in the amplification flow diagram. */
+export interface AmplificationLink {
+  source: string;
+  target: string;
+  strength: number;
+  quality: 'genuine' | 'mixed' | 'bot';
+}
+
+/** Platform-level metrics for cross-platform comparison. */
+export interface PlatformMetrics {
+  platform: SocialPlatform;
+  reach: number;
+  engagement: number;
+  sentiment: number;
+  shares: number;
+  virality: number;
+  topReactionType?: string;
+  topComment?: string;
+}
+
+/** Cross-platform analysis for a specific event. */
+export interface CrossPlatformAnalysis {
+  eventId: string;
+  eventTitle: string;
+  platforms: PlatformMetrics[];
+  amplification: {
+    nodes: AmplificationNode[];
+    links: AmplificationLink[];
+  };
+}
+
+/** Aggregated social media dashboard data. */
+export interface SocialDashboardData {
+  totalAnnouncements: number;
+  avgEngagement: number;
+  topPlatform: SocialPlatform;
+  activePersonas: number;
+  recentAnnouncements: SocialAnnouncement[];
+  topInfluencers: SocialInfluencer[];
+  personas: AudiencePersona[];
+  engagementTimeline: EngagementDataPoint[];
+  platformBreakdown: Array<{
+    platform: SocialPlatform;
+    announcements: number;
+    totalEngagement: number;
+    avgSentiment: number;
+  }>;
+}
+
+/** Social media API methods. */
+export const socialApi = {
+  /** Fetch aggregated social dashboard data. */
+  getDashboard: () => request<SocialDashboardData>('/social/dashboard'),
+
+  /** Fetch announcements with pagination. */
+  getAnnouncements: (params?: PaginationParams) =>
+    request<PaginatedResponse<SocialAnnouncement>>(`/social/announcements${buildQuery(params)}`),
+
+  /** Fetch a single announcement. */
+  getAnnouncement: (id: string) => request<SocialAnnouncement>(`/social/announcements/${id}`),
+
+  /** Fetch audience segmentation for an entity. */
+  getAudienceSegmentation: (entityId: string) =>
+    request<AudienceSegmentation>(`/social/audience/${encodeURIComponent(entityId)}`),
+
+  /** Fetch all audience personas. */
+  getPersonas: () => request<AudiencePersona[]>('/social/personas'),
+
+  /** Fetch influencers, optionally filtered by entity. */
+  getInfluencers: (entityId?: string) => {
+    const query = entityId ? `?entityId=${encodeURIComponent(entityId)}` : '';
+    return request<SocialInfluencer[]>(`/social/influencers${query}`);
+  },
+
+  /** Fetch cross-platform analysis for an event. */
+  getCrossPlatformAnalysis: (eventId: string) =>
+    request<CrossPlatformAnalysis>(`/social/cross-platform/${encodeURIComponent(eventId)}`),
+
+  /** Load social media demo data. */
+  loadDemo: () =>
+    request<{ message: string; announcements: number }>('/social/demo/load', { method: 'POST' }),
+};

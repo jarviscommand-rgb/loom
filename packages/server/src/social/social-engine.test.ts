@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SocialMediaEngine } from './social-engine.js';
-import type { Platform } from './types.js';
+import type { SocialPlatform } from './types.js';
 
 // ============================================================
 // LOOM — Social Media Engine Tests
@@ -15,7 +15,7 @@ function makeAnnouncementInput(overrides: Record<string, unknown> = {}) {
   return {
     title: 'Product Launch Announcement',
     content: 'We are excited to announce our new AI platform for SMEs.',
-    platform: 'twitter' as Platform,
+    platform: 'twitter' as SocialPlatform,
     author: 'official_account',
     publishedAt: '2026-03-01T10:00:00Z',
     url: 'https://twitter.com/official_account/status/123',
@@ -31,7 +31,7 @@ function makeAnnouncementInput(overrides: Record<string, unknown> = {}) {
 
 /** Helper to create multiple announcements across platforms. */
 function seedMultiPlatformData(engine: SocialMediaEngine) {
-  const platforms: Platform[] = ['twitter', 'facebook', 'instagram', 'linkedin', 'tiktok'];
+  const platforms: SocialPlatform[] = ['twitter', 'facebook', 'instagram', 'tiktok', 'youtube'];
   const announcements = platforms.map((platform, i) =>
     makeAnnouncementInput({
       title: `Announcement on ${platform}`,
@@ -562,7 +562,7 @@ describe('SocialMediaEngine', () => {
       const announcement = engine.trackAnnouncement({
         title: 'Minimal post',
         content: 'Just some content.',
-        platform: 'twitter' as Platform,
+        platform: 'twitter' as SocialPlatform,
         author: 'user',
         metrics: { likes: 0, shares: 0, comments: 0, views: 0 },
       });

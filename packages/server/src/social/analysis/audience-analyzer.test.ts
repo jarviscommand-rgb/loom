@@ -5,7 +5,7 @@ import {
   buildPersonaFromSegment,
   matchPersonaToNarrative,
 } from './audience-analyzer.js';
-import type { AudienceData, AudienceSegment, AudiencePersona, Platform } from '../types.js';
+import type { SocialPlatform } from '../types.js';
 
 // ============================================================
 // LOOM — Audience Analyzer Tests
@@ -14,8 +14,58 @@ import type { AudienceData, AudienceSegment, AudiencePersona, Platform } from '.
 // persona generation, and narrative matching.
 // ============================================================
 
+/**
+ * Audience data input for segmentation analysis.
+ * Defined here as the expected interface for the analyzer module.
+ */
+interface AudienceData {
+  platform: SocialPlatform;
+  followers: number;
+  demographics: {
+    ageGroups: Array<{ range: string; percentage: number }>;
+    genderSplit: Record<string, number>;
+    topLocations: string[];
+    topInterests: string[];
+  };
+  engagementRate: number;
+  activeHours: number[];
+}
+
+/** Simplified segment for analyzer input/output. */
+interface AnalyzerSegment {
+  name: string;
+  size: number;
+  platforms: SocialPlatform[];
+  engagementRate: number;
+  demographics: {
+    primaryAgeGroup: string;
+    topInterests: string[];
+    topLocations: string[];
+  };
+  behavior: {
+    peakActivityHours: number[];
+    preferredContentType: string;
+    avgSessionDuration: number;
+  };
+}
+
+/** Simplified persona for analyzer output. */
+interface AnalyzerPersona {
+  name: string;
+  description: string;
+  interests: string[];
+  engagementStyle: string;
+  motivations: string[];
+  painPoints: string[];
+  preferredPlatforms: SocialPlatform[];
+  estimatedSize: number;
+}
+
 /** Helper to create audience data for a platform. */
-function makeAudienceData(platform: Platform, overrides: Partial<AudienceData> = {}): AudienceData {
+function makeAudienceData(
+  platform: SocialPlatform,
+  overrides: Partial<AudienceData> = {}
+): AudienceData {
   return {
     platform,
     followers: 10000,
@@ -38,7 +88,7 @@ function makeAudienceData(platform: Platform, overrides: Partial<AudienceData> =
 }
 
 /** Helper to create a segment result. */
-function makeSegment(name: string, overrides: Partial<AudienceSegment> = {}): AudienceSegment {
+function makeSegment(name: string, overrides: Partial<AnalyzerSegment> = {}): AnalyzerSegment {
   return {
     name,
     size: 5000,
@@ -82,7 +132,7 @@ describe('AudienceAnalyzer', () => {
             topInterests: ['news', 'family', 'religion'],
           },
         }),
-        makeAudienceData('linkedin', {
+        makeAudienceData('youtube', {
           followers: 8000,
           engagementRate: 0.045,
           demographics: {
@@ -160,7 +210,7 @@ describe('AudienceAnalyzer', () => {
         },
       });
 
-      const olderProfessional = makeAudienceData('linkedin', {
+      const olderProfessional = makeAudienceData('youtube', {
         followers: 15000,
         demographics: {
           ageGroups: [
@@ -187,7 +237,7 @@ describe('AudienceAnalyzer', () => {
   describe('detectAudienceOverlap', () => {
     it('should detect overlap between similar audiences', () => {
       const audienceA = makeAudienceData('twitter');
-      const audienceB = makeAudienceData('linkedin', {
+      const audienceB = makeAudienceData('youtube', {
         demographics: {
           ageGroups: [
             { range: '18-24', percentage: 0.2 },
@@ -228,7 +278,7 @@ describe('AudienceAnalyzer', () => {
         },
       });
 
-      const seniorProfessional = makeAudienceData('linkedin', {
+      const seniorProfessional = makeAudienceData('reddit', {
         demographics: {
           ageGroups: [
             { range: '18-24', percentage: 0.02 },
@@ -347,14 +397,14 @@ describe('AudienceAnalyzer', () => {
   // -------------------------------------------------------------------------
   describe('matchPersonaToNarrative', () => {
     it('should score high match for aligned persona and narrative', () => {
-      const persona: AudiencePersona = {
+      const persona: AnalyzerPersona = {
         name: 'Tech Entrepreneur',
         description: 'Young tech-savvy founder interested in AI and innovation',
         interests: ['technology', 'AI', 'startups', 'innovation'],
         engagementStyle: 'active-sharer',
         motivations: ['staying ahead of trends', 'networking'],
         painPoints: ['information overload', 'finding reliable tech news'],
-        preferredPlatforms: ['twitter', 'linkedin'],
+        preferredPlatforms: ['twitter', 'youtube'],
         estimatedSize: 5000,
       };
 
@@ -375,7 +425,7 @@ describe('AudienceAnalyzer', () => {
     });
 
     it('should score low for mismatched persona and narrative', () => {
-      const persona: AudiencePersona = {
+      const persona: AnalyzerPersona = {
         name: 'Rural Farmer',
         description: 'Traditional farmer interested in agriculture and local news',
         interests: ['agriculture', 'weather', 'local-news', 'farming'],
@@ -397,7 +447,7 @@ describe('AudienceAnalyzer', () => {
     });
 
     it('should return medium score for partially relevant narrative', () => {
-      const persona: AudiencePersona = {
+      const persona: AnalyzerPersona = {
         name: 'SME Owner',
         description: 'Small business owner in Jakarta',
         interests: ['business', 'finance', 'local-economy'],
@@ -420,7 +470,7 @@ describe('AudienceAnalyzer', () => {
     });
 
     it('should include predicted engagement level', () => {
-      const persona: AudiencePersona = {
+      const persona: AnalyzerPersona = {
         name: 'News Junkie',
         description: 'Active news consumer',
         interests: ['politics', 'economy', 'technology'],
@@ -444,7 +494,7 @@ describe('AudienceAnalyzer', () => {
     });
 
     it('should handle empty topic lists', () => {
-      const persona: AudiencePersona = {
+      const persona: AnalyzerPersona = {
         name: 'General',
         description: 'General audience',
         interests: [],

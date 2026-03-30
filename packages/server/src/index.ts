@@ -12,6 +12,8 @@ import { config } from './config/env.js';
 import { globalErrorHandler } from './middleware/error-handler.js';
 import { SentimentEngine } from './sentiment/sentiment-engine.js';
 import { createSentimentRoutes } from './sentiment/api/sentiment-routes.js';
+import { SocialMediaEngine } from './social/social-engine.js';
+import { createSocialRoutes } from './social/api/social-routes.js';
 import { extractNarrativeStreaming } from './extraction/streaming-extractor.js';
 import { researchTopic } from './ingestion/auto-researcher.js';
 import type { ResearchProgressCallback } from './ingestion/types.js';
@@ -166,6 +168,10 @@ app.use('/api', createKnowledgeBaseRoutes(graph));
 // --- Sentiment Engine ---
 const sentimentEngine = new SentimentEngine();
 app.use('/api/sentiment', createSentimentRoutes(sentimentEngine));
+
+// --- Social Media Intelligence Engine ---
+const socialMediaEngine = new SocialMediaEngine();
+app.use('/api/social', createSocialRoutes(socialMediaEngine));
 
 // Serve client static files in production
 if (config.NODE_ENV === 'production') {

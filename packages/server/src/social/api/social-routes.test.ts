@@ -3,7 +3,7 @@ import express from 'express';
 import { createSocialRoutes } from './social-routes.js';
 import { SocialMediaEngine } from '../social-engine.js';
 import { globalErrorHandler } from '../../middleware/error-handler.js';
-import type { Platform } from '../types.js';
+import type { SocialPlatform } from '../types.js';
 
 // ============================================================
 // LOOM — Social Media API Route Tests
@@ -184,7 +184,7 @@ describe('Social API Routes', () => {
       engine.trackAnnouncement({
         title: 'Test',
         content: 'Content',
-        platform: 'twitter' as Platform,
+        platform: 'twitter' as SocialPlatform,
         author: 'user',
         metrics: { likes: 100, shares: 20, comments: 5, views: 5000 },
       });
@@ -201,7 +201,7 @@ describe('Social API Routes', () => {
         engine.trackAnnouncement({
           title: `Announcement ${i}`,
           content: `Content ${i}`,
-          platform: 'twitter' as Platform,
+          platform: 'twitter' as SocialPlatform,
           author: 'user',
           metrics: { likes: i * 100, shares: i * 20, comments: i * 5, views: i * 5000 },
         });
@@ -219,14 +219,14 @@ describe('Social API Routes', () => {
       engine.trackAnnouncement({
         title: 'Twitter post',
         content: 'Content',
-        platform: 'twitter' as Platform,
+        platform: 'twitter' as SocialPlatform,
         author: 'user',
         metrics: { likes: 100, shares: 20, comments: 5, views: 5000 },
       });
       engine.trackAnnouncement({
         title: 'Facebook post',
         content: 'Content',
-        platform: 'facebook' as Platform,
+        platform: 'facebook' as SocialPlatform,
         author: 'user',
         metrics: { likes: 100, shares: 20, comments: 5, views: 5000 },
       });
@@ -249,7 +249,7 @@ describe('Social API Routes', () => {
       const tracked = engine.trackAnnouncement({
         title: 'Specific post',
         content: 'Content here',
-        platform: 'twitter' as Platform,
+        platform: 'twitter' as SocialPlatform,
         author: 'user',
         metrics: { likes: 100, shares: 20, comments: 5, views: 5000 },
       });
@@ -274,7 +274,7 @@ describe('Social API Routes', () => {
       const tracked = engine.trackAnnouncement({
         title: 'Engagement test',
         content: 'Content',
-        platform: 'twitter' as Platform,
+        platform: 'twitter' as SocialPlatform,
         author: 'user',
         metrics: { likes: 1000, shares: 200, comments: 50, views: 30000 },
       });
@@ -300,7 +300,7 @@ describe('Social API Routes', () => {
       const tracked = engine.trackAnnouncement({
         title: 'Quality test',
         content: 'Content',
-        platform: 'twitter' as Platform,
+        platform: 'twitter' as SocialPlatform,
         author: 'user',
         metrics: { likes: 500, shares: 100, comments: 80, views: 15000 },
       });
@@ -472,7 +472,7 @@ describe('Social API Routes', () => {
       const tracked = engine.trackAnnouncement({
         title: 'Viral post',
         content: 'This is going viral',
-        platform: 'twitter' as Platform,
+        platform: 'twitter' as SocialPlatform,
         author: 'user',
         metrics: { likes: 10000, shares: 5000, comments: 2000, views: 500000 },
       });

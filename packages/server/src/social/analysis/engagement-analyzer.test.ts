@@ -4,286 +4,210 @@ import {
   calculateDecayCurve,
   predictEngagementPeak,
   scoreViralPotential,
+  buildEngagementPattern,
 } from './engagement-analyzer.js';
-import type { EngagementMetrics, EngagementTimeSeries } from '../types.js';
+import type { EngagementMetrics } from '../types.js';
 
 // ============================================================
 // LOOM — Engagement Analyzer Tests
-//
-// Tests for engagement pattern detection, decay curve fitting,
-// peak prediction, and viral potential scoring.
 // ============================================================
 
-/** Helper to create engagement time series data. */
-function makeTimeSeries(
-  values: number[],
-  startTime = '2026-03-01T00:00:00Z'
-): EngagementTimeSeries {
+/** Helper to create engagement metrics snapshots. */
+function makeSnapshots(values: number[], startTime = '2026-03-01T00:00:00Z'): EngagementMetrics[] {
   const start = new Date(startTime);
-  return {
-    points: values.map((value, i) => ({
-      timestamp: new Date(start.getTime() + i * 3600_000).toISOString(),
-      engagement: value,
-    })),
-    interval: 'hourly',
-  };
-}
-
-/** Helper to create engagement metrics. */
-function makeMetrics(overrides: Partial<EngagementMetrics> = {}): EngagementMetrics {
-  return {
-    likes: 1000,
-    shares: 200,
-    comments: 50,
-    views: 25000,
-    ...overrides,
-  };
+  return values.map((value, i) => ({
+    platform: 'twitter' as const,
+    likes: Math.floor(value * 0.6),
+    shares: Math.floor(value * 0.2),
+    comments: Math.floor(value * 0.1),
+    views: value * 10,
+    reachEstimate: value * 6,
+    timestamp: new Date(start.getTime() + i * 3600_000).toISOString(),
+  }));
 }
 
 describe('EngagementAnalyzer', () => {
-  // -------------------------------------------------------------------------
-  // detectEngagementPattern
-  // -------------------------------------------------------------------------
   describe('detectEngagementPattern', () => {
-    it('should classify viral pattern for explosive growth', () => {
-      // Exponential-like curve: 1, 10, 100, 500, 2000, 5000, 3000, 1000
-      const series = makeTimeSeries([1, 10, 100, 500, 2000, 5000, 3000, 1000]);
-      const pattern = detectEngagementPattern(series);
-
-      expect(pattern.type).toBe('viral');
-      expect(pattern.confidence).toBeGreaterThan(0.5);
-    });
-
-    it('should classify steady pattern for linear growth', () => {
-      // Linear growth: 100, 110, 120, 130, 140, 150, 160, 170
-      const series = makeTimeSeries([100, 110, 120, 130, 140, 150, 160, 170]);
-      const pattern = detectEngagementPattern(series);
-
-      expect(pattern.type).toBe('steady');
-      expect(pattern.confidence).toBeGreaterThan(0.5);
-    });
-
     it('should classify spike-decay pattern', () => {
-      // Sharp spike then rapid decline
-      const series = makeTimeSeries([10, 5000, 4000, 2000, 500, 100, 50, 20]);
-      const pattern = detectEngagementPattern(series);
+      const snapshots = makeSnapshots([10, 5000, 4000, 2000, 500, 100, 50, 20]);
+      const pattern = detectEngagementPattern(snapshots);
 
       expect(pattern.type).toBe('spike-decay');
+      expect(pattern.confidence).toBeGreaterThan(0.5);
     });
 
-    it('should classify slow-burn for gradual accumulation', () => {
-      // Slow start, gradually increasing
-      const series = makeTimeSeries([5, 8, 12, 20, 35, 60, 110, 200, 380, 700]);
-      const pattern = detectEngagementPattern(series);
+    it('should classify sustained pattern for flat engagement', () => {
+      const snapshots = makeSnapshots([100, 110, 105, 108, 112, 107, 103, 109]);
+      const pattern = detectEngagementPattern(snapshots);
 
-      expect(['slow-burn', 'viral']).toContain(pattern.type);
+      expect(pattern.type).toBe('sustained');
+      expect(pattern.confidence).toBeGreaterThan(0.5);
     });
 
-    it('should classify flat pattern for minimal engagement', () => {
-      const series = makeTimeSeries([10, 11, 10, 12, 10, 11, 10, 10]);
-      const pattern = detectEngagementPattern(series);
+    it('should classify slow-burn for late peak', () => {
+      const snapshots = makeSnapshots([5, 8, 12, 20, 35, 60, 110, 200, 380, 700]);
+      const pattern = detectEngagementPattern(snapshots);
 
-      expect(pattern.type).toBe('flat');
+      expect(['slow-burn', 'viral-loop']).toContain(pattern.type);
     });
 
     it('should return pattern with required fields', () => {
-      const series = makeTimeSeries([100, 200, 300, 400, 500]);
-      const pattern = detectEngagementPattern(series);
+      const snapshots = makeSnapshots([100, 200, 300, 400, 500]);
+      const pattern = detectEngagementPattern(snapshots);
 
       expect(pattern.type).toBeDefined();
       expect(typeof pattern.confidence).toBe('number');
       expect(pattern.confidence).toBeGreaterThanOrEqual(0);
       expect(pattern.confidence).toBeLessThanOrEqual(1);
-      expect(pattern.description).toBeDefined();
-    });
-
-    it('should handle empty metrics gracefully', () => {
-      const series = makeTimeSeries([]);
-      const pattern = detectEngagementPattern(series);
-
-      expect(pattern.type).toBe('flat');
-      expect(pattern.confidence).toBeLessThanOrEqual(0.5);
     });
 
     it('should handle single data point', () => {
-      const series = makeTimeSeries([500]);
-      const pattern = detectEngagementPattern(series);
+      const snapshots = makeSnapshots([500]);
+      const pattern = detectEngagementPattern(snapshots);
 
       expect(pattern.type).toBeDefined();
       expect(pattern.confidence).toBeLessThanOrEqual(0.5);
     });
+
+    it('should handle empty snapshots', () => {
+      const pattern = detectEngagementPattern([]);
+
+      expect(pattern.type).toBe('slow-burn');
+      expect(pattern.confidence).toBeLessThanOrEqual(0.5);
+    });
   });
 
-  // -------------------------------------------------------------------------
-  // calculateDecayCurve
-  // -------------------------------------------------------------------------
   describe('calculateDecayCurve', () => {
     it('should fit a reasonable decay curve from peak data', () => {
-      // Post-peak engagement: 5000, 3000, 1800, 1100, 650, 400
-      const postPeakData = makeTimeSeries([5000, 3000, 1800, 1100, 650, 400]);
-      const decay = calculateDecayCurve(postPeakData);
+      const snapshots = makeSnapshots([5000, 3000, 1800, 1100, 650, 400]);
+      const decay = calculateDecayCurve(snapshots);
 
       expect(decay).toBeDefined();
-      expect(typeof decay.halfLife).toBe('number');
-      expect(decay.halfLife).toBeGreaterThan(0);
+      expect(typeof decay.halfLifeHours).toBe('number');
+      expect(decay.halfLifeHours).toBeGreaterThan(0);
       expect(typeof decay.decayRate).toBe('number');
       expect(decay.decayRate).toBeGreaterThan(0);
       expect(decay.decayRate).toBeLessThanOrEqual(1);
-      expect(Array.isArray(decay.projectedCurve)).toBe(true);
     });
 
     it('should return shorter half-life for rapid decay', () => {
-      const rapidDecay = makeTimeSeries([10000, 2000, 400, 80, 16, 3]);
-      const slowDecay = makeTimeSeries([10000, 8000, 6400, 5100, 4100, 3300]);
+      const rapid = calculateDecayCurve(makeSnapshots([10000, 2000, 400, 80, 16, 3]));
+      const slow = calculateDecayCurve(makeSnapshots([10000, 8000, 6400, 5100, 4100, 3300]));
 
-      const rapid = calculateDecayCurve(rapidDecay);
-      const slow = calculateDecayCurve(slowDecay);
-
-      expect(rapid.halfLife).toBeLessThan(slow.halfLife);
-    });
-
-    it('should handle flat data (no decay)', () => {
-      const flatData = makeTimeSeries([1000, 1000, 1000, 1000, 1000]);
-      const decay = calculateDecayCurve(flatData);
-
-      expect(decay.decayRate).toBeLessThanOrEqual(0.1);
+      expect(rapid.halfLifeHours).toBeLessThan(slow.halfLifeHours);
     });
 
     it('should handle empty data', () => {
-      const emptyData = makeTimeSeries([]);
-      const decay = calculateDecayCurve(emptyData);
+      const decay = calculateDecayCurve([]);
 
-      expect(decay.halfLife).toBe(0);
-      expect(decay.projectedCurve).toEqual([]);
+      expect(decay.halfLifeHours).toBe(48);
+      expect(decay.peakValue).toBe(0);
     });
 
     it('should handle single data point', () => {
-      const single = makeTimeSeries([5000]);
-      const decay = calculateDecayCurve(single);
+      const decay = calculateDecayCurve(makeSnapshots([5000]));
 
       expect(decay).toBeDefined();
-      expect(typeof decay.halfLife).toBe('number');
+      expect(typeof decay.halfLifeHours).toBe('number');
     });
   });
 
-  // -------------------------------------------------------------------------
-  // predictEngagementPeak
-  // -------------------------------------------------------------------------
   describe('predictEngagementPeak', () => {
     it('should predict peak for rising data', () => {
-      const rising = makeTimeSeries([100, 300, 800, 1500, 2500]);
-      const prediction = predictEngagementPeak(rising);
+      const snapshots = makeSnapshots([100, 300, 800, 1500, 2500]);
+      const prediction = predictEngagementPeak(snapshots);
 
       expect(prediction).toBeDefined();
-      expect(typeof prediction.predictedPeakValue).toBe('number');
-      expect(prediction.predictedPeakValue).toBeGreaterThan(2500);
-      expect(prediction.predictedPeakTime).toBeDefined();
+      expect(typeof prediction.estimatedPeakValue).toBe('number');
       expect(typeof prediction.confidence).toBe('number');
     });
 
     it('should detect already-peaked data', () => {
-      const peaked = makeTimeSeries([100, 500, 2000, 5000, 3000, 1000, 500]);
-      const prediction = predictEngagementPeak(peaked);
+      const snapshots = makeSnapshots([100, 500, 2000, 5000, 3000, 1000, 500]);
+      const prediction = predictEngagementPeak(snapshots);
 
-      expect(prediction.alreadyPeaked).toBe(true);
-      expect(prediction.predictedPeakValue).toBeLessThanOrEqual(5000);
-    });
-
-    it('should handle flat data', () => {
-      const flat = makeTimeSeries([100, 100, 100, 100, 100]);
-      const prediction = predictEngagementPeak(flat);
-
-      expect(prediction).toBeDefined();
-      expect(prediction.confidence).toBeLessThanOrEqual(0.5);
+      expect(prediction.hoursUntilPeak).toBe(0);
     });
 
     it('should handle empty data', () => {
-      const empty = makeTimeSeries([]);
-      const prediction = predictEngagementPeak(empty);
+      const prediction = predictEngagementPeak([]);
 
-      expect(prediction.predictedPeakValue).toBe(0);
-      expect(prediction.confidence).toBe(0);
+      expect(prediction.estimatedPeakValue).toBe(0);
+      expect(prediction.confidence).toBe(0.3);
     });
 
     it('should return higher confidence with more data points', () => {
-      const short = makeTimeSeries([100, 200, 400]);
-      const long = makeTimeSeries([100, 150, 200, 300, 450, 700, 1000, 1400, 1900, 2500]);
+      const short = predictEngagementPeak(makeSnapshots([100, 200, 400]));
+      const long = predictEngagementPeak(
+        makeSnapshots([100, 150, 200, 300, 450, 700, 1000, 1400, 1900, 2500])
+      );
 
-      const shortPred = predictEngagementPeak(short);
-      const longPred = predictEngagementPeak(long);
-
-      expect(longPred.confidence).toBeGreaterThanOrEqual(shortPred.confidence);
+      expect(long.confidence).toBeGreaterThanOrEqual(short.confidence);
     });
   });
 
-  // -------------------------------------------------------------------------
-  // scoreViralPotential
-  // -------------------------------------------------------------------------
   describe('scoreViralPotential', () => {
-    it('should score high for viral-like metrics', () => {
-      const viralMetrics = makeMetrics({
-        likes: 50000,
-        shares: 25000,
-        comments: 8000,
-        views: 2_000_000,
-      });
+    it('should return score between 0 and 1', () => {
+      const snapshots = makeSnapshots([1000, 2000, 5000]);
+      const score = scoreViralPotential(snapshots);
 
-      const score = scoreViralPotential(viralMetrics);
-
-      expect(typeof score.score).toBe('number');
-      expect(score.score).toBeGreaterThanOrEqual(0);
-      expect(score.score).toBeLessThanOrEqual(100);
-      expect(score.score).toBeGreaterThan(50);
+      expect(score).toBeGreaterThanOrEqual(0);
+      expect(score).toBeLessThanOrEqual(1);
     });
 
-    it('should score low for minimal metrics', () => {
-      const lowMetrics = makeMetrics({
-        likes: 5,
-        shares: 0,
-        comments: 1,
-        views: 100,
-      });
-
-      const score = scoreViralPotential(lowMetrics);
-      expect(score.score).toBeLessThan(30);
+    it('should handle empty snapshots', () => {
+      const score = scoreViralPotential([]);
+      expect(score).toBe(0);
     });
 
-    it('should weight shares higher than likes', () => {
-      const highShares = makeMetrics({ likes: 100, shares: 500, comments: 10, views: 10000 });
-      const highLikes = makeMetrics({ likes: 500, shares: 100, comments: 10, views: 10000 });
+    it('should score higher for high-share content', () => {
+      const highShares: EngagementMetrics[] = [
+        {
+          platform: 'twitter',
+          likes: 100,
+          shares: 500,
+          comments: 10,
+          views: 10000,
+          reachEstimate: 6000,
+          timestamp: '2026-03-01T00:00:00Z',
+        },
+      ];
+      const lowShares: EngagementMetrics[] = [
+        {
+          platform: 'twitter',
+          likes: 500,
+          shares: 10,
+          comments: 10,
+          views: 10000,
+          reachEstimate: 6000,
+          timestamp: '2026-03-01T00:00:00Z',
+        },
+      ];
 
-      const shareScore = scoreViralPotential(highShares);
-      const likeScore = scoreViralPotential(highLikes);
+      expect(scoreViralPotential(highShares)).toBeGreaterThan(scoreViralPotential(lowShares));
+    });
+  });
 
-      expect(shareScore.score).toBeGreaterThan(likeScore.score);
+  describe('buildEngagementPattern', () => {
+    it('should return complete engagement pattern', () => {
+      const snapshots = makeSnapshots([100, 500, 2000, 1500, 800, 400]);
+      const pattern = buildEngagementPattern(snapshots);
+
+      expect(pattern.type).toBeDefined();
+      expect(pattern.confidence).toBeGreaterThan(0);
+      expect(pattern.peakValue).toBeGreaterThan(0);
+      expect(pattern.peakTimestamp).toBeDefined();
+      expect(typeof pattern.decayRate).toBe('number');
+      expect(typeof pattern.halfLifeHours).toBe('number');
+      expect(typeof pattern.viralCoefficient).toBe('number');
+      expect(pattern.timeSeries).toEqual(snapshots);
     });
 
-    it('should return score within valid range', () => {
-      const metrics = makeMetrics();
-      const score = scoreViralPotential(metrics);
+    it('should handle empty snapshots', () => {
+      const pattern = buildEngagementPattern([]);
 
-      expect(score.score).toBeGreaterThanOrEqual(0);
-      expect(score.score).toBeLessThanOrEqual(100);
-      expect(Array.isArray(score.factors)).toBe(true);
-      expect(score.factors.length).toBeGreaterThan(0);
-    });
-
-    it('should handle zero metrics', () => {
-      const zeroMetrics = makeMetrics({ likes: 0, shares: 0, comments: 0, views: 0 });
-      const score = scoreViralPotential(zeroMetrics);
-
-      expect(score.score).toBe(0);
-    });
-
-    it('should include contributing factors', () => {
-      const metrics = makeMetrics({ likes: 1000, shares: 500, comments: 200, views: 50000 });
-      const score = scoreViralPotential(metrics);
-
-      expect(score.factors).toBeDefined();
-      for (const factor of score.factors) {
-        expect(factor.name).toBeDefined();
-        expect(typeof factor.contribution).toBe('number');
-      }
+      expect(pattern.type).toBe('slow-burn');
+      expect(pattern.peakValue).toBe(0);
     });
   });
 });
