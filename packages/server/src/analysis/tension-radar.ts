@@ -7,6 +7,7 @@ import type {
   MomentumDirection,
   TensionStatus,
 } from '../graph/types.js';
+import { createBreakdown, createVariable, type ScoreBreakdown } from './score-breakdown.js';
 
 // ============================================================
 // LOOM — Tension Radar
@@ -174,6 +175,7 @@ function analyzeSingleTension(
     cascadeScore: cascadeRisk,
   };
   const overallScore = computeCompositeScore(components);
+  const scoreBreakdown = buildScoreBreakdown(tension, components, overallScore, ctx);
 
   return {
     tensionId: tension.id,
@@ -184,7 +186,85 @@ function analyzeSingleTension(
     cascadeRisk,
     cascadeTargets,
     narrative: generateNarrative(tension, overallScore, momentum, cascadeRisk, graph),
+    scoreBreakdown,
   };
+}
+
+/**
+ * Build a full ScoreBreakdown for a tension's composite pressure score.
+ * Each variable shows the raw input, normalized score, weight, and
+ * a plain-English explanation of the math.
+ */
+function buildScoreBreakdown(
+  tension: Tension,
+  components: TensionScoringComponents,
+  overallScore: number,
+  ctx: AnalysisContext
+): ScoreBreakdown {
+  const convergenceCount = ctx.convergenceCounts.get(tension.id) || 0;
+  const momentumClamped = Math.max(0, components.momentumScore);
+
+  return createBreakdown(
+    'Tension Pressure Score',
+    overallScore,
+    'Σ(intensity×0.2 + duration×0.15 + escalation×0.2 + convergence×0.15 + momentum×0.15 + cascade×0.15)',
+    [
+      createVariable(
+        'Intensity',
+        tension.intensity,
+        components.intensityScore,
+        SCORE_WEIGHTS.intensity,
+        `Raw tension intensity from extraction (${tension.intensity.toFixed(2)} on 0-1 scale). ` +
+          'Higher values indicate more severe opposition between the parties.'
+      ),
+      createVariable(
+        'Duration Decay',
+        tension.duration,
+        components.durationScore,
+        SCORE_WEIGHTS.duration,
+        `Tension has been active for ${tension.duration} days. Uses exponential rise-then-decay ` +
+          `with half-life of ${DURATION_HALF_LIFE_DAYS} days — peaks around day ${DURATION_HALF_LIFE_DAYS}, ` +
+          'then decays as long-running tensions become "background noise".'
+      ),
+      createVariable(
+        'Escalation',
+        STATUS_SEVERITY[tension.status],
+        components.escalationScore,
+        SCORE_WEIGHTS.escalation,
+        `Current status "${tension.status}" (severity ${STATUS_SEVERITY[tension.status].toFixed(1)}). ` +
+          'Blends base severity with rate of status change over time — rapid escalation amplifies ' +
+          'the score via tanh(rate × 5) × 0.3 bonus.'
+      ),
+      createVariable(
+        'Convergence',
+        convergenceCount,
+        components.convergenceScore,
+        SCORE_WEIGHTS.convergence,
+        `${convergenceCount} other tension(s) share entities with this one. ` +
+          'Score uses diminishing returns: 1 - 1/(1 + count/2). ' +
+          'More convergence = more pressure amplification from interconnected conflicts.'
+      ),
+      createVariable(
+        'Momentum',
+        components.momentumScore,
+        momentumClamped,
+        SCORE_WEIGHTS.momentum,
+        `Momentum score ${components.momentumScore.toFixed(3)} (only positive values add pressure). ` +
+          'Computed by comparing event impact and frequency between first and second half of ' +
+          'the tension timeline. >0.15 = accelerating, <-0.15 = decaying.'
+      ),
+      createVariable(
+        'Cascade Risk',
+        components.cascadeScore,
+        components.cascadeScore,
+        SCORE_WEIGHTS.cascade,
+        `Probability (${(components.cascadeScore * 100).toFixed(1)}%) that this tension breaking ` +
+          'triggers connected tensions. Uses P(at least one) = 1 - Π(1 - pᵢ) for independent events, ' +
+          'where each pᵢ depends on entity overlap, volatility, and susceptibility.'
+      ),
+    ],
+    { minValue: 0, maxValue: 1, scoreUnit: '0-1' }
+  );
 }
 
 // ============================================================

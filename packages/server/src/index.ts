@@ -6,6 +6,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import swaggerUi from 'swagger-ui-express';
 import { TemporalGraph } from './graph/temporal-graph.js';
 import { createRoutes } from './api/routes.js';
+import { createKnowledgeBaseRoutes } from './api/knowledge-base-routes.js';
 import { swaggerSpec } from './api/swagger.js';
 import { config } from './config/env.js';
 import { globalErrorHandler } from './middleware/error-handler.js';
@@ -160,6 +161,7 @@ app.get('/api-docs/json', (_req, res) => res.json(swaggerSpec));
 
 const graph = new TemporalGraph();
 app.use('/api', createRoutes(graph, broadcast));
+app.use('/api', createKnowledgeBaseRoutes(graph));
 
 // --- Sentiment Engine ---
 const sentimentEngine = new SentimentEngine();

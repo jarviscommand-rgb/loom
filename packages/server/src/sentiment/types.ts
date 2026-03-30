@@ -6,6 +6,8 @@
 // by source credibility, and enables predictive analysis.
 // ============================================================
 
+import type { ScoreBreakdown } from '../analysis/score-breakdown.js';
+
 // --- Enums & Primitives ---
 
 /** Political leaning of a media source. */
@@ -123,6 +125,118 @@ export interface MediaSource {
   signalWeight: number;
   /** Whether this source is currently active for ingestion. */
   active: boolean;
+
+  /** Deep research profile with ownership chain, political history, etc. */
+  extendedProfile?: ExtendedSourceProfile;
+}
+
+/** Ownership chain entry for tracking media ownership structures. */
+export interface OwnershipChainEntry {
+  /** Name of the entity. */
+  entity: string;
+  /** Role in ownership structure. */
+  role: 'direct-owner' | 'parent-company' | 'ultimate-beneficiary' | 'minority-shareholder';
+  /** Ownership stake if known. */
+  stake?: string;
+  /** Year relationship began. */
+  since?: string;
+}
+
+/** Political stance during a specific administration. */
+export interface PoliticalHistoryEntry {
+  /** Time period (e.g. '2014-2019'). */
+  period: string;
+  /** Political stance during this period. */
+  stance: string;
+  /** Detailed description. */
+  details: string;
+  /** Which administration was in power. */
+  administration: string;
+}
+
+/** Notable editorial stance on a specific topic. */
+export interface EditorialStance {
+  /** Topic area. */
+  topic: string;
+  /** The editorial position. */
+  stance: string;
+  /** Specific examples of this stance. */
+  examples: string[];
+  /** Date range for this stance. */
+  dateRange?: string;
+}
+
+/** Audience demographics and reach data. */
+export interface AudienceDemographics {
+  /** Estimated monthly unique visitors/viewers. */
+  estimatedMonthlyReach: string;
+  /** Primary demographic group. */
+  primaryDemographic: string;
+  /** Geographic coverage focus. */
+  geographicFocus: string;
+  /** Platform distribution breakdown. */
+  platformBreakdown: Record<string, string>;
+}
+
+/** Record of a reliability-relevant incident. */
+export interface ReliabilityIncident {
+  /** What happened. */
+  incident: string;
+  /** When it happened. */
+  date: string;
+  /** Impact on credibility. */
+  impact: string;
+  /** How it was resolved. */
+  outcome: string;
+}
+
+/** Specific example of bias in coverage. */
+export interface BiasExample {
+  /** Topic area. */
+  topic: string;
+  /** What balanced coverage would look like. */
+  expectedCoverage: string;
+  /** What actually happened. */
+  actualCoverage: string;
+  /** Analysis of the gap. */
+  analysis: string;
+  /** When this occurred. */
+  date?: string;
+}
+
+/** Deep research profile for a media source. */
+export interface ExtendedSourceProfile {
+  /** Full ownership chain from direct owner to ultimate beneficiary. */
+  ownershipChain: OwnershipChainEntry[];
+  /** Political stance history across different administrations. */
+  politicalHistory: PoliticalHistoryEntry[];
+  /** Notable editorial positions on specific topics. */
+  editorialStances: EditorialStance[];
+  /** Audience size, demographics, and platform data. */
+  audienceDemographics: AudienceDemographics;
+  /** Track record of reliability-relevant incidents. */
+  reliabilityRecord: ReliabilityIncident[];
+  /** Specific examples of bias with analysis. */
+  biasExamples: BiasExample[];
+  /** Press freedom incidents affecting this source. */
+  pressFreedomIncidents?: Array<{
+    date: string;
+    description: string;
+    outcome: string;
+  }>;
+  /** Awards and professional recognition. */
+  awards?: Array<{
+    name: string;
+    year: string;
+    category?: string;
+  }>;
+  /** Historical context on founding. */
+  foundingContext: string;
+  /** Key milestones in the source's history. */
+  keyMilestones: Array<{
+    year: string;
+    event: string;
+  }>;
 }
 
 // --- Article Types ---
@@ -153,6 +267,8 @@ export interface SentimentScore {
   weightedScore: number;
   /** The source weight that was applied. */
   sourceWeight: number;
+  /** Full variable-level score breakdown for transparency. */
+  scoreBreakdown?: ScoreBreakdown;
 }
 
 /** Emotional sentiment type distribution. */
@@ -179,6 +295,8 @@ export interface EffectivenessAnalysis {
   noveltyFactor: number;
   /** Summary explanation. */
   explanation: string;
+  /** Full variable-level score breakdown for transparency. */
+  scoreBreakdown?: ScoreBreakdown;
 }
 
 /** Audience segment impacted by an article/event. */
@@ -232,6 +350,8 @@ export interface NarrativeImpactScore {
   percentile: number;
   /** Human-readable summary. */
   summary: string;
+  /** Full variable-level score breakdown for transparency. */
+  scoreBreakdown?: ScoreBreakdown;
 }
 
 /** An ingested and analyzed article. */

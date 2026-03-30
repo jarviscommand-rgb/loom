@@ -9,6 +9,7 @@ import type {
   SubplotInfo,
   NarrativeArchetype,
 } from '../graph/types.js';
+import { createBreakdown, createVariable, type ScoreBreakdown } from './score-breakdown.js';
 
 // ============================================================
 // LOOM — Arc Detector
@@ -75,6 +76,13 @@ function analyzeArc(arc: NarrativeArc, graph: TemporalGraph): ArcAnalysis {
     detectedPhase
   );
 
+  const healthBreakdown = buildHealthBreakdown(healthFactors, healthScore);
+  const archetypeBreakdown = buildArchetypeBreakdown(
+    sentimentTrajectory,
+    impactTrajectory,
+    archetype
+  );
+
   return {
     arcId: arc.id,
     arcName: arc.name,
@@ -89,6 +97,8 @@ function analyzeArc(arc: NarrativeArc, graph: TemporalGraph): ArcAnalysis {
     climaxConfidence,
     sentimentTrajectory,
     impactTrajectory,
+    healthBreakdown,
+    archetypeBreakdown,
   };
 }
 
@@ -571,6 +581,122 @@ function predictClimax(
     predictedClimaxDate: predictedDate.toISOString(),
     climaxConfidence: confidence,
   };
+}
+
+// ============================================================
+// Score Breakdown Builders
+// ============================================================
+
+/**
+ * Build a full ScoreBreakdown for arc health scoring.
+ * Shows how event pacing, tension progression, character development,
+ * and causal coherence contribute to the overall health score.
+ */
+function buildHealthBreakdown(factors: ArcHealthFactors, healthScore: number): ScoreBreakdown {
+  return createBreakdown(
+    'Arc Health Score',
+    healthScore,
+    'mean(eventPacing × 0.25 + tensionProgression × 0.25 + characterDevelopment × 0.25 + causalCoherence × 0.25)',
+    [
+      createVariable(
+        'Event Pacing',
+        factors.eventPacing,
+        factors.eventPacing,
+        0.25,
+        `Regularity of event timing (${factors.eventPacing.toFixed(2)}). Computed from coefficient ` +
+          'of variation of inter-event gaps: CV=0 is perfect regularity, CV≥2 is very irregular. ' +
+          'Score = 1 - CV/2, clamped to [0, 1].'
+      ),
+      createVariable(
+        'Tension Progression',
+        factors.tensionProgression,
+        factors.tensionProgression,
+        0.25,
+        `Diversity of tension states (${factors.tensionProgression.toFixed(2)}). Counts unique ` +
+          'tension statuses (simmering, escalating, critical, resolving, resolved). ' +
+          'Score = uniqueStatuses / 3, clamped to [0, 1]. More diversity = healthier progression.'
+      ),
+      createVariable(
+        'Character Development',
+        factors.characterDevelopment,
+        factors.characterDevelopment,
+        0.25,
+        `Average character appearances in events (${factors.characterDevelopment.toFixed(2)}). ` +
+          'Score = (avgAppearances - 1) / 2, clamped to [0, 1]. ' +
+          '1 appearance = underdeveloped, 3+ = well-developed.'
+      ),
+      createVariable(
+        'Causal Coherence',
+        factors.causalCoherence,
+        factors.causalCoherence,
+        0.25,
+        `Ratio of events with causal predecessors (${factors.causalCoherence.toFixed(2)}). ` +
+          'Measures how connected the causal chain is. ' +
+          '1.0 means every event (except the first) has a causal link.'
+      ),
+    ],
+    { minValue: 0, maxValue: 1, scoreUnit: '0-1' }
+  );
+}
+
+/**
+ * Build a ScoreBreakdown for archetype matching.
+ * Shows the fit score for each archetype candidate.
+ */
+function buildArchetypeBreakdown(
+  sentiment: number[],
+  impact: number[],
+  bestMatch: { type: NarrativeArchetype; confidence: number }
+): ScoreBreakdown {
+  if (sentiment.length < 3) {
+    return createBreakdown('Archetype Match', 0, 'Insufficient data (need ≥3 events)', [], {
+      minValue: 0,
+      maxValue: 1,
+      scoreUnit: '0-1 confidence',
+    });
+  }
+
+  const scores: Array<{ type: NarrativeArchetype; score: number }> = [
+    { type: 'tragedy', score: scoreTragedyFit(sentiment, impact) },
+    { type: 'comedy', score: scoreComedyFit(sentiment, impact) },
+    { type: 'heros_journey', score: scoreHerosJourneyFit(sentiment, impact) },
+    { type: 'rags_to_riches', score: scoreRagsToRichesFit(sentiment) },
+    { type: 'rebirth', score: scoreRebirthFit(sentiment) },
+    { type: 'overcoming_monster', score: scoreOvercomingMonsterFit(sentiment, impact) },
+  ];
+
+  const totalScore = scores.reduce((sum, s) => sum + s.score, 0);
+  const normalizer = totalScore > 0 ? totalScore : 1;
+
+  return createBreakdown(
+    'Archetype Match',
+    bestMatch.confidence,
+    `Best fit: "${bestMatch.type}" selected by highest score with confidence = score × 0.7 + gap × 0.3`,
+    scores.map((s) =>
+      createVariable(
+        s.type,
+        s.score,
+        clamp(s.score, 0, 1),
+        s.score / normalizer,
+        buildArchetypeDescription(s.type, s.score)
+      )
+    ),
+    { minValue: 0, maxValue: 1, scoreUnit: '0-1 confidence' }
+  );
+}
+
+/** Generate a description for an archetype fit score. */
+function buildArchetypeDescription(type: NarrativeArchetype, score: number): string {
+  const fit = score > 0.6 ? 'Strong' : score > 0.3 ? 'Moderate' : 'Weak';
+  const descriptions: Record<string, string> = {
+    tragedy: `${fit} fit. Looks for sentiment dropping from high to low with high-impact ending.`,
+    comedy: `${fit} fit. Looks for sentiment rising from low to high with declining impact.`,
+    heros_journey: `${fit} fit. Looks for mid-story sentiment dip (ordeal) followed by recovery.`,
+    rags_to_riches: `${fit} fit. Looks for monotonically increasing sentiment trend.`,
+    rebirth: `${fit} fit. Looks for a fall (sentiment drop) followed by dramatic rise.`,
+    overcoming_monster: `${fit} fit. Looks for high-impact confrontation with positive resolution.`,
+  };
+  return descriptions[type] || `${fit} fit for ${type} archetype.`;
 }
 
 // ============================================================

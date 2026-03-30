@@ -140,6 +140,9 @@ describe('Environment Validation', () => {
       process.env.NODE_ENV = 'test';
       delete process.env.OPENAI_API_KEY;
 
+      // Mock dotenv to prevent .env file from overriding our deleted key
+      vi.doMock('dotenv', () => ({ default: { config: () => ({}) } }));
+
       const { config } = await import('./env.js');
 
       expect(config.OPENAI_API_KEY).toBe('test-key');

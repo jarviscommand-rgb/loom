@@ -13,6 +13,7 @@ import type {
   GraphSnapshot,
 } from '../graph/types.js';
 import { DREAM_MODE_PROMPT } from '../extraction/prompts.js';
+import { createBreakdown, createVariable } from './score-breakdown.js';
 
 // ============================================================
 // LOOM — Dream Engine
@@ -75,6 +76,11 @@ export async function generateDreamAnalysis(
   const constraintViolations = checkConstraints(allBranches, snapshot, graph);
   validateTemporalCoherence(allBranches, snapshot);
   const interBranchDependencies = analyzeInterBranchDependencies(allBranches);
+
+  // Build probability breakdowns for each branch
+  for (const branch of allBranches) {
+    branch.probabilityBreakdown = buildDreamBreakdown(branch, constraintViolations);
+  }
 
   const metadata: DreamMetadata = {
     generationTimeMs: Date.now() - startTime,
@@ -491,6 +497,72 @@ export function analyzeInterBranchDependencies(branches: DreamBranch[]): BranchD
   }
 
   return dependencies;
+}
+
+// ============================================================
+// Score Breakdown
+// ============================================================
+
+/**
+ * Build a ScoreBreakdown for a dream branch's probability.
+ * Shows how base probability, motivation alignment, temporal coherence,
+ * and constraint satisfaction contribute to the final score.
+ */
+function buildDreamBreakdown(
+  branch: DreamBranch,
+  violations: ConstraintViolation[]
+): ReturnType<typeof createBreakdown> {
+  const motivation = branch.motivationAlignment ?? 0.5;
+  const temporal = branch.temporallyCoherent !== false ? 1.0 : 0.3;
+  const branchViolations = violations.filter((v) => v.branchId === branch.id);
+  const constraintScore =
+    branchViolations.length === 0
+      ? 1.0
+      : Math.max(0, 1 - branchViolations.reduce((sum, v) => sum + v.severity, 0));
+
+  return createBreakdown(
+    'Dream Branch Probability',
+    branch.probability,
+    'Normalized probability after softmax, adjusted by motivation alignment × temporal coherence × constraint satisfaction',
+    [
+      createVariable(
+        'Base Probability',
+        branch.probability,
+        clamp(branch.probability, 0, 1),
+        0.4,
+        `LLM-generated probability normalized via softmax to sum to 1.0 across all branches. ` +
+          `Strategy "${branch.strategy ?? 'unknown'}" guides the probability range.`
+      ),
+      createVariable(
+        'Motivation Alignment',
+        motivation,
+        clamp(motivation, 0, 1),
+        0.25,
+        `How well this branch aligns with character motivations (${(motivation * 100).toFixed(0)}%). ` +
+          'Computed by matching entity motivation keywords against the branch narrative. ' +
+          'Formula: min(keyword_matches / (motivation_words × 0.3), 1).'
+      ),
+      createVariable(
+        'Temporal Coherence',
+        temporal,
+        clamp(temporal, 0, 1),
+        0.2,
+        temporal >= 1.0
+          ? 'Branch passes temporal coherence checks — no time paradoxes or past-tense references to future events detected.'
+          : 'Branch has temporal coherence issues — references to past events or time paradoxes detected.'
+      ),
+      createVariable(
+        'Constraint Satisfaction',
+        constraintScore,
+        clamp(constraintScore, 0, 1),
+        0.15,
+        branchViolations.length === 0
+          ? 'No constraint violations — branch is consistent with established facts.'
+          : `${branchViolations.length} violation(s) found: ${branchViolations.map((v) => v.violation).join('; ')}`
+      ),
+    ],
+    { minValue: 0, maxValue: 1, scoreUnit: '0-1 probability' }
+  );
 }
 
 // ============================================================

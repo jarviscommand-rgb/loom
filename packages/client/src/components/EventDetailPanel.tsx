@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { SentimentArticle } from '../hooks/useApi';
 import { X } from 'lucide-react';
+import ScoreBreakdown from './ScoreBreakdown';
 
 interface EventDetailPanelProps {
   article: SentimentArticle;
@@ -70,13 +71,25 @@ function EmotionBar({ type, intensity }: { type: string; intensity: number }) {
   );
 }
 
+type DetailTab = 'overview' | 'breakdown' | 'audience' | 'effects';
+
 export default function EventDetailPanel({ article, onClose }: EventDetailPanelProps) {
   const [visible, setVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<DetailTab>('overview');
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
     return () => setVisible(false);
   }, [article]);
+
+  // Close with Escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   const handleClose = () => {
     setVisible(false);
@@ -84,6 +97,13 @@ export default function EventDetailPanel({ article, onClose }: EventDetailPanelP
   };
 
   const { nis, sentiment, sentimentTypes, effectiveness, audienceImpact } = article;
+
+  const tabs: { id: DetailTab; label: string }[] = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'breakdown', label: 'Score Breakdown' },
+    { id: 'audience', label: 'Audience' },
+    { id: 'effects', label: 'Effects' },
+  ];
 
   return (
     <>
@@ -132,151 +152,215 @@ export default function EventDetailPanel({ article, onClose }: EventDetailPanelP
             </p>
           </div>
 
-          {/* NIS Component Breakdown */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-            <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
-              NIS Components
-            </h4>
-            <div className="space-y-2">
-              <ProgressBar label="Sentiment Shift" value={nis.components.sentimentShift} />
-              <ProgressBar label="Source Credibility" value={nis.components.sourceCredibility} />
-              <ProgressBar label="Audience Reach" value={nis.components.audienceReach} />
-              <ProgressBar label="Impact Duration" value={nis.components.impactDuration} />
-              <ProgressBar label="Amplification" value={nis.components.amplification} />
-            </div>
+          {/* Tabs */}
+          <div className="flex gap-1 overflow-x-auto border-b border-white/10 pb-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`text-[10px] px-3 py-1.5 rounded-t transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-white/5 text-loom-accent border-b-2 border-loom-accent'
+                    : 'text-loom-muted hover:text-loom-text'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {/* Sentiment Type Radar (as bars) */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-            <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
-              Sentiment Types
-            </h4>
-            <div className="space-y-1.5">
-              {sentimentTypes
-                .sort((a, b) => b.intensity - a.intensity)
-                .map((st) => (
-                  <EmotionBar key={st.type} type={st.type} intensity={st.intensity} />
-                ))}
-            </div>
-          </div>
+          {/* Tab content */}
+          {activeTab === 'overview' && (
+            <div className="space-y-4 animate-fadeSlideIn">
+              {/* NIS Component Breakdown */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
+                  NIS Components
+                </h4>
+                <div className="space-y-2">
+                  <ProgressBar label="Sentiment Shift" value={nis.components.sentimentShift} />
+                  <ProgressBar
+                    label="Source Credibility"
+                    value={nis.components.sourceCredibility}
+                  />
+                  <ProgressBar label="Audience Reach" value={nis.components.audienceReach} />
+                  <ProgressBar label="Impact Duration" value={nis.components.impactDuration} />
+                  <ProgressBar label="Amplification" value={nis.components.amplification} />
+                </div>
+              </div>
 
-          {/* Effectiveness Analysis */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-            <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
-              Effectiveness Analysis
-            </h4>
-            <div className="space-y-2">
-              <ProgressBar label="Source Credibility" value={effectiveness.sourceCredibility} />
-              <ProgressBar label="Timing Relevance" value={effectiveness.timingRelevance} />
-              <ProgressBar label="Framing Quality" value={effectiveness.framingQuality} />
-              <ProgressBar label="Emotional Resonance" value={effectiveness.emotionalResonance} />
-              <ProgressBar label="Novelty Factor" value={effectiveness.noveltyFactor} />
-            </div>
-            <p className="text-[10px] text-loom-muted mt-2 italic font-serif">
-              {effectiveness.explanation}
-            </p>
-          </div>
+              {/* Sentiment Types */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
+                  Sentiment Types
+                </h4>
+                <div className="space-y-1.5">
+                  {sentimentTypes
+                    .sort((a, b) => b.intensity - a.intensity)
+                    .map((st) => (
+                      <EmotionBar key={st.type} type={st.type} intensity={st.intensity} />
+                    ))}
+                </div>
+              </div>
 
-          {/* Source Profile */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-            <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
-              Source Profile
-            </h4>
-            <div className="space-y-1.5 text-[11px]">
-              <div className="flex justify-between">
-                <span className="text-loom-muted">Source ID</span>
-                <span className="text-loom-text font-mono">{article.sourceId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-loom-muted">Language</span>
-                <span className="text-loom-text">{article.language}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-loom-muted">Method</span>
-                <span className="text-loom-text capitalize">{sentiment.method}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-loom-muted">Confidence</span>
-                <span className="text-loom-text font-mono">
-                  {(sentiment.confidence * 100).toFixed(0)}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-loom-muted">Weighted Score</span>
-                <span
-                  className={`font-mono ${sentiment.weightedScore > 0 ? 'text-green-400' : 'text-red-400'}`}
-                >
-                  {sentiment.weightedScore > 0 ? '+' : ''}
-                  {sentiment.weightedScore.toFixed(3)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Audience Impact */}
-          {audienceImpact.length > 0 && (
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-              <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
-                Audience Impact
-              </h4>
-              <div className="space-y-2.5">
-                {audienceImpact
-                  .sort((a, b) => b.impact - a.impact)
-                  .map((ai) => (
-                    <div key={ai.segment}>
-                      <div className="flex justify-between text-[10px] mb-0.5">
-                        <span className="text-loom-muted capitalize">
-                          {ai.segment.replace(/-/g, ' ')}
-                        </span>
-                        <span className="text-loom-text font-mono">
-                          {(ai.impact * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                      <div className="flex gap-1">
-                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-loom-calm/70 rounded-full transition-all duration-500"
-                            style={{ width: `${ai.reach * 100}%` }}
-                          />
-                        </div>
-                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-loom-accent/70 rounded-full transition-all duration-500"
-                            style={{ width: `${ai.relevance * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-1 text-[8px] text-loom-muted mt-0.5">
-                        <span className="flex-1">Reach</span>
-                        <span className="flex-1">Relevance</span>
-                      </div>
-                    </div>
-                  ))}
+              {/* Source Profile */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
+                  Source Profile
+                </h4>
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-loom-muted">Source ID</span>
+                    <span className="text-loom-text font-mono">{article.sourceId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-loom-muted">Language</span>
+                    <span className="text-loom-text">{article.language}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-loom-muted">Method</span>
+                    <span className="text-loom-text capitalize">{sentiment.method}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-loom-muted">Confidence</span>
+                    <span className="text-loom-text font-mono">
+                      {(sentiment.confidence * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-loom-muted">Weighted Score</span>
+                    <span
+                      className={`font-mono ${sentiment.weightedScore > 0 ? 'text-green-400' : 'text-red-400'}`}
+                    >
+                      {sentiment.weightedScore > 0 ? '+' : ''}
+                      {sentiment.weightedScore.toFixed(3)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Downstream Effects */}
-          {article.downstreamEffects.length > 0 && (
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-              <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
-                Downstream Effects
-              </h4>
-              <div className="space-y-2">
-                {article.downstreamEffects.map((de) => (
-                  <div key={de.effect} className="flex items-start gap-2 text-[11px]">
-                    <span
-                      className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${de.direction === 'positive' ? 'bg-green-400' : 'bg-red-400'}`}
-                    />
-                    <div>
-                      <span className="text-loom-text capitalize">
-                        {de.effect.replace(/-/g, ' ')}
-                      </span>
-                      <span className="text-loom-muted ml-1">— {de.description}</span>
-                    </div>
-                  </div>
-                ))}
+          {activeTab === 'breakdown' && (
+            <div className="space-y-3 animate-fadeSlideIn">
+              {/* NIS Score Breakdown */}
+              {nis.scoreBreakdown && (
+                <ScoreBreakdown breakdown={nis.scoreBreakdown} defaultExpanded />
+              )}
+
+              {/* Sentiment Score Breakdown */}
+              {sentiment.scoreBreakdown && <ScoreBreakdown breakdown={sentiment.scoreBreakdown} />}
+
+              {/* Effectiveness Breakdown */}
+              {effectiveness.scoreBreakdown && (
+                <ScoreBreakdown breakdown={effectiveness.scoreBreakdown} />
+              )}
+
+              {!nis.scoreBreakdown && !sentiment.scoreBreakdown && (
+                <div className="text-xs text-loom-muted text-center py-8">
+                  Score breakdowns not available for this article.
+                  <br />
+                  Re-analyze to generate full variable transparency.
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'audience' && (
+            <div className="space-y-4 animate-fadeSlideIn">
+              {/* Effectiveness */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
+                  Effectiveness Analysis
+                </h4>
+                <div className="space-y-2">
+                  <ProgressBar label="Source Credibility" value={effectiveness.sourceCredibility} />
+                  <ProgressBar label="Timing Relevance" value={effectiveness.timingRelevance} />
+                  <ProgressBar label="Framing Quality" value={effectiveness.framingQuality} />
+                  <ProgressBar
+                    label="Emotional Resonance"
+                    value={effectiveness.emotionalResonance}
+                  />
+                  <ProgressBar label="Novelty Factor" value={effectiveness.noveltyFactor} />
+                </div>
+                <p className="text-[10px] text-loom-muted mt-2 italic font-serif">
+                  {effectiveness.explanation}
+                </p>
               </div>
+
+              {/* Audience Impact */}
+              {audienceImpact.length > 0 && (
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                  <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
+                    Audience Impact
+                  </h4>
+                  <div className="space-y-2.5">
+                    {audienceImpact
+                      .sort((a, b) => b.impact - a.impact)
+                      .map((ai) => (
+                        <div key={ai.segment}>
+                          <div className="flex justify-between text-[10px] mb-0.5">
+                            <span className="text-loom-muted capitalize">
+                              {ai.segment.replace(/-/g, ' ')}
+                            </span>
+                            <span className="text-loom-text font-mono">
+                              {(ai.impact * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                          <div className="flex gap-1">
+                            <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-loom-calm/70 rounded-full transition-all duration-500"
+                                style={{ width: `${ai.reach * 100}%` }}
+                              />
+                            </div>
+                            <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-loom-accent/70 rounded-full transition-all duration-500"
+                                style={{ width: `${ai.relevance * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-1 text-[8px] text-loom-muted mt-0.5">
+                            <span className="flex-1">Reach</span>
+                            <span className="flex-1">Relevance</span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'effects' && (
+            <div className="space-y-4 animate-fadeSlideIn">
+              {article.downstreamEffects.length > 0 ? (
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                  <h4 className="text-[10px] uppercase tracking-wider text-loom-muted mb-3">
+                    Downstream Effects
+                  </h4>
+                  <div className="space-y-2">
+                    {article.downstreamEffects.map((de) => (
+                      <div key={de.effect} className="flex items-start gap-2 text-[11px]">
+                        <span
+                          className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${de.direction === 'positive' ? 'bg-green-400' : 'bg-red-400'}`}
+                        />
+                        <div>
+                          <span className="text-loom-text capitalize">
+                            {de.effect.replace(/-/g, ' ')}
+                          </span>
+                          <span className="text-loom-muted ml-1">— {de.description}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-loom-muted text-center py-8">
+                  No downstream effects predicted for this article.
+                </div>
+              )}
             </div>
           )}
         </div>

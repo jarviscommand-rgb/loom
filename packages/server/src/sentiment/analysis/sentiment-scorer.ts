@@ -14,6 +14,7 @@ import type {
   ScoringMethod,
   MediaSource,
 } from '../types.js';
+import { createBreakdown, createVariable } from '../../analysis/score-breakdown.js';
 
 // ============================================================
 // Lexicon-based sentiment (fast, no API calls)
@@ -92,6 +93,71 @@ export function computeSentimentScore(
 
   const weightedScore = lexicon.overall * sourceWeight;
 
+  const biasLabel =
+    source.biasDirection === 'pro-government'
+      ? 'pro-government'
+      : source.biasDirection === 'anti-government'
+        ? 'anti-government'
+        : 'neutral';
+
+  const unexpectedSignal =
+    aboutGovernment &&
+    ((source.biasDirection === 'pro-government' && sentimentDirection === 'negative') ||
+      (source.biasDirection === 'anti-government' && sentimentDirection === 'positive'));
+
+  const scoreBreakdown = createBreakdown(
+    'Sentiment Score',
+    clamp(weightedScore, -5, 5),
+    'overall × sourceWeight, where sourceWeight = reliability × biasMultiplier × signalWeight',
+    [
+      createVariable(
+        'Lexicon Overall',
+        lexicon.overall,
+        (lexicon.overall + 1) / 2,
+        0.3,
+        `Lexicon-based score: (positive_words - negative_words) / total_sentiment_words = ${lexicon.overall.toFixed(3)}. ` +
+          'Scans English and Bahasa Indonesia word lists (~80 words each).'
+      ),
+      createVariable(
+        'Magnitude',
+        lexicon.magnitude,
+        lexicon.magnitude,
+        0.15,
+        `Sentiment signal density: (positive + negative) / total_words = ${lexicon.magnitude.toFixed(3)}. ` +
+          'Higher magnitude means more emotionally charged text.'
+      ),
+      createVariable(
+        'Source Reliability',
+        source.reliabilityScore,
+        source.reliabilityScore,
+        0.2,
+        `${source.name} has reliability score ${source.reliabilityScore.toFixed(2)}. ` +
+          'Based on editorial standards, fact-checking track record, and independence.'
+      ),
+      createVariable(
+        'Bias Signal',
+        sourceWeight / Math.max(source.reliabilityScore * source.signalWeight, 0.01),
+        clamp(sourceWeight / 2.5, 0, 1),
+        0.2,
+        unexpectedSignal
+          ? `HIGH SIGNAL: ${biasLabel} source reporting ${sentimentDirection} sentiment about government — ` +
+              'unexpected direction amplifies weight by 2.5×.'
+          : aboutGovernment && source.biasDirection !== 'neutral'
+            ? `Expected ${sentimentDirection} sentiment from ${biasLabel} source — weight dampened to 0.5×.`
+            : `Neutral bias direction — baseline weight 1.0×.`
+      ),
+      createVariable(
+        'Confidence',
+        lexicon.confidence,
+        lexicon.confidence,
+        0.15,
+        `Scoring confidence: min(signal_words / 20, 0.7) = ${lexicon.confidence.toFixed(2)}. ` +
+          'Lexicon scoring is capped at 0.7 confidence — LLM methods can reach higher.'
+      ),
+    ],
+    { minValue: -5, maxValue: 5, scoreUnit: '-5 to 5 weighted' }
+  );
+
   return {
     overall: lexicon.overall,
     magnitude: lexicon.magnitude,
@@ -99,6 +165,7 @@ export function computeSentimentScore(
     method,
     weightedScore: clamp(weightedScore, -5, 5),
     sourceWeight,
+    scoreBreakdown,
   };
 }
 

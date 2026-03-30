@@ -130,10 +130,10 @@ function Scene({
         <EventParticle key={event.id} event={event} position={position} />
       ))}
 
-      {/* Postprocessing */}
+      {/* Postprocessing — enhanced bloom for glow effects on tension threads */}
       <EffectComposer>
-        <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={1.2} mipmapBlur />
-        <Vignette offset={0.3} darkness={0.7} />
+        <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.8} intensity={1.5} mipmapBlur />
+        <Vignette offset={0.3} darkness={0.65} />
       </EffectComposer>
 
       {/* Controls */}

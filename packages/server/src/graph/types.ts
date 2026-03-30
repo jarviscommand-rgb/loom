@@ -2,6 +2,8 @@
 // LOOM — Core Type Definitions
 // ============================================================
 
+import type { ScoreBreakdown } from '../analysis/score-breakdown.js';
+
 // --- Primitive enums ---
 
 export type EntityType = 'person' | 'company' | 'institution' | 'group' | 'concept';
@@ -15,7 +17,15 @@ export type DreamStrategy = 'conservative' | 'wild_card' | 'pattern_based';
 export type MomentumDirection = 'accelerating' | 'plateauing' | 'decaying';
 
 /** Common narrative structure archetypes. */
-export type NarrativeArchetype = 'tragedy' | 'comedy' | 'heros_journey' | 'rags_to_riches' | 'rebirth' | 'quest' | 'overcoming_monster' | 'unknown';
+export type NarrativeArchetype =
+  | 'tragedy'
+  | 'comedy'
+  | 'heros_journey'
+  | 'rags_to_riches'
+  | 'rebirth'
+  | 'quest'
+  | 'overcoming_monster'
+  | 'unknown';
 
 // --- Core graph primitives ---
 
@@ -91,6 +101,8 @@ export interface DreamBranch {
   motivationAlignment?: number;
   /** Whether this branch passes temporal coherence checks. */
   temporallyCoherent?: boolean;
+  /** Full variable-level score breakdown for probability. */
+  probabilityBreakdown?: ScoreBreakdown;
 }
 
 // --- Analysis output types ---
@@ -123,6 +135,8 @@ export interface TensionAnalysis {
   cascadeTargets: string[];
   /** Human-readable narrative summary. */
   narrative: string;
+  /** Full variable-level score breakdown for transparency. */
+  scoreBreakdown?: ScoreBreakdown;
 }
 
 /** Individual scoring components for a tension. */
@@ -167,6 +181,10 @@ export interface ArcAnalysis {
   sentimentTrajectory: number[];
   /** Impact trajectory over the arc's events. */
   impactTrajectory: number[];
+  /** Full variable-level score breakdown for health score. */
+  healthBreakdown?: ScoreBreakdown;
+  /** Full variable-level score breakdown for archetype matching. */
+  archetypeBreakdown?: ScoreBreakdown;
 }
 
 export interface ArcHealthFactors {

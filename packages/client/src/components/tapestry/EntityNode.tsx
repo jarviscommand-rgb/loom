@@ -82,11 +82,20 @@ export default function EntityNode({
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
+    // Subtle breathing float
+    const breathY = Math.sin(t * 0.5 + position[0]) * 0.15;
+    // Gentle scale pulse
+    const pulse = 1 + Math.sin(t * 0.8 + position[2] * 2) * 0.04;
+
     if (meshRef.current) {
-      meshRef.current.position.y = position[1] + Math.sin(t * 0.5 + position[0]) * 0.15;
+      meshRef.current.position.y = position[1] + breathY;
+      meshRef.current.scale.setScalar(pulse);
+      const mat = meshRef.current.material as THREE.MeshStandardMaterial;
+      mat.emissiveIntensity = 0.5 + Math.sin(t * 1.2 + position[0]) * 0.15;
     }
     if (glowRef.current) {
-      glowRef.current.position.y = position[1] + Math.sin(t * 0.5 + position[0]) * 0.15;
+      glowRef.current.position.y = position[1] + breathY;
+      glowRef.current.scale.setScalar(pulse * 1.05);
       const mat = glowRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = 0.06 + Math.sin(t * 1.5 + position[2]) * 0.03;
     }

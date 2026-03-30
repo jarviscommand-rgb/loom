@@ -18,6 +18,7 @@ import type {
   DownstreamEffect,
   MediaSource,
 } from '../types.js';
+import { createBreakdown, createVariable } from '../../analysis/score-breakdown.js';
 
 // ============================================================
 // Narrative Impact Score (NIS)
@@ -90,6 +91,56 @@ export function computeArticleNIS(
 
   const score = sentimentShift + sourceCredibility + audienceReach + impactDuration + amplification;
 
+  const scoreBreakdown = createBreakdown(
+    'Narrative Impact Score (NIS)',
+    Math.round(score * 10) / 10,
+    'NIS = sentimentShift + sourceCredibility + audienceReach + impactDuration + amplification (each 0-20, total 0-100)',
+    [
+      createVariable(
+        'Sentiment Shift',
+        Math.abs(article.sentiment.weightedScore) * article.sentiment.magnitude,
+        sentimentShift / NIS_WEIGHTS.sentimentShift,
+        0.2,
+        `min(|weightedScore| × magnitude × 20, 20) = ${sentimentShift.toFixed(1)}. ` +
+          `Raw inputs: weightedScore=${article.sentiment.weightedScore.toFixed(2)}, ` +
+          `magnitude=${article.sentiment.magnitude.toFixed(2)}.`
+      ),
+      createVariable(
+        'Source Credibility',
+        source.reliabilityScore * article.sentiment.sourceWeight,
+        sourceCredibility / NIS_WEIGHTS.sourceCredibility,
+        0.2,
+        `min(reliabilityScore × sourceWeight × 20, 20) = ${sourceCredibility.toFixed(1)}. ` +
+          `${source.name}: reliability=${source.reliabilityScore}, sourceWeight=${article.sentiment.sourceWeight.toFixed(2)}.`
+      ),
+      createVariable(
+        'Audience Reach',
+        avgReach,
+        audienceReach / NIS_WEIGHTS.audienceReach,
+        0.2,
+        `min(avgReach × 20, 20) = ${audienceReach.toFixed(1)}. ` +
+          `Average of (reach × relevance) across ${article.audienceImpact.length} audience segments.`
+      ),
+      createVariable(
+        'Impact Duration',
+        durationFactor,
+        impactDuration / NIS_WEIGHTS.impactDuration,
+        0.2,
+        `min(durationFactor × 20, 20) = ${impactDuration.toFixed(1)}. ` +
+          `durationFactor = emotionalResonance×0.4 + novelty×0.3 + framing×0.3 = ${durationFactor.toFixed(3)}.`
+      ),
+      createVariable(
+        'Amplification',
+        crossSourceCount,
+        amplification / NIS_WEIGHTS.amplification,
+        0.2,
+        `min(crossSourceCount/5, 1) × 20 = ${amplification.toFixed(1)}. ` +
+          `${crossSourceCount} source(s) covering this event (5+ = maximum amplification).`
+      ),
+    ],
+    { minValue: 0, maxValue: 100, scoreUnit: '0-100' }
+  );
+
   return {
     score: Math.round(score * 10) / 10,
     components: {
@@ -101,6 +152,7 @@ export function computeArticleNIS(
     },
     percentile: historicalPercentile ?? 0,
     summary: generateNISSummary(score, sentimentShift, sourceCredibility, amplification),
+    scoreBreakdown,
   };
 }
 
@@ -261,6 +313,59 @@ export function analyzeEffectiveness(
       ? `Key effectiveness drivers: ${topFactors.join(', ')}.`
       : 'Limited effectiveness indicators detected.';
 
+  const overallEffectiveness =
+    (sourceCredibility + timingRelevance + framingQuality + emotionalResonance + noveltyFactor) / 5;
+
+  const effectivenessBreakdown = createBreakdown(
+    'Article Effectiveness',
+    overallEffectiveness,
+    'mean(sourceCredibility, timingRelevance, framingQuality, emotionalResonance, noveltyFactor)',
+    [
+      createVariable(
+        'Source Credibility',
+        sourceCredibility,
+        sourceCredibility,
+        0.2,
+        `${source.name} reliability score: ${sourceCredibility.toFixed(2)}.`
+      ),
+      createVariable(
+        'Timing Relevance',
+        timingRelevance,
+        timingRelevance,
+        0.2,
+        isTimely
+          ? 'Well-timed release — published close to the event (0.8).'
+          : 'Not timely — published well after the event (0.3).'
+      ),
+      createVariable(
+        'Framing Quality',
+        framingQuality,
+        framingQuality,
+        0.2,
+        `Structural quality: ${framingIndicators.filter(Boolean).length}/5 indicators present ` +
+          '(quotes, substantive length, statistics, attribution, balanced framing).'
+      ),
+      createVariable(
+        'Emotional Resonance',
+        emotionalResonance,
+        emotionalResonance,
+        0.2,
+        `${emotionalHits} of ${emotionalWords.length} emotional trigger words found. ` +
+          'Score = min(hits / 5, 1). Includes crisis, outrage, hope, breakthrough, etc.'
+      ),
+      createVariable(
+        'Novelty Factor',
+        noveltyFactor,
+        noveltyFactor,
+        0.2,
+        isNovel
+          ? 'Novel information — first or early reporting on this topic (0.85).'
+          : 'Not novel — rehash of existing coverage (0.2).'
+      ),
+    ],
+    { minValue: 0, maxValue: 1, scoreUnit: '0-1' }
+  );
+
   return {
     sourceCredibility,
     timingRelevance,
@@ -268,6 +373,7 @@ export function analyzeEffectiveness(
     emotionalResonance,
     noveltyFactor,
     explanation,
+    scoreBreakdown: effectivenessBreakdown,
   };
 }
 

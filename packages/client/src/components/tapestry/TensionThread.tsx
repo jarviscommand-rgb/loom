@@ -14,7 +14,18 @@ export default function TensionThread({ from, to, intensity, status }: TensionTh
   const tubeRef = useRef<THREE.Mesh>(null);
   const particlesRef = useRef<THREE.Points>(null);
 
-  const color = status === 'critical' ? '#ef4444' : status === 'escalating' ? '#f97316' : '#eab308';
+  /** Color-code tension threads by severity:
+   *  green → yellow → orange → red → pulsing red for critical */
+  const color =
+    status === 'critical'
+      ? '#ef4444'
+      : status === 'escalating'
+        ? '#f97316'
+        : status === 'simmering'
+          ? '#eab308'
+          : status === 'resolving'
+            ? '#22c55e'
+            : '#6b7280';
 
   const { curve, tubeGeometry } = useMemo(() => {
     const mid: [number, number, number] = [

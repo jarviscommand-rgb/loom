@@ -133,7 +133,7 @@ export function createSentimentRoutes(engine: SentimentEngine): Router {
   router.get(
     '/articles/:id',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const article = engine.getArticleById(req.params.id);
+      const article = engine.getArticleById(req.params.id as string);
       if (!article) {
         throw new ValidationError('Article not found', { id: req.params.id });
       }
@@ -178,7 +178,7 @@ export function createSentimentRoutes(engine: SentimentEngine): Router {
   router.get(
     '/timeline/:entity',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const entityName = decodeURIComponent(req.params.entity);
+      const entityName = decodeURIComponent(req.params.entity as string);
       const intervalDays = parseInt(String(req.query.interval)) || 1;
 
       const timeSeries = engine.getTimeline(entityName, intervalDays);
@@ -210,9 +210,9 @@ export function createSentimentRoutes(engine: SentimentEngine): Router {
   router.get(
     '/sources/:id',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const source = engine.getSourceById(req.params.id);
+      const source = engine.getSourceById(req.params.id as string);
       if (!source) {
-        throw new ValidationError('Source not found', { id: req.params.id });
+        throw new ValidationError('Source not found', { id: req.params.id as string });
       }
       res.json(source);
     })

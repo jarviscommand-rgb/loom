@@ -337,6 +337,27 @@ export interface ArticleEntity {
 }
 
 /** Sentiment score breakdown. */
+/** Score variable in a breakdown. */
+export interface ScoreVariableData {
+  name: string;
+  rawValue: number;
+  normalizedValue: number;
+  weight: number;
+  weightedContribution: number;
+  description: string;
+}
+
+/** Universal score breakdown for any metric. */
+export interface ScoreBreakdownData {
+  metricName: string;
+  finalScore: number;
+  formula: string;
+  variables: ScoreVariableData[];
+  minValue?: number;
+  maxValue?: number;
+  scoreUnit?: string;
+}
+
 export interface SentimentScore {
   overall: number;
   magnitude: number;
@@ -344,6 +365,7 @@ export interface SentimentScore {
   method: 'llm' | 'lexicon' | 'hybrid';
   weightedScore: number;
   sourceWeight: number;
+  scoreBreakdown?: ScoreBreakdownData;
 }
 
 /** Emotional sentiment type distribution. */
@@ -361,6 +383,7 @@ export interface EffectivenessAnalysis {
   emotionalResonance: number;
   noveltyFactor: number;
   explanation: string;
+  scoreBreakdown?: ScoreBreakdownData;
 }
 
 /** Audience segment impact. */
@@ -392,6 +415,7 @@ export interface NarrativeImpactScore {
   };
   percentile: number;
   summary: string;
+  scoreBreakdown?: ScoreBreakdownData;
 }
 
 /** An ingested and analyzed article. */
