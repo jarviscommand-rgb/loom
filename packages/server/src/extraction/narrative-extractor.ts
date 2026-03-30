@@ -33,7 +33,7 @@ const FUZZY_MATCH_THRESHOLD = 0.8;
 // Types
 // ============================================================
 
-interface RawExtraction {
+export interface RawExtraction {
   characters: Array<{
     name: string;
     type: string;

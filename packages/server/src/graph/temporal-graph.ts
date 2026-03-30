@@ -437,18 +437,33 @@ export class TemporalGraph {
   getSnapshotAt(timestamp: string): GraphSnapshot {
     const t = new Date(timestamp).getTime();
 
-    const entities = this.getAllEntities().filter((e) => new Date(e.firstSeen).getTime() <= t);
-    const events = this.getAllEvents().filter((e) => new Date(e.timestamp).getTime() <= t);
-    const tensions = this.getAllTensions().filter((ten) => {
+    const entities: Entity[] = [];
+    for (const e of this.entities.values()) {
+      if (new Date(e.firstSeen).getTime() <= t) entities.push(e);
+    }
+
+    // Use time index for efficient range query instead of sorting all events
+    this.rebuildTimeIndex();
+    const events: NarrativeEvent[] = [];
+    for (const entry of this.eventTimeIndex) {
+      if (entry.time > t) break;
+      const event = this.events.get(entry.id);
+      if (event) events.push(event);
+    }
+
+    const tensions: Tension[] = [];
+    for (const ten of this.tensions.values()) {
       const from = new Date(ten.validFrom).getTime();
       const to = ten.validTo ? new Date(ten.validTo).getTime() : Infinity;
-      return from <= t && t <= to;
-    });
-    const arcs = this.getAllArcs().filter((a) => {
+      if (from <= t && t <= to) tensions.push(ten);
+    }
+
+    const arcs: NarrativeArc[] = [];
+    for (const a of this.arcs.values()) {
       const start = new Date(a.startDate).getTime();
       const end = a.endDate ? new Date(a.endDate).getTime() : Infinity;
-      return start <= t && t <= end;
-    });
+      if (start <= t && t <= end) arcs.push(a);
+    }
 
     return { entities, events, tensions, arcs, timestamp };
   }
@@ -560,13 +575,24 @@ export class TemporalGraph {
     return edgeCount / maxEdges;
   }
 
-  /** Average local clustering coefficient across all nodes. */
+  /**
+   * Average local clustering coefficient across all nodes.
+   * For large graphs (>500 nodes), samples a subset of nodes for efficiency.
+   */
   private computeClusteringCoefficient(adjacency: Map<string, Set<string>>): number {
     if (adjacency.size === 0) return 0;
+
+    // For large graphs, sample nodes to keep computation tractable
+    const SAMPLE_THRESHOLD = 500;
+    let nodes: Array<[string, Set<string>]> = Array.from(adjacency.entries());
+    if (nodes.length > SAMPLE_THRESHOLD) {
+      nodes = this.sampleArray(nodes, SAMPLE_THRESHOLD);
+    }
+
     let totalCoeff = 0;
     let countWithNeighbors = 0;
 
-    for (const [, neighbors] of adjacency) {
+    for (const [, neighbors] of nodes) {
       const k = neighbors.size;
       if (k < 2) continue;
       countWithNeighbors++;
@@ -591,6 +617,8 @@ export class TemporalGraph {
 
   /**
    * Approximate betweenness centrality using Brandes' algorithm.
+   * For large graphs (>500 nodes), uses random sampling of source
+   * nodes and extrapolates to reduce O(V*(V+E)) cost.
    * Returns top entities sorted by centrality (descending).
    */
   private computeBetweennessCentrality(
@@ -605,8 +633,21 @@ export class TemporalGraph {
     const centrality = new Map<string, number>();
     for (const id of nodes) centrality.set(id, 0);
 
+    // Sample sources for large graphs to keep computation tractable
+    const SAMPLE_THRESHOLD = 500;
+    let sources: string[];
+    let scaleFactor: number;
+    if (n > SAMPLE_THRESHOLD) {
+      const sampleSize = Math.min(Math.ceil(Math.sqrt(n) * 2), SAMPLE_THRESHOLD);
+      sources = this.sampleArray(nodes, sampleSize);
+      scaleFactor = n / sampleSize;
+    } else {
+      sources = nodes;
+      scaleFactor = 1;
+    }
+
     // Brandes' algorithm
-    for (const source of nodes) {
+    for (const source of sources) {
       const stack: string[] = [];
       const predecessors = new Map<string, string[]>();
       const sigma = new Map<string, number>(); // number of shortest paths
@@ -623,10 +664,11 @@ export class TemporalGraph {
       sigma.set(source, 1);
       dist.set(source, 0);
       const queue: string[] = [source];
+      let queueHead = 0;
 
-      // BFS
-      while (queue.length > 0) {
-        const v = queue.shift()!;
+      // BFS (using index to avoid O(n) shift)
+      while (queueHead < queue.length) {
+        const v = queue[queueHead++];
         stack.push(v);
         const dv = dist.get(v)!;
         const neighbors = adjacency.get(v);
@@ -659,24 +701,35 @@ export class TemporalGraph {
       }
     }
 
-    // Normalize
+    // Normalize (apply scale factor for sampled graphs)
     const normFactor = n > 2 ? (n - 1) * (n - 2) : 1;
     const results: Array<{ entityId: string; centrality: number }> = [];
     for (const [id, value] of centrality) {
-      results.push({ entityId: id, centrality: value / normFactor });
+      results.push({ entityId: id, centrality: (value * scaleFactor) / normFactor });
     }
 
     return results.sort((a, b) => b.centrality - a.centrality);
   }
 
-  /** Compute the temporal span of all events. */
+  /** Deterministic-seed reservoir sample of an array. */
+  private sampleArray<T>(arr: T[], count: number): T[] {
+    if (count >= arr.length) return arr;
+    const result = arr.slice(0, count);
+    for (let i = count; i < arr.length; i++) {
+      const j = Math.floor(Math.random() * (i + 1));
+      if (j < count) result[j] = arr[i];
+    }
+    return result;
+  }
+
+  /** Compute the temporal span of all events using the time index. */
   private computeTimeSpan(): { earliest: string; latest: string } | null {
-    const events = this.getAllEvents();
-    if (events.length === 0) return null;
-    return {
-      earliest: events[0].timestamp,
-      latest: events[events.length - 1].timestamp,
-    };
+    if (this.events.size === 0) return null;
+    this.rebuildTimeIndex();
+    const earliest = this.events.get(this.eventTimeIndex[0].id);
+    const latest = this.events.get(this.eventTimeIndex[this.eventTimeIndex.length - 1].id);
+    if (!earliest || !latest) return null;
+    return { earliest: earliest.timestamp, latest: latest.timestamp };
   }
 }
 

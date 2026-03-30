@@ -11,6 +11,7 @@ import { config } from './config/env.js';
 import { globalErrorHandler } from './middleware/error-handler.js';
 import { SentimentEngine } from './sentiment/sentiment-engine.js';
 import { createSentimentRoutes } from './sentiment/api/sentiment-routes.js';
+import { extractNarrativeStreaming } from './extraction/streaming-extractor.js';
 
 const app = express();
 const server = createServer(app);
@@ -22,6 +23,54 @@ const clients = new Set<WebSocket>();
 wss.on('connection', (ws) => {
   clients.add(ws);
   console.log(`[ws] Client connected (${clients.size} total)`);
+
+  ws.on('message', async (data) => {
+    try {
+      const msg = JSON.parse(data.toString()) as { type: string; text?: string };
+
+      if (msg.type === 'extract-stream') {
+        if (!msg.text || typeof msg.text !== 'string' || msg.text.trim().length === 0) {
+          ws.send(JSON.stringify({ type: 'extraction-error', error: 'Text is required' }));
+          return;
+        }
+
+        try {
+          const result = await extractNarrativeStreaming(msg.text, graph, (chunk) => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(
+                JSON.stringify({
+                  type: 'extraction-progress',
+                  stage: chunk.stage,
+                  partial: chunk.partial,
+                  done: chunk.done,
+                })
+              );
+            }
+          });
+
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'extraction-complete', result }));
+          }
+
+          // Broadcast graph update to all clients
+          broadcast({ type: 'graph-updated', data: graph.getSnapshot() });
+        } catch (err) {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(
+              JSON.stringify({
+                type: 'extraction-error',
+                error: err instanceof Error ? err.message : 'Extraction failed',
+              })
+            );
+          }
+        }
+      }
+    } catch {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'extraction-error', error: 'Invalid message format' }));
+      }
+    }
+  });
 
   ws.on('close', () => {
     clients.delete(ws);

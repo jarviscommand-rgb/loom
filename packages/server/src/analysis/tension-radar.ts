@@ -30,9 +30,9 @@ const DURATION_HALF_LIFE_DAYS = 14;
 
 /** Weight vector for the composite score. */
 const SCORE_WEIGHTS = {
-  intensity: 0.20,
+  intensity: 0.2,
   duration: 0.15,
-  escalation: 0.20,
+  escalation: 0.2,
   convergence: 0.15,
   momentum: 0.15,
   cascade: 0.15,
@@ -62,9 +62,7 @@ export function analyzeTensions(graph: TemporalGraph): TensionAnalysis[] {
   // Pre-compute shared context
   const ctx = buildAnalysisContext(graph, activeTensions);
 
-  const analyses = activeTensions.map((tension) =>
-    analyzeSingleTension(tension, ctx, graph)
-  );
+  const analyses = activeTensions.map((tension) => analyzeSingleTension(tension, ctx, graph));
 
   return analyses.sort((a, b) => b.overallScore - a.overallScore);
 }
@@ -76,6 +74,8 @@ export function analyzeTensions(graph: TemporalGraph): TensionAnalysis[] {
 interface AnalysisContext {
   /** All active tensions. */
   activeTensions: Tension[];
+  /** Tension ID → Tension for fast lookup. */
+  tensionById: Map<string, Tension>;
   /** Entity ID → set of tension IDs involving that entity. */
   entityTensionMap: Map<string, Set<string>>;
   /** Tension ID → set of entity IDs on both sides. */
@@ -87,11 +87,14 @@ interface AnalysisContext {
 }
 
 /** Build shared context that multiple tension analyses can reference. */
-function buildAnalysisContext(
-  graph: TemporalGraph,
-  activeTensions: Tension[]
-): AnalysisContext {
+function buildAnalysisContext(graph: TemporalGraph, activeTensions: Tension[]): AnalysisContext {
   const referenceTime = Date.now();
+
+  // Build tension ID → Tension index
+  const tensionById = new Map<string, Tension>();
+  for (const t of activeTensions) {
+    tensionById.set(t.id, t);
+  }
 
   // Build entity→tension mapping
   const entityTensionMap = new Map<string, Set<string>>();
@@ -139,6 +142,7 @@ function buildAnalysisContext(
 
   return {
     activeTensions,
+    tensionById,
     entityTensionMap,
     tensionEntityMap,
     convergenceCounts,
@@ -155,10 +159,21 @@ function analyzeSingleTension(
   ctx: AnalysisContext,
   graph: TemporalGraph
 ): TensionAnalysis {
-  const components = computeScoringComponents(tension, ctx, graph);
-  const overallScore = computeCompositeScore(components);
-  const momentum = detectMomentum(tension, graph);
+  // Compute expensive values once and reuse
   const { cascadeRisk, cascadeTargets } = computeCascadeRisk(tension, ctx);
+  const momentumScore = computeMomentumScore(tension, graph);
+  const momentum: MomentumDirection =
+    momentumScore > 0.15 ? 'accelerating' : momentumScore < -0.15 ? 'decaying' : 'plateauing';
+
+  const components: TensionScoringComponents = {
+    durationScore: computeDurationScore(tension),
+    escalationScore: computeEscalationScore(tension),
+    convergenceScore: computeConvergenceScore(tension, ctx),
+    intensityScore: tension.intensity,
+    momentumScore,
+    cascadeScore: cascadeRisk,
+  };
+  const overallScore = computeCompositeScore(components);
 
   return {
     tensionId: tension.id,
@@ -176,7 +191,7 @@ function analyzeSingleTension(
 // Scoring components
 // ============================================================
 
-function computeScoringComponents(
+function _computeScoringComponents(
   tension: Tension,
   ctx: AnalysisContext,
   graph: TemporalGraph
@@ -234,8 +249,7 @@ function computeEscalationScore(tension: Tension): number {
     const prevSeverity = STATUS_SEVERITY[history[i - 1].status];
     const currSeverity = STATUS_SEVERITY[history[i].status];
     const timeDeltaMs =
-      new Date(history[i].timestamp).getTime() -
-      new Date(history[i - 1].timestamp).getTime();
+      new Date(history[i].timestamp).getTime() - new Date(history[i - 1].timestamp).getTime();
     const timeDeltaDays = Math.max(timeDeltaMs / (1000 * 60 * 60 * 24), 0.1);
 
     // Positive = escalating, negative = de-escalating
@@ -300,7 +314,7 @@ function computeMomentumScore(tension: Tension, graph: TemporalGraph): number {
 // ============================================================
 
 /** Classify momentum direction from the momentum score. */
-function detectMomentum(tension: Tension, graph: TemporalGraph): MomentumDirection {
+function _detectMomentum(tension: Tension, graph: TemporalGraph): MomentumDirection {
   const score = computeMomentumScore(tension, graph);
   if (score > 0.15) return 'accelerating';
   if (score < -0.15) return 'decaying';
@@ -327,18 +341,20 @@ function computeCascadeRisk(
   const myEntities = ctx.tensionEntityMap.get(tension.id) || new Set<string>();
   const targets: Array<{ tensionId: string; risk: number }> = [];
 
-  for (const other of ctx.activeTensions) {
-    if (other.id === tension.id) continue;
-
-    const otherEntities = ctx.tensionEntityMap.get(other.id) || new Set<string>();
-
-    // Count shared entities
-    let sharedCount = 0;
-    for (const eid of myEntities) {
-      if (otherEntities.has(eid)) sharedCount++;
+  // Use entityTensionMap to find only overlapping tensions (avoids O(T^2))
+  const overlapCounts = new Map<string, number>();
+  for (const eid of myEntities) {
+    const tensionsOnEntity = ctx.entityTensionMap.get(eid);
+    if (!tensionsOnEntity) continue;
+    for (const otherId of tensionsOnEntity) {
+      if (otherId === tension.id) continue;
+      overlapCounts.set(otherId, (overlapCounts.get(otherId) || 0) + 1);
     }
+  }
 
-    if (sharedCount === 0) continue;
+  for (const [otherId, sharedCount] of overlapCounts) {
+    const other = ctx.tensionById.get(otherId);
+    if (!other) continue;
 
     // Risk based on overlap ratio and the other tension's volatility
     const overlapRatio = sharedCount / Math.max(myEntities.size, 1);
@@ -346,10 +362,13 @@ function computeCascadeRisk(
 
     // Tensions that are already escalating are more susceptible to cascade
     const susceptibility =
-      other.status === 'simmering' ? 0.8 :
-      other.status === 'escalating' ? 1.0 :
-      other.status === 'critical' ? 0.6 : // already critical, less marginal effect
-      0.3;
+      other.status === 'simmering'
+        ? 0.8
+        : other.status === 'escalating'
+          ? 1.0
+          : other.status === 'critical'
+            ? 0.6 // already critical, less marginal effect
+            : 0.3;
 
     const risk = overlapRatio * otherVolatility * susceptibility;
     if (risk > 0.05) {
@@ -361,9 +380,8 @@ function computeCascadeRisk(
 
   // Overall cascade risk = probability that at least one cascade occurs
   // P(at least one) = 1 - product(1 - p_i) for independent events
-  const cascadeRisk = targets.length > 0
-    ? 1 - targets.reduce((acc, t) => acc * (1 - t.risk), 1)
-    : 0;
+  const cascadeRisk =
+    targets.length > 0 ? 1 - targets.reduce((acc, t) => acc * (1 - t.risk), 1) : 0;
 
   return {
     cascadeRisk: clamp(cascadeRisk, 0, 1),
@@ -399,10 +417,7 @@ function generateNarrative(
   graph: TemporalGraph
 ): string {
   const urgency =
-    score > 0.8 ? 'CRITICAL' :
-    score > 0.6 ? 'HIGH' :
-    score > 0.4 ? 'ELEVATED' :
-    'DEVELOPING';
+    score > 0.8 ? 'CRITICAL' : score > 0.6 ? 'HIGH' : score > 0.4 ? 'ELEVATED' : 'DEVELOPING';
 
   const entity1 = graph.getEntity(tension.parties[0]);
   const entity2 = graph.getEntity(tension.parties[1]);
@@ -410,9 +425,11 @@ function generateNarrative(
   const name2 = entity2?.name || tension.parties[1];
 
   const momentumText =
-    momentum === 'accelerating' ? 'and accelerating' :
-    momentum === 'decaying' ? 'but losing momentum' :
-    'and holding steady';
+    momentum === 'accelerating'
+      ? 'and accelerating'
+      : momentum === 'decaying'
+        ? 'but losing momentum'
+        : 'and holding steady';
 
   const cascadeText =
     cascadeRisk > 0.5
@@ -461,9 +478,7 @@ function mean(values: number[]): number {
 }
 
 /** Compute event frequency as events per day. */
-function computeFrequency(
-  events: Array<{ timestamp: string }>
-): number {
+function computeFrequency(events: Array<{ timestamp: string }>): number {
   if (events.length < 2) return 0;
   const first = new Date(events[0].timestamp).getTime();
   const last = new Date(events[events.length - 1].timestamp).getTime();

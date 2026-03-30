@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   api,
   type GraphSnapshot,
@@ -60,6 +60,18 @@ export default function App() {
       console.error('Failed to refresh data:', err);
     }
   }, []);
+
+  const [isLoading, _setIsLoading] = useState(false);
+  const [tabTransitionKey, setTabTransitionKey] = useState(0);
+  const prevTabRef = useRef<ViewTab>(activeTab);
+
+  // Smooth tab transition
+  useEffect(() => {
+    if (prevTabRef.current !== activeTab) {
+      setTabTransitionKey((k) => k + 1);
+      prevTabRef.current = activeTab;
+    }
+  }, [activeTab]);
 
   const hasData = entities.length > 0;
 
@@ -163,7 +175,7 @@ export default function App() {
                 <div className="w-1 h-1 rounded-full bg-loom-glow" />
                 Narrative Arcs
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-2 list-stagger">
                 {arcs.map((arc) => {
                   const phaseColors: Record<string, string> = {
                     setup: 'border-blue-500/30 text-blue-400',
@@ -179,7 +191,7 @@ export default function App() {
                   return (
                     <div
                       key={arc.id}
-                      className={`border rounded-lg p-2.5 bg-loom-bg/30 transition-all duration-300 hover:bg-loom-bg/50 ${phaseColors[arc.phase] || 'border-loom-border'} ${phaseGlow[arc.phase] || ''}`}
+                      className={`arc-card border rounded-lg p-2.5 bg-loom-bg/30 transition-all duration-300 hover:bg-loom-bg/50 ${phaseColors[arc.phase] || 'border-loom-border'} ${phaseGlow[arc.phase] || ''}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-serif font-semibold text-xs">{arc.name}</span>
@@ -218,23 +230,55 @@ export default function App() {
             ))}
           </div>
 
-          {/* View content with fade transition */}
+          {/* View content with smooth transitions */}
           {topTab === 'sentiment' ? (
-            <div className="flex-1 m-4 mt-0 overflow-hidden tab-content-enter">
+            <div className="flex-1 m-4 mt-0 overflow-hidden tab-content-enter" key="sentiment">
               <SentimentDashboard />
+            </div>
+          ) : !hasData ? (
+            <div
+              className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden flex items-center justify-center tab-content-enter"
+              key="empty"
+            >
+              <div className="text-center space-y-4 max-w-sm">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-loom-accent/10 flex items-center justify-center">
+                  <Layers size={28} className="text-loom-accent/50" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-loom-text mb-1">No narrative loaded</h3>
+                  <p className="text-xs text-loom-muted leading-relaxed">
+                    Paste text to extract a narrative, or load a demo scenario from the left panel.
+                  </p>
+                </div>
+              </div>
             </div>
           ) : (
             <div
               className="flex-1 glass-panel m-4 mt-0 rounded-tl-none overflow-hidden tab-content-enter"
-              key={activeTab}
+              key={`${activeTab}-${tabTransitionKey}`}
             >
-              {activeTab === 'timeline' && <Timeline events={events} entities={entities} />}
-              {activeTab === 'network' && <NetworkGraph entities={entities} tensions={tensions} />}
-              {activeTab === 'tapestry' && (
-                <Tapestry entities={entities} events={events} tensions={tensions} />
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center space-y-3">
+                    <div className="w-8 h-8 mx-auto loading-spinner" />
+                    <p className="text-xs text-loom-muted">Analyzing narrative…</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {activeTab === 'timeline' && <Timeline events={events} entities={entities} />}
+                  {activeTab === 'network' && (
+                    <NetworkGraph entities={entities} tensions={tensions} />
+                  )}
+                  {activeTab === 'tapestry' && (
+                    <Tapestry entities={entities} events={events} tensions={tensions} />
+                  )}
+                  {activeTab === 'tension' && (
+                    <TensionRadar tensions={tensions} entities={entities} />
+                  )}
+                  {activeTab === 'dream' && <DreamTree hasData={hasData} />}
+                </>
               )}
-              {activeTab === 'tension' && <TensionRadar tensions={tensions} entities={entities} />}
-              {activeTab === 'dream' && <DreamTree hasData={hasData} />}
             </div>
           )}
         </main>

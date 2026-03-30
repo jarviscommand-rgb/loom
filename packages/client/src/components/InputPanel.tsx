@@ -1,18 +1,41 @@
 import { useState } from 'react';
 import { api } from '../hooks/useApi';
-import { BookOpen, Sparkles, Trash2, Loader2 } from 'lucide-react';
+import { useStreamingExtraction } from '../hooks/useStreamingExtraction';
+import { BookOpen, Sparkles, Trash2, Loader2, Zap } from 'lucide-react';
 
 interface InputPanelProps {
   onDataLoaded: () => void;
 }
 
+const STAGE_LABELS: Record<string, string> = {
+  entities: 'Extracting entities...',
+  events: 'Extracting events...',
+  tensions: 'Detecting tensions...',
+  arcs: 'Mapping story arcs...',
+};
+
 export default function InputPanel({ onDataLoaded }: InputPanelProps) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [useStreaming, setUseStreaming] = useState(true);
+  const streaming = useStreamingExtraction();
 
   const handleExtract = async () => {
     if (!text.trim()) return;
+
+    if (useStreaming) {
+      const result = await streaming.extract(text);
+      if (result) {
+        setStatus('Narrative extracted successfully');
+        setText('');
+        onDataLoaded();
+      } else if (streaming.error) {
+        setStatus(`Error: ${streaming.error}`);
+      }
+      return;
+    }
+
     setLoading(true);
     setStatus('Weaving narrative threads...');
     try {
@@ -26,6 +49,12 @@ export default function InputPanel({ onDataLoaded }: InputPanelProps) {
       setLoading(false);
     }
   };
+
+  const isLoading = loading || streaming.isStreaming;
+  const currentStatus =
+    streaming.isStreaming && streaming.progress
+      ? STAGE_LABELS[streaming.progress] || 'Processing...'
+      : status;
 
   const handleLoadDemo = async () => {
     setLoading(true);
@@ -63,7 +92,7 @@ export default function InputPanel({ onDataLoaded }: InputPanelProps) {
         <div className="flex gap-2">
           <button
             onClick={handleLoadDemo}
-            disabled={loading}
+            disabled={isLoading}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-loom-accent/20 text-loom-accent border border-loom-accent/30 rounded hover:bg-loom-accent/30 transition-colors disabled:opacity-50"
           >
             <BookOpen size={12} />
@@ -71,7 +100,7 @@ export default function InputPanel({ onDataLoaded }: InputPanelProps) {
           </button>
           <button
             onClick={handleReset}
-            disabled={loading}
+            disabled={isLoading}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-500/10 text-red-400 border border-red-500/20 rounded hover:bg-red-500/20 transition-colors disabled:opacity-50"
           >
             <Trash2 size={12} />
@@ -88,18 +117,36 @@ export default function InputPanel({ onDataLoaded }: InputPanelProps) {
       />
 
       <div className="flex items-center justify-between">
-        <button
-          onClick={handleExtract}
-          disabled={loading || !text.trim()}
-          className="flex items-center gap-2 px-4 py-2 bg-loom-accent text-white rounded font-medium text-sm hover:bg-loom-accent/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-          {loading ? 'Weaving...' : 'Extract Narrative'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExtract}
+            disabled={isLoading || !text.trim()}
+            className="flex items-center gap-2 px-4 py-2 bg-loom-accent text-white rounded font-medium text-sm hover:bg-loom-accent/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+            {isLoading ? 'Weaving...' : 'Extract Narrative'}
+          </button>
 
-        {status && (
-          <span className={`text-xs ${status.startsWith('Error') ? 'text-red-400' : 'text-loom-muted'}`}>
-            {status}
+          <button
+            onClick={() => setUseStreaming(!useStreaming)}
+            disabled={isLoading}
+            className={`flex items-center gap-1 px-2 py-1.5 text-xs border rounded transition-colors disabled:opacity-50 ${
+              useStreaming
+                ? 'bg-loom-accent/20 text-loom-accent border-loom-accent/30'
+                : 'bg-transparent text-loom-muted border-loom-border hover:border-loom-accent/30'
+            }`}
+            title={useStreaming ? 'Streaming mode (live progress)' : 'Standard mode (REST API)'}
+          >
+            <Zap size={10} />
+            {useStreaming ? 'Stream' : 'REST'}
+          </button>
+        </div>
+
+        {currentStatus && (
+          <span
+            className={`text-xs ${currentStatus.startsWith('Error') ? 'text-red-400' : 'text-loom-muted'}`}
+          >
+            {currentStatus}
           </span>
         )}
       </div>
