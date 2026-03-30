@@ -15,6 +15,13 @@ import type {
 // subgraph extraction, centrality, and time-windowed queries.
 // ============================================================
 
+/**
+ * In-memory temporal causal graph engine.
+ *
+ * Stores entities, events, tensions, and narrative arcs with
+ * secondary indexes for fast lookups. Supports causal chain traversal,
+ * subgraph extraction, centrality measures, and time-windowed queries.
+ */
 export class TemporalGraph {
   // --- Primary storage ---
   private entities: Map<string, Entity> = new Map();
@@ -169,9 +176,7 @@ export class TemporalGraph {
       const event = this.events.get(eid);
       if (event) result.push(event);
     }
-    return result.sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
+    return result.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }
 
   // ============================================================
@@ -317,7 +322,10 @@ export class TemporalGraph {
    * Returns all entities, events, and tensions reachable through
    * event co-participation and tension relationships.
    */
-  getSubgraphForEntity(entityId: string, maxDepth = 2): {
+  getSubgraphForEntity(
+    entityId: string,
+    maxDepth = 2
+  ): {
     entities: Entity[];
     events: NarrativeEvent[];
     tensions: Tension[];
@@ -409,7 +417,9 @@ export class TemporalGraph {
    * Rank entities by betweenness centrality.
    * Returns top entities sorted by centrality score (descending).
    */
-  getEntityImportanceRanking(topN = 10): Array<{ entityId: string; name: string; centrality: number }> {
+  getEntityImportanceRanking(
+    topN = 10
+  ): Array<{ entityId: string; name: string; centrality: number }> {
     const adjacency = this.buildEntityAdjacency();
     const centrality = this.computeBetweennessCentrality(adjacency);
     return centrality.slice(0, topN).map((c) => ({
@@ -427,12 +437,8 @@ export class TemporalGraph {
   getSnapshotAt(timestamp: string): GraphSnapshot {
     const t = new Date(timestamp).getTime();
 
-    const entities = this.getAllEntities().filter(
-      (e) => new Date(e.firstSeen).getTime() <= t
-    );
-    const events = this.getAllEvents().filter(
-      (e) => new Date(e.timestamp).getTime() <= t
-    );
+    const entities = this.getAllEntities().filter((e) => new Date(e.firstSeen).getTime() <= t);
+    const events = this.getAllEvents().filter((e) => new Date(e.timestamp).getTime() <= t);
     const tensions = this.getAllTensions().filter((ten) => {
       const from = new Date(ten.validFrom).getTime();
       const to = ten.validTo ? new Date(ten.validTo).getTime() : Infinity;
@@ -695,7 +701,7 @@ function levenshtein(a: string, b: string): number {
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       curr[j] = Math.min(
-        prev[j] + 1,     // deletion
+        prev[j] + 1, // deletion
         curr[j - 1] + 1, // insertion
         prev[j - 1] + cost // substitution
       );

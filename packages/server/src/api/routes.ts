@@ -48,6 +48,10 @@ function paginate<T>(items: T[], { limit, offset }: PaginationParams): T[] {
 // Route factory
 // ============================================================
 
+/**
+ * Create Express router with all LOOM API routes.
+ * Includes validation, pagination, rate limiting, and error handling.
+ */
 export function createRoutes(graph: TemporalGraph, broadcast: (data: unknown) => void): Router {
   const router = Router();
 

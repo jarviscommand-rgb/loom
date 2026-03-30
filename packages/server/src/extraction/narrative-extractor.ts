@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 import type { Entity, NarrativeEvent, Tension, NarrativeArc } from '../graph/types.js';
 import type { TemporalGraph } from '../graph/temporal-graph.js';
 import { NARRATIVE_EXTRACTION_PROMPT } from './prompts.js';
+import { ExtractionError } from '../errors/index.js';
 
 // ============================================================
 // LOOM — Narrative Extraction Pipeline
@@ -192,7 +193,7 @@ async function extractChunkWithRetry(openai: OpenAI, text: string): Promise<RawE
       });
 
       const content = response.choices[0]?.message?.content;
-      if (!content) throw new Error('No response from LLM');
+      if (!content) throw new ExtractionError('No response from LLM');
 
       return parseJsonResponse<RawExtraction>(content);
     } catch (error) {
@@ -205,7 +206,9 @@ async function extractChunkWithRetry(openai: OpenAI, text: string): Promise<RawE
     }
   }
 
-  throw new Error(`Extraction failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`);
+  throw new ExtractionError(
+    `Extraction failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`
+  );
 }
 
 // ============================================================
@@ -583,7 +586,7 @@ function parseJsonResponse<T>(content: string): T {
     if (match) {
       return JSON.parse(match[1]) as T;
     }
-    throw new Error('Failed to parse LLM response as JSON');
+    throw new ExtractionError('Failed to parse LLM response as JSON');
   }
 }
 

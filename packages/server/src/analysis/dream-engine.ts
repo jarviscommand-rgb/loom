@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { v4 as uuid } from 'uuid';
 import type { TemporalGraph } from '../graph/temporal-graph.js';
+import { DreamGenerationError } from '../errors/index.js';
 import type {
   DreamBranch,
   DreamAnalysis,
@@ -240,7 +241,7 @@ async function callLLMWithRetry(prompt: string): Promise<RawBranch[]> {
       });
 
       const content = response.choices[0]?.message?.content;
-      if (!content) throw new Error('No response from LLM');
+      if (!content) throw new DreamGenerationError('No response from LLM');
 
       return parseJsonResponse<RawBranch[]>(content);
     } catch (error) {
@@ -253,7 +254,7 @@ async function callLLMWithRetry(prompt: string): Promise<RawBranch[]> {
     }
   }
 
-  throw new Error(
+  throw new DreamGenerationError(
     `Dream generation failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`
   );
 }
@@ -507,7 +508,7 @@ function parseJsonResponse<T>(content: string): T {
     if (match) {
       return JSON.parse(match[1]) as T;
     }
-    throw new Error('Failed to parse dream response as JSON');
+    throw new DreamGenerationError('Failed to parse dream response as JSON');
   }
 }
 
