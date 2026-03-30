@@ -164,7 +164,7 @@ describe('NarrativeBridge', () => {
         sentiment: -0.5,
       });
 
-      bridge.linkAnnouncementToEvent('ann-south-china-sea', event.id);
+      bridge.linkAnnouncementToEvent('ann-scs-incident', event.id);
       const chain = bridge.buildFullImpactChain(event.id);
 
       expect(chain).not.toBeNull();
@@ -199,10 +199,10 @@ describe('NarrativeBridge', () => {
   describe('calculateSocialNIS', () => {
     it('should calculate social-enhanced NIS', () => {
       socialEngine.loadDemoData();
-      const nis = bridge.calculateSocialNIS('ann-south-china-sea');
+      const nis = bridge.calculateSocialNIS('ann-scs-incident');
 
       expect(nis).not.toBeNull();
-      expect(nis!.announcementId).toBe('ann-south-china-sea');
+      expect(nis!.announcementId).toBe('ann-scs-incident');
       expect(nis!.baseNIS).toBeGreaterThan(0);
       expect(nis!.socialAmplification).toBeGreaterThanOrEqual(0);
       expect(nis!.engagementQuality).toBeGreaterThanOrEqual(0);
@@ -219,8 +219,8 @@ describe('NarrativeBridge', () => {
 
     it('should give higher scores to multi-platform announcements', () => {
       socialEngine.loadDemoData();
-      // ann-south-china-sea has 4 platforms, ann-digital-tax has 2
-      const multiPlatform = bridge.calculateSocialNIS('ann-south-china-sea');
+      // ann-scs-incident has 4 platforms, ann-digital-tax has 2
+      const multiPlatform = bridge.calculateSocialNIS('ann-scs-incident');
       const fewPlatform = bridge.calculateSocialNIS('ann-digital-tax');
 
       expect(multiPlatform).not.toBeNull();

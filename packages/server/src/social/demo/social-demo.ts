@@ -1237,3 +1237,67 @@ export const DEMO_ANNOUNCEMENTS: AnnouncementTracking[] = [
     tags: ['religion', 'education', 'culture-war', 'policy'],
   },
 ];
+
+// ============================================================
+// Demo Narrative Event Links
+// ============================================================
+
+/** Pre-linked narrative event data for demo integration. */
+export interface DemoNarrativeLink {
+  /** Announcement ID. */
+  announcementId: string;
+  /** Narrative event title. */
+  eventTitle: string;
+  /** Narrative event description. */
+  eventDescription: string;
+  /** Event timestamp. */
+  eventTimestamp: string;
+  /** Event impact (0-1). */
+  eventImpact: number;
+  /** Event sentiment (-1 to 1). */
+  eventSentiment: number;
+}
+
+/** Demo links between announcements and narrative events. */
+export const DEMO_NARRATIVE_LINKS: DemoNarrativeLink[] = [
+  {
+    announcementId: 'ann-cabinet-reshuffle',
+    eventTitle: 'Cabinet Reshuffle Announcement',
+    eventDescription: 'President Prabowo announces major cabinet reshuffle affecting 6 ministries.',
+    eventTimestamp: '2025-03-15T10:00:00Z',
+    eventImpact: 0.8,
+    eventSentiment: 0.3,
+  },
+  {
+    announcementId: 'ann-free-meals',
+    eventTitle: 'Free School Meals Program Expansion',
+    eventDescription: 'Government expands free school meals program to 78 million students.',
+    eventTimestamp: '2025-03-20T08:00:00Z',
+    eventImpact: 0.75,
+    eventSentiment: 0.6,
+  },
+  {
+    announcementId: 'ann-scs-incident',
+    eventTitle: 'South China Sea Naval Confrontation',
+    eventDescription: 'Indonesian Navy confronts Chinese coast guard near Natuna Islands.',
+    eventTimestamp: '2025-04-05T00:00:00Z',
+    eventImpact: 0.92,
+    eventSentiment: -0.4,
+  },
+  {
+    announcementId: 'ann-kpk-raid',
+    eventTitle: 'KPK Anti-Corruption Operation',
+    eventDescription: 'KPK arrests sitting minister in high-profile corruption case.',
+    eventTimestamp: '2025-04-03T02:00:00Z',
+    eventImpact: 0.78,
+    eventSentiment: 0.2,
+  },
+  {
+    announcementId: 'ann-kalimantan-fires',
+    eventTitle: 'Kalimantan Forest Fire Emergency',
+    eventDescription: 'Forest fires in East Kalimantan reach critical levels.',
+    eventTimestamp: '2025-04-07T06:00:00Z',
+    eventImpact: 0.85,
+    eventSentiment: -0.6,
+  },
+];

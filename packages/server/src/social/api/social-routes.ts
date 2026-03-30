@@ -1,9 +1,6 @@
-// ============================================================
 // LOOM — Social Media Intelligence API Routes
-//
 // REST endpoints for social media tracking, audience analysis,
 // engagement patterns, and amplification chains.
-// ============================================================
 
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
@@ -11,11 +8,8 @@ import { asyncHandler } from '../../middleware/error-handler.js';
 import { validateBody } from '../../middleware/validation.js';
 import { ValidationError } from '../../errors/index.js';
 import type { SocialMediaEngine } from '../social-engine.js';
-import type { NarrativeBridge } from '../integration/narrative-bridge.js';
 
-// ============================================================
-// Request validation schemas
-// ============================================================
+// --- Request validation schemas ---
 
 const trackAnnouncementSchema = z.object({
   entityId: z.string().min(1, 'entityId is required'),
@@ -28,11 +22,6 @@ const trackAnnouncementSchema = z.object({
   tags: z.array(z.string()).default([]),
 });
 
-const linkAnnouncementSchema = z.object({
-  announcementId: z.string().min(1, 'announcementId is required'),
-  narrativeEventId: z.string().min(1, 'narrativeEventId is required'),
-});
-
 const predictReactionSchema = z.object({
   announcement: z.string().min(1, 'announcement text is required'),
   tags: z.array(z.string()).default([]),
@@ -41,9 +30,7 @@ const predictReactionSchema = z.object({
     .default(['twitter', 'instagram', 'tiktok']),
 });
 
-// ============================================================
-// Pagination helper
-// ============================================================
+// --- Pagination helper ---
 
 /** Pagination parameters. */
 interface PaginationParams {
@@ -65,9 +52,7 @@ function paginate<T>(items: T[], { limit, offset }: PaginationParams): T[] {
   return items.slice(offset, offset + limit);
 }
 
-// ============================================================
-// Route factory
-// ============================================================
+// --- Route factory ---
 
 /**
  * Create social media intelligence API routes.
@@ -75,7 +60,7 @@ function paginate<T>(items: T[], { limit, offset }: PaginationParams): T[] {
  * @param engine - The social media engine instance
  * @returns Express router with all social endpoints
  */
-export function createSocialRoutes(engine: SocialMediaEngine, bridge?: NarrativeBridge): Router {
+export function createSocialRoutes(engine: SocialMediaEngine): Router {
   const router = Router();
 
   // --- Dashboard ---
@@ -293,81 +278,6 @@ export function createSocialRoutes(engine: SocialMediaEngine, bridge?: Narrative
 
       const overlap = engine.getAudienceOverlap(entity1, entity2);
       res.json(overlap);
-    })
-  );
-
-  // --- Narrative Bridge: Link announcement to event ---
-
-  router.post(
-    '/link',
-    validateBody(linkAnnouncementSchema),
-    asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      if (!bridge) {
-        throw new ValidationError('Narrative bridge not configured');
-      }
-      const { announcementId, narrativeEventId } = req.body;
-      const link = bridge.linkAnnouncementToEvent(announcementId, narrativeEventId);
-      if (!link) {
-        throw new ValidationError('Announcement or event not found', {
-          announcementId,
-          narrativeEventId,
-        });
-      }
-      res.status(201).json(link);
-    })
-  );
-
-  // --- Narrative Bridge: Social impact for event ---
-
-  router.get(
-    '/impact/:eventId',
-    asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      if (!bridge) {
-        throw new ValidationError('Narrative bridge not configured');
-      }
-      const impact = bridge.getEventSocialImpact(req.params.eventId as string);
-      if (!impact) {
-        throw new ValidationError('No social impact data for event', {
-          eventId: req.params.eventId as string,
-        });
-      }
-      res.json(impact);
-    })
-  );
-
-  // --- Narrative Bridge: Engagement-sentiment correlation ---
-
-  router.get(
-    '/correlation/:entityId',
-    asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      if (!bridge) {
-        throw new ValidationError('Narrative bridge not configured');
-      }
-      const correlation = bridge.correlateEngagementWithSentiment(req.params.entityId as string);
-      if (!correlation) {
-        throw new ValidationError('No correlation data for entity', {
-          entityId: req.params.entityId as string,
-        });
-      }
-      res.json(correlation);
-    })
-  );
-
-  // --- Narrative Bridge: Full impact chain ---
-
-  router.get(
-    '/impact-chain/:eventId',
-    asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      if (!bridge) {
-        throw new ValidationError('Narrative bridge not configured');
-      }
-      const chain = bridge.buildFullImpactChain(req.params.eventId as string);
-      if (!chain) {
-        throw new ValidationError('No impact chain data for event', {
-          eventId: req.params.eventId as string,
-        });
-      }
-      res.json(chain);
     })
   );
 
