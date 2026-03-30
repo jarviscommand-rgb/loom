@@ -120,9 +120,11 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
   router.get(
     '/announcements/:id',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const announcement = engine.getAnnouncementById(req.params.id);
+      const announcement = engine.getAnnouncementById(req.params.id as string);
       if (!announcement) {
-        throw new ValidationError('Announcement not found', { id: req.params.id });
+        throw new ValidationError('Announcement not found', {
+          id: req.params.id as string as string,
+        });
       }
       res.json(announcement);
     })
@@ -152,9 +154,11 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
   router.get(
     '/announcements/:id/engagement',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const pattern = engine.getEngagementPattern(req.params.id);
+      const pattern = engine.getEngagementPattern(req.params.id as string);
       if (!pattern) {
-        throw new ValidationError('Announcement not found', { id: req.params.id });
+        throw new ValidationError('Announcement not found', {
+          id: req.params.id as string as string,
+        });
       }
       res.json(pattern);
     })
@@ -165,9 +169,11 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
   router.get(
     '/announcements/:id/amplification',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const chain = engine.buildAmplificationChain(req.params.id);
+      const chain = engine.buildAmplificationChain(req.params.id as string);
       if (!chain) {
-        throw new ValidationError('Announcement not found', { id: req.params.id });
+        throw new ValidationError('Announcement not found', {
+          id: req.params.id as string as string,
+        });
       }
       res.json(chain);
     })
@@ -178,8 +184,8 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
   router.get(
     '/audiences/:entityId',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const segments = engine.getAudienceSegmentation(req.params.entityId);
-      res.json({ entityId: req.params.entityId, segments });
+      const segments = engine.getAudienceSegmentation(req.params.entityId as string);
+      res.json({ entityId: req.params.entityId as string, segments });
     })
   );
 
@@ -198,9 +204,9 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
   router.get(
     '/personas/:id',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const persona = engine.getPersonaById(req.params.id);
+      const persona = engine.getPersonaById(req.params.id as string);
       if (!persona) {
-        throw new ValidationError('Persona not found', { id: req.params.id });
+        throw new ValidationError('Persona not found', { id: req.params.id as string as string });
       }
       res.json(persona);
     })
@@ -213,9 +219,14 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
     validateBody(predictReactionSchema),
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
       const { announcement, tags, platforms } = req.body;
-      const reaction = engine.predictPersonaReaction(req.params.id, announcement, tags, platforms);
+      const reaction = engine.predictPersonaReaction(
+        req.params.id as string,
+        announcement,
+        tags,
+        platforms
+      );
       if (!reaction) {
-        throw new ValidationError('Persona not found', { id: req.params.id });
+        throw new ValidationError('Persona not found', { id: req.params.id as string as string });
       }
       res.json(reaction);
     })
@@ -242,8 +253,8 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
   router.get(
     '/influencers/:entityId',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const influencers = engine.identifyInfluencers(req.params.entityId);
-      res.json({ entityId: req.params.entityId, influencers });
+      const influencers = engine.identifyInfluencers(req.params.entityId as string);
+      res.json({ entityId: req.params.entityId as string, influencers });
     })
   );
 
@@ -252,9 +263,11 @@ export function createSocialRoutes(engine: SocialMediaEngine): Router {
   router.get(
     '/cross-platform/:eventId',
     asyncHandler(async (req: Request, res: Response): Promise<void> => {
-      const analysis = engine.analyzeCrossPlatform(req.params.eventId);
+      const analysis = engine.analyzeCrossPlatform(req.params.eventId as string);
       if (!analysis) {
-        throw new ValidationError('Event not found', { eventId: req.params.eventId });
+        throw new ValidationError('Event not found', {
+          eventId: req.params.eventId as string as string,
+        });
       }
       res.json(analysis);
     })

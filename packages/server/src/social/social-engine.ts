@@ -21,7 +21,6 @@ import type {
   SocialPlatform,
   PersonaReaction,
   PlatformResponse,
-  EngagementMetrics as _EngagementMetrics,
 } from './types.js';
 import {
   DEMO_ANNOUNCEMENTS,
@@ -34,12 +33,8 @@ import {
   segmentAudience,
   detectAudienceOverlap,
   predictReaction,
-  matchPersonaToNarrative as _matchPersonaToNarrative,
 } from './analysis/audience-analyzer.js';
-import {
-  buildAmplificationChain,
-  identifyKeyAmplifiers as _identifyKeyAmplifiers,
-} from './analysis/amplification-tracker.js';
+import { buildAmplificationChain } from './analysis/amplification-tracker.js';
 
 // ============================================================
 // Social Media Engine

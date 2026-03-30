@@ -70,13 +70,13 @@ export default function AmplificationFlow({
   height = 400,
 }: AmplificationFlowProps) {
   const [hoveredNode, setHoveredNode] = useState<AmplificationNode | null>(null);
-  const [_animationPhase, _setAnimationPhase] = useState(0);
+  const [_animationPhase, setAnimationPhase] = useState(0);
 
   /* Animate flow lines */
   useEffect(() => {
     let frame: number;
     const animate = () => {
-      setAnimationPhase((prev) => (prev + 0.5) % 100);
+      setAnimationPhase((prev: number) => (prev + 0.5) % 100);
       frame = requestAnimationFrame(animate);
     };
     frame = requestAnimationFrame(animate);

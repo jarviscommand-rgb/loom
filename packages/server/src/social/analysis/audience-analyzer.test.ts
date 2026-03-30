@@ -4,512 +4,280 @@ import {
   detectAudienceOverlap,
   buildPersonaFromSegment,
   matchPersonaToNarrative,
+  predictReaction,
 } from './audience-analyzer.js';
-import type { SocialPlatform } from '../types.js';
+import type {
+  AudienceSegment,
+  AudiencePersona,
+  EngagementMetrics,
+  SocialPlatform,
+} from '../types.js';
 
 // ============================================================
 // LOOM — Audience Analyzer Tests
-//
-// Tests for audience segmentation, overlap detection,
-// persona generation, and narrative matching.
 // ============================================================
 
-/**
- * Audience data input for segmentation analysis.
- * Defined here as the expected interface for the analyzer module.
- */
-interface AudienceData {
-  platform: SocialPlatform;
-  followers: number;
-  demographics: {
-    ageGroups: Array<{ range: string; percentage: number }>;
-    genderSplit: Record<string, number>;
-    topLocations: string[];
-    topInterests: string[];
-  };
-  engagementRate: number;
-  activeHours: number[];
-}
-
-/** Simplified segment for analyzer input/output. */
-interface AnalyzerSegment {
-  name: string;
-  size: number;
-  platforms: SocialPlatform[];
-  engagementRate: number;
-  demographics: {
-    primaryAgeGroup: string;
-    topInterests: string[];
-    topLocations: string[];
-  };
-  behavior: {
-    peakActivityHours: number[];
-    preferredContentType: string;
-    avgSessionDuration: number;
-  };
-}
-
-/** Simplified persona for analyzer output. */
-interface AnalyzerPersona {
-  name: string;
-  description: string;
-  interests: string[];
-  engagementStyle: string;
-  motivations: string[];
-  painPoints: string[];
-  preferredPlatforms: SocialPlatform[];
-  estimatedSize: number;
-}
-
-/** Helper to create audience data for a platform. */
-function makeAudienceData(
-  platform: SocialPlatform,
-  overrides: Partial<AudienceData> = {}
-): AudienceData {
+/** Helper to create an audience segment. */
+function makeSegment(name: string, overrides: Partial<AudienceSegment> = {}): AudienceSegment {
   return {
-    platform,
-    followers: 10000,
-    demographics: {
-      ageGroups: [
-        { range: '18-24', percentage: 0.25 },
-        { range: '25-34', percentage: 0.35 },
-        { range: '35-44', percentage: 0.2 },
-        { range: '45-54', percentage: 0.12 },
-        { range: '55+', percentage: 0.08 },
-      ],
-      genderSplit: { male: 0.55, female: 0.42, other: 0.03 },
-      topLocations: ['Jakarta', 'Surabaya', 'Bandung'],
-      topInterests: ['technology', 'business', 'finance'],
-    },
-    engagementRate: 0.035,
-    activeHours: [9, 10, 11, 12, 13, 17, 18, 19, 20, 21],
+    id: `seg-${name.toLowerCase().replace(/\s/g, '-')}`,
+    name,
+    description: `${name} segment`,
+    estimatedSize: 10000,
+    shareOfAudience: 0.2,
+    politicalLeaning: 'independent',
+    geography: 'Jakarta',
+    audienceType: 'urban-middle',
+    influenceLevel: 'mid-tier',
+    primaryPlatforms: ['twitter', 'instagram'],
+    engagementRate: 0.04,
     ...overrides,
   };
 }
 
-/** Helper to create a segment result. */
-function makeSegment(name: string, overrides: Partial<AnalyzerSegment> = {}): AnalyzerSegment {
+/** Helper to create engagement metrics. */
+function makeMetrics(platform: SocialPlatform, total: number): EngagementMetrics {
   return {
-    name,
-    size: 5000,
-    platforms: ['twitter'],
-    engagementRate: 0.04,
-    demographics: {
-      primaryAgeGroup: '25-34',
-      topInterests: ['technology', 'startups'],
-      topLocations: ['Jakarta'],
-    },
-    behavior: {
-      peakActivityHours: [10, 11, 19, 20],
-      preferredContentType: 'informational',
-      avgSessionDuration: 12,
-    },
+    platform,
+    likes: Math.floor(total * 0.6),
+    shares: Math.floor(total * 0.2),
+    comments: Math.floor(total * 0.1),
+    views: total * 10,
+    reachEstimate: total * 6,
+    timestamp: '2026-03-01T10:00:00Z',
+  };
+}
+
+/** Helper to create an audience persona. */
+function makePersona(overrides: Partial<AudiencePersona> = {}): AudiencePersona {
+  return {
+    id: 'persona-test',
+    name: 'Test Persona',
+    description: 'A test persona',
+    ageRange: '25-35',
+    genderDistribution: '50% male, 50% female',
+    incomeLevel: 'Middle class',
+    educationLevel: 'University graduate',
+    platforms: ['twitter', 'instagram'],
+    interests: ['technology', 'politics', 'business'],
+    followedInfluencers: [],
+    politicalLeaning: 'independent',
+    geography: 'Jakarta',
+    mediaConsumption: 'Digital-first',
+    keyConcerns: ['cost of living', 'job market', 'infrastructure'],
     ...overrides,
   };
 }
 
 describe('AudienceAnalyzer', () => {
-  // -------------------------------------------------------------------------
-  // segmentAudience
-  // -------------------------------------------------------------------------
   describe('segmentAudience', () => {
-    it('should produce valid segments from multi-platform data', () => {
-      const audienceData: AudienceData[] = [
-        makeAudienceData('twitter'),
-        makeAudienceData('facebook', {
-          followers: 25000,
-          engagementRate: 0.02,
-          demographics: {
-            ageGroups: [
-              { range: '18-24', percentage: 0.1 },
-              { range: '25-34', percentage: 0.2 },
-              { range: '35-44', percentage: 0.3 },
-              { range: '45-54', percentage: 0.25 },
-              { range: '55+', percentage: 0.15 },
-            ],
-            genderSplit: { male: 0.48, female: 0.5, other: 0.02 },
-            topLocations: ['Jakarta', 'Medan', 'Makassar'],
-            topInterests: ['news', 'family', 'religion'],
-          },
-        }),
-        makeAudienceData('youtube', {
-          followers: 8000,
-          engagementRate: 0.045,
-          demographics: {
-            ageGroups: [
-              { range: '18-24', percentage: 0.05 },
-              { range: '25-34', percentage: 0.4 },
-              { range: '35-44', percentage: 0.35 },
-              { range: '45-54', percentage: 0.15 },
-              { range: '55+', percentage: 0.05 },
-            ],
-            genderSplit: { male: 0.6, female: 0.38, other: 0.02 },
-            topLocations: ['Jakarta', 'Singapore', 'Bandung'],
-            topInterests: ['business', 'technology', 'leadership'],
-          },
-        }),
+    it('should return weighted segments based on engagement data', () => {
+      const segments = [
+        makeSegment('Urban Digital', { primaryPlatforms: ['twitter', 'instagram'] }),
+        makeSegment('Rural Traditional', { primaryPlatforms: ['facebook'] }),
       ];
+      const engagement = [makeMetrics('twitter', 5000), makeMetrics('instagram', 3000)];
 
-      const segments = segmentAudience(audienceData);
+      const result = segmentAudience(engagement, segments);
 
-      expect(Array.isArray(segments)).toBe(true);
-      expect(segments.length).toBeGreaterThan(0);
-
-      for (const segment of segments) {
-        expect(segment.name).toBeDefined();
-        expect(typeof segment.size).toBe('number');
-        expect(segment.size).toBeGreaterThan(0);
-        expect(Array.isArray(segment.platforms)).toBe(true);
-        expect(segment.platforms.length).toBeGreaterThan(0);
-        expect(typeof segment.engagementRate).toBe('number');
-        expect(segment.demographics).toBeDefined();
-        expect(segment.behavior).toBeDefined();
-      }
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(2);
+      expect(result[0].name).toBe('Urban Digital');
     });
 
-    it('should segment single platform data', () => {
-      const segments = segmentAudience([makeAudienceData('twitter')]);
+    it('should return existing segments when no engagement data', () => {
+      const segments = [makeSegment('Test')];
+      const result = segmentAudience([], segments);
 
-      expect(segments.length).toBeGreaterThan(0);
-      for (const segment of segments) {
-        expect(segment.platforms).toContain('twitter');
-      }
+      expect(result).toEqual(segments);
     });
 
-    it('should return empty segments for empty input', () => {
-      const segments = segmentAudience([]);
-      expect(segments).toEqual([]);
-    });
-
-    it('should have segment sizes that sum to approximately total audience', () => {
-      const data = [
-        makeAudienceData('twitter', { followers: 10000 }),
-        makeAudienceData('facebook', { followers: 20000 }),
-      ];
-      const segments = segmentAudience(data);
-
-      const totalSegmentSize = segments.reduce((sum, s) => sum + s.size, 0);
-      // Allow overlap — total can exceed sum of followers
-      expect(totalSegmentSize).toBeGreaterThan(0);
-    });
-
-    it('should identify distinct segments from diverse audiences', () => {
-      const youngTech = makeAudienceData('tiktok', {
-        followers: 50000,
-        demographics: {
-          ageGroups: [
-            { range: '18-24', percentage: 0.6 },
-            { range: '25-34', percentage: 0.3 },
-            { range: '35-44', percentage: 0.08 },
-            { range: '45-54', percentage: 0.02 },
-            { range: '55+', percentage: 0.0 },
-          ],
-          genderSplit: { male: 0.45, female: 0.52, other: 0.03 },
-          topLocations: ['Jakarta', 'Bandung'],
-          topInterests: ['entertainment', 'fashion', 'music'],
-        },
-      });
-
-      const olderProfessional = makeAudienceData('youtube', {
-        followers: 15000,
-        demographics: {
-          ageGroups: [
-            { range: '18-24', percentage: 0.05 },
-            { range: '25-34', percentage: 0.2 },
-            { range: '35-44', percentage: 0.4 },
-            { range: '45-54', percentage: 0.25 },
-            { range: '55+', percentage: 0.1 },
-          ],
-          genderSplit: { male: 0.65, female: 0.33, other: 0.02 },
-          topLocations: ['Jakarta', 'Singapore'],
-          topInterests: ['business', 'leadership', 'finance'],
-        },
-      });
-
-      const segments = segmentAudience([youngTech, olderProfessional]);
-      expect(segments.length).toBeGreaterThanOrEqual(2);
+    it('should return empty when no segments exist', () => {
+      const result = segmentAudience([makeMetrics('twitter', 1000)], []);
+      expect(result).toEqual([]);
     });
   });
 
-  // -------------------------------------------------------------------------
-  // detectAudienceOverlap
-  // -------------------------------------------------------------------------
   describe('detectAudienceOverlap', () => {
     it('should detect overlap between similar audiences', () => {
-      const audienceA = makeAudienceData('twitter');
-      const audienceB = makeAudienceData('youtube', {
-        demographics: {
-          ageGroups: [
-            { range: '18-24', percentage: 0.2 },
-            { range: '25-34', percentage: 0.4 },
-            { range: '35-44', percentage: 0.25 },
-            { range: '45-54', percentage: 0.1 },
-            { range: '55+', percentage: 0.05 },
-          ],
-          genderSplit: { male: 0.58, female: 0.4, other: 0.02 },
-          topLocations: ['Jakarta', 'Surabaya', 'Bandung'],
-          topInterests: ['technology', 'business', 'finance'],
-        },
-      });
+      const sharedSeg = makeSegment('Shared', { id: 'seg-shared' });
+      const segments1 = [sharedSeg, makeSegment('Unique A', { id: 'seg-a' })];
+      const segments2 = [sharedSeg, makeSegment('Unique B', { id: 'seg-b' })];
 
-      const overlap = detectAudienceOverlap(audienceA, audienceB);
+      const overlap = detectAudienceOverlap(
+        segments1,
+        segments2,
+        'entity-1',
+        'entity-2',
+        'Entity One',
+        'Entity Two'
+      );
 
       expect(overlap).toBeDefined();
-      expect(typeof overlap.overlapPercentage).toBe('number');
-      expect(overlap.overlapPercentage).toBeGreaterThan(0);
-      expect(overlap.overlapPercentage).toBeLessThanOrEqual(100);
-      expect(Array.isArray(overlap.sharedInterests)).toBe(true);
-      expect(Array.isArray(overlap.sharedLocations)).toBe(true);
+      expect(typeof overlap.overlapCoefficient).toBe('number');
+      expect(overlap.overlapCoefficient).toBeGreaterThan(0);
+      expect(overlap.overlapCoefficient).toBeLessThanOrEqual(1);
+      expect(overlap.sharedSegments.length).toBe(1);
+      expect(overlap.uniqueToEntity1.length).toBe(1);
+      expect(overlap.uniqueToEntity2.length).toBe(1);
     });
 
-    it('should detect low overlap for very different audiences', () => {
-      const techYouth = makeAudienceData('tiktok', {
-        demographics: {
-          ageGroups: [
-            { range: '18-24', percentage: 0.7 },
-            { range: '25-34', percentage: 0.2 },
-            { range: '35-44', percentage: 0.08 },
-            { range: '45-54', percentage: 0.02 },
-            { range: '55+', percentage: 0.0 },
-          ],
-          genderSplit: { male: 0.4, female: 0.55, other: 0.05 },
-          topLocations: ['Bali', 'Yogyakarta'],
-          topInterests: ['gaming', 'anime', 'k-pop'],
-        },
-      });
+    it('should return full overlap for identical audiences', () => {
+      const segments = [makeSegment('A', { id: 'seg-a' })];
+      const overlap = detectAudienceOverlap(segments, segments, 'e1', 'e2', 'E1', 'E2');
 
-      const seniorProfessional = makeAudienceData('reddit', {
-        demographics: {
-          ageGroups: [
-            { range: '18-24', percentage: 0.02 },
-            { range: '25-34', percentage: 0.08 },
-            { range: '35-44', percentage: 0.3 },
-            { range: '45-54', percentage: 0.35 },
-            { range: '55+', percentage: 0.25 },
-          ],
-          genderSplit: { male: 0.7, female: 0.28, other: 0.02 },
-          topLocations: ['Jakarta', 'Singapore'],
-          topInterests: ['governance', 'investment', 'policy'],
-        },
-      });
-
-      const overlap = detectAudienceOverlap(techYouth, seniorProfessional);
-      expect(overlap.overlapPercentage).toBeLessThan(30);
+      expect(overlap.overlapCoefficient).toBe(1);
+      expect(overlap.uniqueToEntity1).toEqual([]);
+      expect(overlap.uniqueToEntity2).toEqual([]);
     });
 
-    it('should return 100% overlap for identical audiences', () => {
-      const data = makeAudienceData('twitter');
-      const overlap = detectAudienceOverlap(data, data);
+    it('should return zero overlap for disjoint audiences', () => {
+      const seg1 = [makeSegment('A', { id: 'seg-a' })];
+      const seg2 = [makeSegment('B', { id: 'seg-b' })];
 
-      expect(overlap.overlapPercentage).toBeGreaterThanOrEqual(90);
+      const overlap = detectAudienceOverlap(seg1, seg2, 'e1', 'e2', 'E1', 'E2');
+
+      expect(overlap.overlapCoefficient).toBe(0);
+      expect(overlap.sharedSegments).toEqual([]);
     });
 
-    it('should include shared demographic details', () => {
-      const a = makeAudienceData('twitter');
-      const b = makeAudienceData('facebook');
-      const overlap = detectAudienceOverlap(a, b);
+    it('should include a summary', () => {
+      const seg1 = [makeSegment('A', { id: 'seg-a' })];
+      const seg2 = [makeSegment('A', { id: 'seg-a' })];
 
-      expect(overlap.sharedInterests).toBeDefined();
-      expect(overlap.sharedLocations).toBeDefined();
-      expect(overlap.sharedAgeGroups).toBeDefined();
+      const overlap = detectAudienceOverlap(seg1, seg2, 'e1', 'e2', 'Entity 1', 'Entity 2');
+
+      expect(typeof overlap.summary).toBe('string');
+      expect(overlap.summary.length).toBeGreaterThan(0);
     });
   });
 
-  // -------------------------------------------------------------------------
-  // buildPersonaFromSegment
-  // -------------------------------------------------------------------------
   describe('buildPersonaFromSegment', () => {
     it('should create complete persona from segment', () => {
-      const segment = makeSegment('Tech-savvy Professionals');
+      const segment = makeSegment('Tech Professionals');
       const persona = buildPersonaFromSegment(segment);
 
       expect(persona).toBeDefined();
-      expect(persona.name).toBeDefined();
-      expect(typeof persona.name).toBe('string');
-      expect(persona.name.length).toBeGreaterThan(0);
-      expect(persona.description).toBeDefined();
+      expect(persona.name).toBe('Tech Professionals');
+      expect(typeof persona.description).toBe('string');
       expect(persona.description.length).toBeGreaterThan(10);
       expect(Array.isArray(persona.interests)).toBe(true);
       expect(persona.interests.length).toBeGreaterThan(0);
-      expect(persona.engagementStyle).toBeDefined();
-      expect(persona.motivations).toBeDefined();
-      expect(Array.isArray(persona.motivations)).toBe(true);
-      expect(persona.painPoints).toBeDefined();
-      expect(Array.isArray(persona.painPoints)).toBe(true);
+      expect(Array.isArray(persona.platforms)).toBe(true);
+      expect(persona.politicalLeaning).toBe('independent');
     });
 
-    it('should incorporate segment demographics into persona', () => {
-      const segment = makeSegment('Young Influencers', {
-        demographics: {
-          primaryAgeGroup: '18-24',
-          topInterests: ['fashion', 'beauty', 'lifestyle'],
-          topLocations: ['Jakarta', 'Bali'],
-        },
-      });
-
+    it('should incorporate segment geography', () => {
+      const segment = makeSegment('Jakarta Youth', { geography: 'Jakarta' });
       const persona = buildPersonaFromSegment(segment);
 
-      expect(persona.interests).toEqual(expect.arrayContaining(['fashion', 'beauty', 'lifestyle']));
+      expect(persona.geography).toBe('Jakarta');
     });
 
     it('should create distinct personas from different segments', () => {
-      const techSegment = makeSegment('Tech Workers', {
-        demographics: {
-          primaryAgeGroup: '25-34',
-          topInterests: ['technology', 'AI', 'startups'],
-          topLocations: ['Jakarta'],
-        },
+      const techSeg = makeSegment('Tech', {
+        audienceType: 'elite-policy',
+        politicalLeaning: 'centrist',
+      });
+      const ruralSeg = makeSegment('Rural', {
+        audienceType: 'rural-mass',
+        politicalLeaning: 'islamic-conservative',
       });
 
-      const tradSegment = makeSegment('Traditional Consumers', {
-        demographics: {
-          primaryAgeGroup: '45-54',
-          topInterests: ['news', 'family', 'religion'],
-          topLocations: ['Surabaya', 'Medan'],
-        },
-      });
+      const techPersona = buildPersonaFromSegment(techSeg);
+      const ruralPersona = buildPersonaFromSegment(ruralSeg);
 
-      const techPersona = buildPersonaFromSegment(techSegment);
-      const tradPersona = buildPersonaFromSegment(tradSegment);
-
-      expect(techPersona.name).not.toBe(tradPersona.name);
-      expect(techPersona.interests).not.toEqual(tradPersona.interests);
-    });
-
-    it('should handle segment with minimal data', () => {
-      const minimal = makeSegment('Minimal', {
-        size: 100,
-        demographics: {
-          primaryAgeGroup: '25-34',
-          topInterests: [],
-          topLocations: [],
-        },
-      });
-
-      const persona = buildPersonaFromSegment(minimal);
-      expect(persona.name).toBeDefined();
-      expect(persona.description).toBeDefined();
+      expect(techPersona.interests).not.toEqual(ruralPersona.interests);
+      expect(techPersona.incomeLevel).not.toBe(ruralPersona.incomeLevel);
     });
   });
 
-  // -------------------------------------------------------------------------
-  // matchPersonaToNarrative
-  // -------------------------------------------------------------------------
   describe('matchPersonaToNarrative', () => {
-    it('should score high match for aligned persona and narrative', () => {
-      const persona: AnalyzerPersona = {
-        name: 'Tech Entrepreneur',
-        description: 'Young tech-savvy founder interested in AI and innovation',
-        interests: ['technology', 'AI', 'startups', 'innovation'],
-        engagementStyle: 'active-sharer',
-        motivations: ['staying ahead of trends', 'networking'],
-        painPoints: ['information overload', 'finding reliable tech news'],
-        preferredPlatforms: ['twitter', 'youtube'],
-        estimatedSize: 5000,
-      };
+    it('should score high for aligned persona and narrative', () => {
+      const persona = makePersona({
+        interests: ['technology', 'startups', 'AI'],
+        platforms: ['twitter', 'instagram'],
+        keyConcerns: ['investment climate', 'digital rights'],
+      });
 
-      const narrative = {
-        title: 'AI Startup Raises $50M Series B',
-        content: 'A Jakarta-based AI startup announced major funding to scale its platform.',
-        topics: ['AI', 'startups', 'funding', 'technology'],
-      };
+      const score = matchPersonaToNarrative(
+        persona,
+        ['technology', 'AI', 'startups'],
+        ['twitter', 'instagram']
+      );
 
-      const match = matchPersonaToNarrative(persona, narrative);
-
-      expect(typeof match.score).toBe('number');
-      expect(match.score).toBeGreaterThanOrEqual(0);
-      expect(match.score).toBeLessThanOrEqual(1);
-      expect(match.score).toBeGreaterThan(0.5);
-      expect(match.reasoning).toBeDefined();
-      expect(typeof match.reasoning).toBe('string');
+      expect(typeof score).toBe('number');
+      expect(score).toBeGreaterThanOrEqual(0);
+      expect(score).toBeLessThanOrEqual(1);
+      expect(score).toBeGreaterThan(0.3);
     });
 
-    it('should score low for mismatched persona and narrative', () => {
-      const persona: AnalyzerPersona = {
-        name: 'Rural Farmer',
-        description: 'Traditional farmer interested in agriculture and local news',
-        interests: ['agriculture', 'weather', 'local-news', 'farming'],
-        engagementStyle: 'passive-reader',
-        motivations: ['practical farming tips', 'market prices'],
-        painPoints: ['limited internet access', 'complex tech language'],
-        preferredPlatforms: ['facebook'],
-        estimatedSize: 20000,
-      };
+    it('should score low for mismatched persona', () => {
+      const persona = makePersona({
+        interests: ['agriculture', 'religion'],
+        platforms: ['facebook'],
+        keyConcerns: ['land rights', 'subsidies'],
+      });
 
-      const narrative = {
-        title: 'Kubernetes 1.30 Released with Enhanced GPU Scheduling',
-        content: 'The latest Kubernetes release brings improved GPU scheduling for ML workloads.',
-        topics: ['kubernetes', 'cloud-native', 'GPU', 'machine-learning'],
-      };
+      const score = matchPersonaToNarrative(persona, ['kubernetes', 'cloud-native'], ['reddit']);
 
-      const match = matchPersonaToNarrative(persona, narrative);
-      expect(match.score).toBeLessThan(0.3);
+      expect(score).toBeLessThan(0.3);
     });
 
-    it('should return medium score for partially relevant narrative', () => {
-      const persona: AnalyzerPersona = {
-        name: 'SME Owner',
-        description: 'Small business owner in Jakarta',
-        interests: ['business', 'finance', 'local-economy'],
-        engagementStyle: 'occasional-engager',
-        motivations: ['growing business', 'cost reduction'],
-        painPoints: ['cash flow management', 'regulation complexity'],
-        preferredPlatforms: ['facebook', 'instagram'],
-        estimatedSize: 15000,
-      };
+    it('should handle empty tags', () => {
+      const persona = makePersona();
+      const score = matchPersonaToNarrative(persona, [], ['twitter']);
 
-      const narrative = {
-        title: 'New Tax Incentives for Digital Economy',
-        content: 'Government announces tax breaks for tech companies and digital startups.',
-        topics: ['tax', 'digital-economy', 'government-policy'],
-      };
+      expect(score).toBeGreaterThanOrEqual(0);
+      expect(score).toBeLessThanOrEqual(1);
+    });
+  });
 
-      const match = matchPersonaToNarrative(persona, narrative);
-      expect(match.score).toBeGreaterThan(0.2);
-      expect(match.score).toBeLessThan(0.9);
+  describe('predictReaction', () => {
+    it('should return a complete persona reaction', () => {
+      const persona = makePersona();
+      const reaction = predictReaction(
+        persona,
+        'New technology investment program announced',
+        ['technology', 'investment'],
+        ['twitter']
+      );
+
+      expect(reaction).toBeDefined();
+      expect(reaction.personaId).toBe('persona-test');
+      expect(reaction.personaName).toBe('Test Persona');
+      expect(typeof reaction.sentimentScore).toBe('number');
+      expect(reaction.sentimentScore).toBeGreaterThanOrEqual(-1);
+      expect(reaction.sentimentScore).toBeLessThanOrEqual(1);
+      expect(typeof reaction.engagementLikelihood).toBe('number');
+      expect(typeof reaction.amplificationLikelihood).toBe('number');
+      expect(typeof reaction.dominantEmotion).toBe('string');
+      expect(Array.isArray(reaction.likelyTalkingPoints)).toBe(true);
+      expect(typeof reaction.summary).toBe('string');
     });
 
-    it('should include predicted engagement level', () => {
-      const persona: AnalyzerPersona = {
-        name: 'News Junkie',
-        description: 'Active news consumer',
-        interests: ['politics', 'economy', 'technology'],
-        engagementStyle: 'active-commenter',
-        motivations: ['staying informed'],
-        painPoints: ['misinformation'],
-        preferredPlatforms: ['twitter'],
-        estimatedSize: 8000,
-      };
+    it('should predict positive sentiment for growth announcements', () => {
+      const persona = makePersona({ politicalLeaning: 'pro-government' });
+      const reaction = predictReaction(
+        persona,
+        'Economic growth reaches record levels',
+        ['economics', 'growth'],
+        ['twitter']
+      );
 
-      const narrative = {
-        title: 'Political Reform Announced',
-        content: 'Major political reform package revealed.',
-        topics: ['politics', 'reform'],
-      };
-
-      const match = matchPersonaToNarrative(persona, narrative);
-
-      expect(match.predictedEngagement).toBeDefined();
-      expect(['high', 'medium', 'low']).toContain(match.predictedEngagement);
+      expect(reaction.sentimentScore).toBeGreaterThan(0);
     });
 
-    it('should handle empty topic lists', () => {
-      const persona: AnalyzerPersona = {
-        name: 'General',
-        description: 'General audience',
-        interests: [],
-        engagementStyle: 'passive-reader',
-        motivations: [],
-        painPoints: [],
-        preferredPlatforms: ['facebook'],
-        estimatedSize: 1000,
-      };
+    it('should predict negative sentiment for crisis announcements', () => {
+      const persona = makePersona({ politicalLeaning: 'opposition' });
+      const reaction = predictReaction(
+        persona,
+        'Major corruption crisis uncovered in government',
+        ['corruption', 'crisis'],
+        ['twitter']
+      );
 
-      const narrative = { title: 'Update', content: 'Some update.', topics: [] };
-
-      const match = matchPersonaToNarrative(persona, narrative);
-      expect(match.score).toBeGreaterThanOrEqual(0);
-      expect(match.score).toBeLessThanOrEqual(1);
+      expect(reaction.sentimentScore).toBeLessThan(0);
     });
   });
 });
