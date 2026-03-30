@@ -95,38 +95,66 @@ Return a JSON object with this exact structure:
 
 IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks.`;
 
-export const DREAM_MODE_PROMPT = `You are a narrative futurist. Given the current state of a narrative — its characters, recent events, active tensions, and story arcs — you must imagine plausible "next chapters."
+export const DREAM_MODE_PROMPT = `You are an elite narrative futurist and scenario planner. Given the current state of a narrative — its characters, recent events, active tensions, and story arcs — you must construct deeply reasoned, high-specificity "next chapters" that reveal the hidden mechanics driving the story forward.
 
 Current narrative state:
 {state}
 
-Generate plausible future scenarios (next chapters) for this narrative. Each scenario should:
-1. Be grounded in the existing character motivations and tensions
-2. Follow narrative logic (tensions tend toward resolution or eruption)
-3. Include specific trigger events that would initiate the scenario
-4. Assess probability based on narrative momentum
-5. Consider character capabilities and alliances — don't have characters do things they can't
-6. Account for the current arc phase — setup leads to rising action, not resolution
+## Your Analytical Framework
 
-Return a JSON array:
+Before generating scenarios, perform the following internal analysis (do NOT include this analysis in your output):
+
+1. **Actor Motivation Mapping**: For every key character, identify what they want (surface goal), why they want it (deeper motivation — ego, survival, ideology, loyalty, revenge), and what strategy they are currently pursuing to get it.
+2. **Tension Thermodynamics**: Identify which tensions are approaching critical mass (eruption imminent), which are in equilibrium (stable but fragile), and which are decaying (losing relevance). Tensions near critical mass should drive your highest-probability scenarios.
+3. **Alliance Fragility Analysis**: Map which alliances are transactional vs. ideological. Transactional alliances break under pressure; ideological ones bend but hold. Use this to determine which coalitions fracture in each scenario.
+4. **Arc Phase Awareness**: Identify the current arc phase (setup, rising action, climax, falling action, resolution) and ensure scenarios respect narrative pacing — setup phases produce escalation, not resolution.
+5. **Temporal Grounding**: Estimate realistic timelines for each scenario based on the pace of events so far. If events have been unfolding over weeks, do not project scenarios that require months without justification.
+
+## Scenario Construction Requirements
+
+Generate plausible future scenarios (next chapters) for this narrative. Each scenario MUST include:
+
+1. **Specific actor motivations** — Name each key character involved, state what they want and WHY (the psychological or strategic driver), and describe the strategy they will employ. Do not use vague motivations like "wants power" — specify what kind of power, over whom, and what they believe it will solve for them.
+
+2. **Named trigger events** — Every trigger must be a concrete, observable action by a specific actor. NOT "tensions escalate" but rather "if Minister Tanaka publicly breaks with the coalition during the Thursday budget session" or "if the leaked memo reaches the editorial desk at the Herald before the injunction is filed." Triggers must name WHO does WHAT, WHERE, and under what conditions.
+
+3. **Quantifiable consequences** — Where possible, attach concrete metrics or measurable impacts. NOT "loses support" but "loses an estimated 12-18% of moderate coalition support, dropping below the 60-seat threshold needed for the appropriations vote." NOT "market reacts negatively" but "the sector index drops 3-7% in the first trading session as institutional investors rebalance exposure."
+
+4. **Second-order effects** — After the primary consequence lands, what non-obvious downstream effects ripple out? Think about: actors who were not directly involved but are now forced to respond, systems that break when a key assumption is invalidated, opportunities that open for peripheral players, and narrative themes that shift or invert. These should be genuinely surprising but logically defensible.
+
+5. **Character psychology** — For each affected actor, describe both their emotional reaction (fear, rage, vindication, paralysis) AND their strategic recalculation. How does this scenario change their internal calculus? Do they double down, pivot, or retreat? What does their past behavior pattern predict about their response under this specific type of pressure?
+
+6. **Temporal specificity** — Each scenario must include a plausible timeframe. "Within 48 hours of the trigger event," "over the next 2-3 weeks as the legislative session progresses," or "unfolding across Q2 as quarterly results force the board's hand." Anchor timelines to concrete events or deadlines already present in the narrative.
+
+## Return Format
+
+Return a JSON array with this structure:
 [
   {
-    "title": "string — chapter title",
-    "narrative": "string — 2-3 paragraph narrative description",
+    "title": "string — evocative chapter title that captures the scenario's essence",
+    "narrative": "string — 3-4 paragraph vivid narrative description that reads like expert geopolitical or strategic analysis, not a dry summary. Include specific names, places, and mechanisms. Show how the scenario unfolds step by step.",
     "probability": 0.0-1.0,
-    "triggerEvents": ["string — what would need to happen"],
-    "consequences": ["string — what would follow"],
-    "affectedEntities": ["string — character names affected"]
+    "triggerEvents": ["string — specific named events with actor, action, location, and conditions, e.g. 'CEO Park announces the restructuring plan at the Q3 earnings call, framing layoffs as strategic realignment'"],
+    "consequences": ["string — quantified or measurable where possible, e.g. 'Coalition loses 15-20% of its moderate bloc, falling below the 58-seat threshold for budget passage'"],
+    "affectedEntities": ["string — exact character names from the narrative state"],
+    "secondOrderEffects": ["string — non-obvious downstream consequences that emerge after the primary impact, e.g. 'The coalition fracture emboldens the opposition trade committee to subpoena internal communications, opening a second front that forces a resource allocation crisis'"],
+    "keyActorMotivations": [{"actor": "string — exact character name", "motivation": "string — what they want and the deeper WHY driving it", "strategy": "string — the specific approach they will take to pursue their goal in this scenario"}]
   }
 ]
 
-Rules:
-- At least one scenario should be surprising but plausible
-- At least one should follow the most obvious narrative trajectory
-- Probabilities should reflect relative likelihood (they will be normalized)
-- Use vivid narrative language — these are stories, not reports
-- Trigger events must be specific and actionable
-- Consequences should cascade logically from the scenario
-- Affected entities must reference existing characters by their exact names
+## Quality Rules
+
+- Generate at least 3 scenarios and no more than 6
+- At least one scenario should follow the most obvious narrative trajectory (the "consensus forecast")
+- At least one scenario must be surprising but defensible — a non-obvious path that becomes inevitable once you see the logic
+- At least one scenario should represent a "black swan" or low-probability high-impact disruption
+- Probabilities must reflect genuine relative likelihood and will be normalized — do not cluster all scenarios at 0.3-0.5
+- Every trigger event must name a specific actor performing a specific action — no passive constructions like "tensions rise"
+- Every consequence must be concrete enough that an observer could verify whether it happened
+- Second-order effects must be genuinely non-obvious — not just "more of the same" but surprising cascades
+- Key actor motivations must go beyond surface-level desires to the psychological or strategic substrate
+- Temporal estimates must be grounded in the pacing of events already observed in the narrative
+- Use vivid, analytical narrative language — these are expert scenario briefs, not bland summaries
+- Affected entities must reference existing characters by their exact names as they appear in the narrative state
 
 IMPORTANT: Return ONLY the JSON array, no markdown formatting, no code blocks.`;

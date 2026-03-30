@@ -770,6 +770,456 @@ export const INDONESIA_ENTITY_PROFILES: EntityProfile[] = [
       },
     ],
   },
+  {
+    id: 'id-anies-baswedan',
+    name: 'Anies Baswedan',
+    role: 'Former Governor of Jakarta (2017-2022); 2024 presidential candidate and opposition figure',
+    background:
+      "Anies Baswedan is a prominent Indonesian politician and academic who has occupied the intersection of intellectual credibility and populist appeal. Formerly the rector of Paramadina University, he briefly served as Minister of Education and Culture under Joko Widodo (2014-2016) before being replaced in a cabinet reshuffle. He then pivoted to the Jakarta gubernatorial race in 2017, winning a highly polarizing election against incumbent Basuki Tjahaja Purnama (Ahok) with significant support from conservative Islamic groups including the 212 movement. As governor, Anies reversed several of Ahok's signature policies — most notably halting the Jakarta Bay land reclamation project — and pursued a governance style emphasizing inclusivity rhetoric while drawing criticism for uneven administrative performance. His governorship ended in 2022 due to term limits. In the 2024 presidential election, he ran on the AMIN ticket (with Muhaimin Iskandar of PKB as his running mate), backed by NasDem, PKS, and PKB. Despite strong debate performances and support from reform-minded urbanites and conservative Muslims alike, he finished third. Post-election, Anies has positioned himself as a key opposition voice, advocating for democratic norms and critiquing the Prabowo administration's policy direction.",
+    knownRelationships: [
+      {
+        entityId: 'id-joko-widodo',
+        name: 'Joko Widodo',
+        relationship:
+          "Former mentor turned political rival; Widodo appointed Anies as Education Minister in 2014 but replaced him in 2016, and their relationship deteriorated further when Anies defeated Widodo's ally Ahok in the 2017 Jakarta election",
+      },
+      {
+        entityId: 'id-surya-paloh',
+        name: 'Surya Paloh',
+        relationship:
+          "Paloh's NasDem party was a key backer of Anies's 2024 presidential bid, providing critical party infrastructure and media support through Metro TV",
+      },
+      {
+        entityId: 'id-prabowo-subianto',
+        name: 'Prabowo Subianto',
+        relationship:
+          'Rival in the 2024 presidential election; Anies has since positioned himself as a leading opposition figure to the Prabowo administration',
+      },
+      {
+        entityId: 'id-megawati-soekarnoputri',
+        name: 'Megawati Soekarnoputri',
+        relationship:
+          'Complex and adversarial relationship; PDI-P under Megawati backed Ahok against Anies in the 2017 Jakarta election, establishing lasting political rivalry',
+      },
+    ],
+    publicStances: [
+      {
+        topic: 'Urban governance reform',
+        stance:
+          'Advocates for inclusive urban development, community participation in city planning, and reversal of policies seen as favoring developers over residents',
+      },
+      {
+        topic: 'Land reclamation',
+        stance:
+          'Strongly opposed Jakarta Bay reclamation project, halting it as governor on environmental and social equity grounds',
+      },
+      {
+        topic: 'Education reform',
+        stance:
+          'As former Education Minister, pushed for Indonesia Teaching program (Indonesia Mengajar) and broader access to quality education',
+      },
+      {
+        topic: 'Democratic norms',
+        stance:
+          'Vocal critic of democratic backsliding, political dynasties, and erosion of institutional checks and balances under the Prabowo administration',
+      },
+      {
+        topic: 'Opposition politics',
+        stance:
+          'Positioned as a leading opposition figure advocating for accountability, transparency, and reform post-2024 election',
+      },
+    ],
+    historicalPositions: [
+      { period: '2007-2014', position: 'Rector of Paramadina University' },
+      { period: '2014-2016', position: 'Minister of Education and Culture under Joko Widodo' },
+      { period: '2017-2022', position: 'Governor of Jakarta (DKI Jakarta)' },
+      {
+        period: '2024',
+        position:
+          'Presidential candidate on the AMIN ticket (with Muhaimin Iskandar), finished third',
+      },
+      { period: '2024-present', position: 'Opposition figure and public intellectual' },
+    ],
+    mediaOwnershipConnections: [],
+  },
+  {
+    id: 'id-ganjar-pranowo',
+    name: 'Ganjar Pranowo',
+    role: 'Former Governor of Central Java (2013-2023); 2024 presidential candidate',
+    background:
+      "Ganjar Pranowo is a PDI-P cadre who rose to national prominence as the widely popular Governor of Central Java. A former member of the DPR (national parliament), Ganjar built his reputation on an informal, approachable governing style characterized by impromptu visits to public facilities, blusukan (unannounced inspections), and an exceptionally active social media presence that earned him a massive following. His governance of Central Java was marked by investments in digital infrastructure, village development, and anti-corruption measures. In the 2024 presidential election, he was chosen by PDI-P chairperson Megawati Soekarnoputri as the party's candidate, running with Mahfud MD as his vice-presidential partner. Despite strong early polling, Ganjar finished second to Prabowo Subianto, with his campaign hampered by the Joko Widodo political machine's tacit support for the rival Prabowo-Gibran ticket — a painful irony given that both Ganjar and Widodo were PDI-P figures. His loss exposed deep fractures within PDI-P and raised questions about the party's future direction.",
+    knownRelationships: [
+      {
+        entityId: 'id-megawati-soekarnoputri',
+        name: 'Megawati Soekarnoputri',
+        relationship:
+          "Megawati, as PDI-P chairperson, personally selected Ganjar as the party's 2024 presidential candidate, reflecting her trust in his electability and party loyalty",
+      },
+      {
+        entityId: 'id-joko-widodo',
+        name: 'Joko Widodo',
+        relationship:
+          "Fellow PDI-P figure and Central Java political product, but Widodo's tacit backing of Prabowo-Gibran over Ganjar in 2024 created a deep rift",
+      },
+      {
+        entityId: 'id-prabowo-subianto',
+        name: 'Prabowo Subianto',
+        relationship:
+          'Primary rival in the 2024 presidential election; Ganjar lost to Prabowo in a contest shaped by incumbent political machinery',
+      },
+      {
+        entityId: 'id-mahfud-md',
+        name: 'Mahfud MD',
+        relationship:
+          "Vice-presidential running mate on the 2024 PDI-P ticket; their pairing combined Ganjar's populist appeal with Mahfud's legal and constitutional credibility",
+      },
+    ],
+    publicStances: [
+      {
+        topic: 'Clean governance',
+        stance:
+          'Strong advocate for transparent, accountable governance; built his reputation on anti-corruption practices and open administration in Central Java',
+      },
+      {
+        topic: 'Village development',
+        stance:
+          'Prioritized rural development and village fund optimization as governor, emphasizing bottom-up economic empowerment',
+      },
+      {
+        topic: 'Digital governance',
+        stance:
+          'Pioneer of social media engagement in Indonesian politics; used digital platforms for direct citizen communication and public accountability',
+      },
+      {
+        topic: 'Anti-corruption',
+        stance:
+          'Consistent supporter of the KPK (Corruption Eradication Commission) and institutional anti-corruption measures',
+      },
+      {
+        topic: 'Education and human capital',
+        stance:
+          'Emphasized investment in education and vocational training as foundations for economic development',
+      },
+    ],
+    historicalPositions: [
+      {
+        period: '2004-2013',
+        position: 'Member of the DPR (national parliament) representing Central Java',
+      },
+      { period: '2013-2023', position: 'Governor of Central Java (two terms)' },
+      {
+        period: '2024',
+        position: 'Presidential candidate on the PDI-P ticket (with Mahfud MD), finished second',
+      },
+    ],
+    mediaOwnershipConnections: [],
+  },
+  {
+    id: 'id-megawati-soekarnoputri',
+    name: 'Megawati Soekarnoputri',
+    role: 'Chairperson of PDI-P (Indonesian Democratic Party of Struggle); former President of Indonesia (2001-2004)',
+    background:
+      "Megawati Soekarnoputri is the daughter of Indonesia's founding President Sukarno and one of the most enduring figures in Indonesian politics. She became chairperson of PDI-P (Partai Demokrasi Indonesia Perjuangan) and served as Indonesia's first female president from 2001 to 2004, ascending to the presidency after the removal of Abdurrahman Wahid. She lost subsequent presidential bids in 2004 and 2009 but has since wielded enormous political power as PDI-P chairperson, effectively serving as kingmaker in Indonesian politics. Her party machine was the launching pad for Joko Widodo's rise from Solo mayor to president in 2014. However, her relationship with Widodo deteriorated sharply during his second term, particularly over the controversial Constitutional Court ruling that allowed Gibran Rakabuming Raka (Widodo's son) to run as Prabowo's vice-presidential candidate in 2024 — a move Megawati viewed as a betrayal of democratic principles and an act of political dynasty-building. PDI-P under Megawati lost the 2024 proxy battle when Prabowo-Gibran defeated her chosen candidate Ganjar Pranowo. She maintains tight party discipline and controls one of the largest legislative blocs in parliament, making PDI-P a critical force in Indonesian politics regardless of whether it sits in government or opposition.",
+    knownRelationships: [
+      {
+        entityId: 'id-joko-widodo',
+        name: 'Joko Widodo',
+        relationship:
+          "Elevated Widodo from Solo mayor to presidential candidate in 2014, but the relationship fractured during Widodo's second term over the Gibran VP candidacy and perceived disloyalty to PDI-P",
+      },
+      {
+        entityId: 'id-prabowo-subianto',
+        name: 'Prabowo Subianto',
+        relationship:
+          'Longtime political rival spanning multiple election cycles; Megawati lost the 2024 proxy battle when Widodo backed Prabowo-Gibran over her chosen candidate Ganjar',
+      },
+      {
+        entityId: 'id-ganjar-pranowo',
+        name: 'Ganjar Pranowo',
+        relationship:
+          "Personally selected Ganjar as PDI-P's 2024 presidential candidate; his loss was a significant political setback for Megawati's influence",
+      },
+      {
+        entityId: 'id-sri-mulyani',
+        name: 'Sri Mulyani Indrawati',
+        relationship:
+          "First appointed Sri Mulyani as Finance Minister during her own presidency; Sri Mulyani's technocratic credentials were first elevated on the national stage by Megawati",
+      },
+    ],
+    publicStances: [
+      {
+        topic: 'Sukarnoism and nationalism',
+        stance:
+          "Upholds her father Sukarno's nationalist legacy, emphasizing Indonesian sovereignty, self-reliance, and the Pancasila state ideology",
+      },
+      {
+        topic: 'Natural resource sovereignty',
+        stance:
+          'Advocates for state control over natural resources and skepticism toward foreign exploitation of Indonesian mineral and energy assets',
+      },
+      {
+        topic: 'Political dynasties',
+        stance:
+          'Publicly opposed to political dynasty-building — particularly critical of the Widodo-Gibran arrangement — though critics note the irony given her own Sukarno dynasty',
+      },
+      {
+        topic: 'Party discipline and loyalty',
+        stance:
+          'Demands strict loyalty from PDI-P cadres; views party discipline as essential to maintaining political coherence and ideological consistency',
+      },
+      {
+        topic: 'Social welfare',
+        stance:
+          'Supports expansive social welfare programs, subsidies for the poor, and state-led economic intervention on behalf of ordinary Indonesians',
+      },
+    ],
+    historicalPositions: [
+      { period: '1999-2001', position: 'Vice President of Indonesia under Abdurrahman Wahid' },
+      { period: '2001-2004', position: 'President of Indonesia (first female president)' },
+      {
+        period: '1999-present',
+        position: 'Chairperson of PDI-P (Partai Demokrasi Indonesia Perjuangan)',
+      },
+      { period: '2004', position: 'Presidential candidate (lost to Susilo Bambang Yudhoyono)' },
+      { period: '2009', position: 'Presidential candidate (lost to Yudhoyono again)' },
+    ],
+    mediaOwnershipConnections: [],
+  },
+  {
+    id: 'id-luhut-pandjaitan',
+    name: 'Luhut Binsar Pandjaitan',
+    role: 'Former Coordinating Minister for Maritime and Investment Affairs; powerful political-business figure',
+    background:
+      "Luhut Binsar Pandjaitan is a retired military general who became one of the most powerful figures in Joko Widodo's government and arguably the single most influential person in Indonesian policy-making outside the presidency itself. A former Kopassus (special forces) commander with extensive military and intelligence experience, Luhut transitioned into business after retirement, building interests in mining, energy, and technology. His close personal friendship with Widodo — dating back to their shared roots in Solo — made him the president's most trusted adviser and enforcer. He served in multiple cabinet positions under Widodo, including Chief of Staff to the President, Coordinating Minister for Political, Legal, and Security Affairs, and ultimately Coordinating Minister for Maritime and Investment Affairs. In this last role, his portfolio expanded far beyond its formal scope: he led Indonesia's COVID-19 response on Java and Bali, spearheaded the electric vehicle and nickel downstreaming industrial policy, drove investment deregulation through the Omnibus Law, and cultivated deep relationships with Chinese investors and technology companies. His influence often exceeded his ministerial brief, earning him the nickname \"minister of everything.\" After Widodo's presidency ended, Luhut maintains significant business and political influence, with extensive networks that bridge the military, government, and business worlds.",
+    knownRelationships: [
+      {
+        entityId: 'id-joko-widodo',
+        name: 'Joko Widodo',
+        relationship:
+          "Closest adviser, enforcer, and personal friend throughout Widodo's presidency; entrusted with the most sensitive and challenging policy portfolios",
+      },
+      {
+        entityId: 'id-prabowo-subianto',
+        name: 'Prabowo Subianto',
+        relationship:
+          'Fellow retired military general with a complex relationship; both served in Kopassus, and Luhut maintains influence in the Prabowo era through business and political networks',
+      },
+      {
+        entityId: 'id-sri-mulyani',
+        name: 'Sri Mulyani Indrawati',
+        relationship:
+          'Cabinet colleague under Widodo; occasionally clashed on fiscal policy versus investment liberalization priorities, representing the tension between fiscal discipline and growth-at-all-costs approaches',
+      },
+      {
+        entityId: 'id-erick-thohir',
+        name: 'Erick Thohir',
+        relationship:
+          'Fellow Widodo cabinet member; worked in parallel on state enterprise reform and investment promotion, with overlapping but sometimes competing economic policy visions',
+      },
+    ],
+    publicStances: [
+      {
+        topic: 'Investment liberalization',
+        stance:
+          'Aggressive proponent of deregulation and foreign investment attraction, particularly through the Omnibus Law on Job Creation and special economic zones',
+      },
+      {
+        topic: 'EV industry and nickel downstreaming',
+        stance:
+          "Architect of Indonesia's strategy to ban raw nickel ore exports and build a domestic EV battery and processing industry, attracting billions in Chinese and Korean investment",
+      },
+      {
+        topic: 'China engagement',
+        stance:
+          'Pragmatic advocate for deep economic engagement with China, viewing Chinese investment and technology transfer as essential for Indonesian industrialization',
+      },
+      {
+        topic: 'Digital economy',
+        stance:
+          'Supports rapid digital economy development, including digital payments, e-commerce infrastructure, and tech startup ecosystem growth',
+      },
+      {
+        topic: 'Infrastructure development',
+        stance:
+          'Champion of large-scale infrastructure projects as drivers of economic growth, including ports, industrial estates, and transportation networks',
+      },
+    ],
+    historicalPositions: [
+      {
+        period: '1970s-1990s',
+        position:
+          'Military career in Kopassus (Army Special Forces Command) and various command positions',
+      },
+      { period: '1999-2002', position: 'Ambassador of Indonesia to Singapore' },
+      { period: '2014-2015', position: 'Chief of Staff to President Joko Widodo' },
+      {
+        period: '2015-2016',
+        position: 'Coordinating Minister for Political, Legal, and Security Affairs',
+      },
+      {
+        period: '2016-2024',
+        position:
+          'Coordinating Minister for Maritime and Investment Affairs (portfolio repeatedly expanded)',
+      },
+    ],
+    mediaOwnershipConnections: [],
+  },
+  {
+    id: 'id-sri-mulyani',
+    name: 'Sri Mulyani Indrawati',
+    role: 'Minister of Finance of Indonesia; internationally recognized economic technocrat',
+    background:
+      "Sri Mulyani Indrawati is one of Indonesia's most internationally respected technocrats and one of the longest-serving finance ministers in the country's democratic era. She first rose to prominence as Finance Minister under Megawati's presidency, then served under Susilo Bambang Yudhoyono from 2005 to 2010, where she earned recognition for tax reform, improved fiscal transparency, and professional financial management. She departed to become Managing Director of the World Bank (2010-2016), one of the highest-ranking positions ever held by an Indonesian in an international institution. Joko Widodo recalled her to serve as Finance Minister in 2016, and she has held the position continuously since — through the remainder of Widodo's presidency and into the Prabowo administration. Her retention by Prabowo signals a commitment to fiscal policy continuity and international credibility. Sri Mulyani has won multiple international \"Best Finance Minister\" awards and is known for her transparent communication style, rigorous fiscal discipline, and willingness to push back against populist spending proposals. She has navigated Indonesia's finances through the COVID-19 pandemic, commodity price volatility, and the tension between fiscal prudence and the political demands for expansive social spending. Her relationship with the Prabowo administration carries inherent tension, as Prabowo's ambitious spending plans (particularly the free school meals program) test her commitment to deficit and debt limits.",
+    knownRelationships: [
+      {
+        entityId: 'id-joko-widodo',
+        name: 'Joko Widodo',
+        relationship:
+          'Recalled her from the World Bank in 2016 and entrusted her with fiscal management through both terms; Widodo valued her international credibility and technocratic independence',
+      },
+      {
+        entityId: 'id-prabowo-subianto',
+        name: 'Prabowo Subianto',
+        relationship:
+          "Retained as Finance Minister under Prabowo, but faces tension between her fiscal discipline and Prabowo's expansive spending ambitions, particularly the flagship free meals program",
+      },
+      {
+        entityId: 'id-megawati-soekarnoputri',
+        name: 'Megawati Soekarnoputri',
+        relationship:
+          'Megawati first elevated Sri Mulyani to national prominence by appointing her in the cabinet; this early relationship established her technocratic career trajectory',
+      },
+      {
+        entityId: 'id-luhut-pandjaitan',
+        name: 'Luhut Binsar Pandjaitan',
+        relationship:
+          "Cabinet colleague under Widodo with occasional policy friction; Luhut's push for investment spending sometimes conflicted with Sri Mulyani's fiscal discipline priorities",
+      },
+    ],
+    publicStances: [
+      {
+        topic: 'Fiscal discipline',
+        stance:
+          "Steadfast defender of Indonesia's fiscal rules, including the 3% of GDP deficit ceiling; consistently pushes back against populist proposals that threaten fiscal sustainability",
+      },
+      {
+        topic: 'Tax reform',
+        stance:
+          "Architect of Indonesia's tax reform agenda, including the controversial VAT rate increases and efforts to broaden the tax base through digitalization",
+      },
+      {
+        topic: 'Debt management',
+        stance:
+          "Maintains conservative debt management, keeping Indonesia's debt-to-GDP ratio manageable while ensuring access to international capital markets at favorable rates",
+      },
+      {
+        topic: 'Subsidy reform',
+        stance:
+          'Advocates for better-targeted subsidies, reducing blanket fuel and electricity subsidies in favor of direct cash transfers to the poor',
+      },
+      {
+        topic: 'Transparent budgeting',
+        stance:
+          'Champion of budget transparency and open fiscal data, using public communication to build trust in government financial management',
+      },
+    ],
+    historicalPositions: [
+      {
+        period: '2005-2010',
+        position: 'Minister of Finance under President Susilo Bambang Yudhoyono',
+      },
+      { period: '2010-2016', position: 'Managing Director of the World Bank' },
+      { period: '2016-2024', position: 'Minister of Finance under President Joko Widodo' },
+      {
+        period: '2024-present',
+        position: 'Minister of Finance under President Prabowo Subianto (retained)',
+      },
+    ],
+    mediaOwnershipConnections: [],
+  },
+  {
+    id: 'id-mahfud-md',
+    name: 'Mahfud MD',
+    role: 'Former Coordinating Minister for Political, Legal, and Security Affairs; constitutional law expert',
+    background:
+      "Mohammad Mahfud MD is one of Indonesia's most prominent constitutional law scholars and a figure who has straddled the worlds of academia, the judiciary, and executive politics. He served as Chief Justice of the Constitutional Court (Mahkamah Konstitusi) from 2008 to 2013, where he earned a reputation for principled jurisprudence and defending constitutional integrity. Joko Widodo appointed him as Coordinating Minister for Political, Legal, and Security Affairs in 2019, a powerful portfolio overseeing law enforcement, intelligence, and political coordination. In the cabinet, Mahfud was known for his outspoken style — often making public statements that diverged from the government's preferred messaging, particularly on sensitive issues like corruption, human rights, and democratic governance. His tenure became increasingly fraught as the 2024 election approached. He resigned from the cabinet in early 2024 to become Ganjar Pranowo's vice-presidential running mate on the PDI-P ticket, a departure marked by acrimony. Mahfud publicly criticized the Widodo government's handling of election integrity issues, the controversial Constitutional Court ruling enabling Gibran's candidacy, and what he described as the erosion of democratic institutions. After the AMIN and Ganjar-Mahfud tickets both lost to Prabowo-Gibran, Mahfud has continued as a prominent voice for constitutional integrity and democratic reform.",
+    knownRelationships: [
+      {
+        entityId: 'id-joko-widodo',
+        name: 'Joko Widodo',
+        relationship:
+          "Appointed him as Coordinating Minister in 2019, but the relationship deteriorated sharply; Mahfud's resignation and public criticism of the government's democratic record marked a bitter break",
+      },
+      {
+        entityId: 'id-ganjar-pranowo',
+        name: 'Ganjar Pranowo',
+        relationship:
+          "Vice-presidential running mate on the 2024 PDI-P ticket; their partnership combined Ganjar's populist governance appeal with Mahfud's legal and constitutional authority",
+      },
+      {
+        entityId: 'id-prabowo-subianto',
+        name: 'Prabowo Subianto',
+        relationship:
+          "Rival in the 2024 presidential election; Mahfud has been critical of the Prabowo administration's approach to governance and democratic norms",
+      },
+      {
+        entityId: 'id-megawati-soekarnoputri',
+        name: 'Megawati Soekarnoputri',
+        relationship:
+          "Aligned with Megawati's PDI-P coalition for the 2024 election; shares concerns about political dynasty-building and democratic backsliding",
+      },
+    ],
+    publicStances: [
+      {
+        topic: 'Constitutional integrity',
+        stance:
+          "Foremost advocate for upholding the Indonesian constitution as written; deeply critical of the Constitutional Court ruling that bypassed age requirements to enable Gibran's VP candidacy",
+      },
+      {
+        topic: 'Anti-corruption',
+        stance:
+          'Consistent supporter of strong anti-corruption institutions and enforcement; critical of efforts to weaken the KPK (Corruption Eradication Commission)',
+      },
+      {
+        topic: 'Judicial independence',
+        stance:
+          'Advocates for the independence of the Constitutional Court and judiciary from political interference, drawing on his experience as former Chief Justice',
+      },
+      {
+        topic: 'Democratic norms',
+        stance:
+          'Vocal critic of democratic backsliding in Indonesia, including political dynasties, institutional capture, and erosion of checks and balances',
+      },
+      {
+        topic: 'Rule of law',
+        stance:
+          'Emphasizes the primacy of rule of law over political expediency; has publicly challenged government actions he views as legally questionable',
+      },
+    ],
+    historicalPositions: [
+      { period: '1990s-2008', position: 'Constitutional law professor and legal scholar' },
+      {
+        period: '2008-2013',
+        position: 'Chief Justice of the Constitutional Court (Mahkamah Konstitusi)',
+      },
+      {
+        period: '2019-2024',
+        position:
+          'Coordinating Minister for Political, Legal, and Security Affairs under Joko Widodo',
+      },
+      {
+        period: '2024',
+        position:
+          'Vice-presidential candidate on the PDI-P ticket with Ganjar Pranowo, finished second',
+      },
+      {
+        period: '2024-present',
+        position:
+          'Public intellectual and advocate for constitutional reform and democratic governance',
+      },
+    ],
+    mediaOwnershipConnections: [],
+  },
 ];
 
 /**

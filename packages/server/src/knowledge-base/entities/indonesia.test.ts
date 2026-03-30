@@ -49,12 +49,86 @@ describe('Indonesia Entity Profiles', () => {
       const entity = getEntityById('');
       expect(entity).toBeUndefined();
     });
+
+    it('should return Anies Baswedan by id', () => {
+      const entity = getEntityById('id-anies-baswedan');
+      expect(entity).toBeDefined();
+      expect(entity!.name).toBe('Anies Baswedan');
+      expect(entity!.knownRelationships.length).toBeGreaterThan(0);
+    });
+
+    it('should return Ganjar Pranowo by id', () => {
+      const entity = getEntityById('id-ganjar-pranowo');
+      expect(entity).toBeDefined();
+      expect(entity!.name).toBe('Ganjar Pranowo');
+      expect(entity!.knownRelationships.length).toBeGreaterThan(0);
+    });
+
+    it('should return Megawati Soekarnoputri by id', () => {
+      const entity = getEntityById('id-megawati-soekarnoputri');
+      expect(entity).toBeDefined();
+      expect(entity!.name).toBe('Megawati Soekarnoputri');
+      expect(entity!.historicalPositions.length).toBeGreaterThan(0);
+    });
+
+    it('should return Luhut Binsar Pandjaitan by id', () => {
+      const entity = getEntityById('id-luhut-pandjaitan');
+      expect(entity).toBeDefined();
+      expect(entity!.name).toBe('Luhut Binsar Pandjaitan');
+      expect(entity!.publicStances.length).toBeGreaterThan(0);
+    });
+
+    it('should return Sri Mulyani Indrawati by id', () => {
+      const entity = getEntityById('id-sri-mulyani');
+      expect(entity).toBeDefined();
+      expect(entity!.name).toBe('Sri Mulyani Indrawati');
+      expect(entity!.historicalPositions.length).toBeGreaterThan(0);
+    });
+
+    it('should return Mahfud MD by id', () => {
+      const entity = getEntityById('id-mahfud-md');
+      expect(entity).toBeDefined();
+      expect(entity!.name).toBe('Mahfud MD');
+      expect(entity!.knownRelationships.length).toBeGreaterThan(0);
+    });
+  });
+
+  // --------------------------------------------------------
+  // Total entity count
+  // --------------------------------------------------------
+  describe('entity count', () => {
+    it('should have exactly 15 entity profiles', () => {
+      expect(INDONESIA_ENTITY_PROFILES.length).toBe(15);
+    });
   });
 
   // --------------------------------------------------------
   // getEntitiesRelatedTo
   // --------------------------------------------------------
   describe('getEntitiesRelatedTo', () => {
+    it('should find new entities that reference Prabowo', () => {
+      const related = getEntitiesRelatedTo('id-prabowo-subianto');
+      const relatedIds = related.map((entity) => entity.id);
+      expect(relatedIds).toContain('id-anies-baswedan');
+      expect(relatedIds).toContain('id-ganjar-pranowo');
+      expect(relatedIds).toContain('id-megawati-soekarnoputri');
+    });
+
+    it('should find cross-references between Ganjar and Mahfud as running mates', () => {
+      const ganjar = getEntityById('id-ganjar-pranowo');
+      const mahfud = getEntityById('id-mahfud-md');
+      expect(ganjar).toBeDefined();
+      expect(mahfud).toBeDefined();
+      const ganjarRefsMahfud = ganjar!.knownRelationships.some(
+        (rel) => rel.entityId === 'id-mahfud-md'
+      );
+      const mahfudRefsGanjar = mahfud!.knownRelationships.some(
+        (rel) => rel.entityId === 'id-ganjar-pranowo'
+      );
+      expect(ganjarRefsMahfud).toBe(true);
+      expect(mahfudRefsGanjar).toBe(true);
+    });
+
     it('should return entities that reference the given entityId in their relationships', () => {
       const related = getEntitiesRelatedTo('id-joko-widodo');
       expect(related.length).toBeGreaterThan(0);

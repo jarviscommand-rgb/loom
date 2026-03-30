@@ -2282,6 +2282,743 @@ export const INDONESIA_SOURCES: MediaSource[] = [
       ],
     },
   },
+
+  // ──────────────────────────────────────────────────────────
+  // 17. IDN TIMES
+  // ──────────────────────────────────────────────────────────
+  {
+    id: 'idn-times',
+    name: 'IDN Times',
+    country: 'ID',
+    languages: ['id', 'en'],
+    url: 'https://www.idntimes.com',
+    feedUrls: ['https://www.idntimes.com/rss', 'https://www.idntimes.com/news/indonesia/rss'],
+    politicalLeaning: 'centrist',
+    ownership: {
+      owner: 'PT Media Jejaring Semesta',
+      conglomerate: 'IDN Media',
+      politicalAffiliation: undefined,
+      notes:
+        "Founded in 2014 by Winston Utomo and William Utomo. One of Indonesia's largest " +
+        'millennial and Gen-Z focused digital media platforms. IDN Media is the parent company ' +
+        'that also operates other youth-oriented verticals including Popbela, Duniaku, and Popmama. ' +
+        'Venture capital-backed with investments from EV Growth and others. No direct political ' +
+        'affiliation, though lifestyle-heavy content sometimes dilutes journalistic rigour.',
+    },
+    editorialGoal:
+      'Accessible news and lifestyle content for Indonesian youth, community-driven engagement',
+    reliabilityScore: 0.55,
+    audienceTypes: ['youth-digital', 'urban-middle'],
+    biasDirection: 'neutral',
+    signalWeight: 0.5,
+    active: true,
+    extendedProfile: {
+      ownershipChain: [
+        { entity: 'PT Media Jejaringku Semesta', role: 'direct-owner', stake: '100%' },
+        { entity: 'IDN Media', role: 'parent-company', since: '2014' },
+        {
+          entity: 'Winston Utomo & William Utomo (co-founders)',
+          role: 'ultimate-beneficiary',
+          since: '2014',
+        },
+        {
+          entity: 'EV Growth, Kejora Capital (investors)',
+          role: 'minority-shareholder',
+          since: '2017',
+        },
+      ],
+      politicalHistory: [
+        {
+          period: '2014-2019',
+          stance: 'Apolitical, lifestyle and entertainment focus',
+          details:
+            'Launched primarily as a youth-focused content platform blending news with ' +
+            'entertainment, lifestyle, and community-generated content. Political coverage was ' +
+            "minimal and largely neutral, reflecting the audience's primary interest in " +
+            'non-political content.',
+          administration: 'Joko Widodo (first term)',
+        },
+        {
+          period: '2019-present',
+          stance: 'Centrist with progressive social leanings',
+          details:
+            'Gradually expanded news coverage including politics, social issues, and economics. ' +
+            'Editorial stance on social issues tends slightly progressive — supporting gender ' +
+            'equality, mental health awareness, and environmental topics that resonate with younger ' +
+            'audiences. Political coverage remains broadly centrist without strong partisan alignment.',
+          administration: 'Joko Widodo (second term) / Prabowo Subianto',
+        },
+      ],
+      editorialStances: [
+        {
+          topic: 'Social issues and youth advocacy',
+          stance: 'Slightly progressive, youth-empowerment oriented',
+          examples: [
+            'Regular coverage of mental health, gender equality, and LGBTQ+ issues (relatively rare in Indonesian media)',
+            'Series on financial literacy and career development for young Indonesians',
+            'Climate change and environmental sustainability content',
+          ],
+        },
+        {
+          topic: 'Political coverage',
+          stance: 'Centrist, accessible, non-confrontational',
+          examples: [
+            'Election coverage focused on explainers and youth voter engagement',
+            'Avoids deep investigative or adversarial political reporting',
+            'Tends toward "both sides" framing on politically sensitive topics',
+          ],
+        },
+      ],
+      audienceDemographics: {
+        estimatedMonthlyReach:
+          "40-60 million unique visitors (one of Indonesia's top 5 most-visited news/content sites)",
+        primaryDemographic: 'Indonesian millennials and Gen-Z, aged 18-35, digitally native',
+        geographicFocus: 'National with strong urban concentration, especially Java',
+        platformBreakdown: {
+          web: '40%',
+          mobile: '35%',
+          social: '20%',
+          youtube: '5%',
+        },
+      },
+      reliabilityRecord: [
+        {
+          incident:
+            'Community-contributed content (IDN Times Community) blurs editorial vs user-generated boundaries',
+          date: '2018-present',
+          impact: 'Variable quality; user-generated content sometimes lacks editorial standards',
+          outcome: 'Added clearer labelling to distinguish editorial vs community content',
+        },
+        {
+          incident: 'Clickbait-style headlines on lifestyle and entertainment verticals',
+          date: 'Ongoing',
+          impact: 'Reduces overall perceived reliability despite decent news vertical quality',
+          outcome: 'News vertical maintains higher standards than lifestyle/entertainment sections',
+        },
+      ],
+      biasExamples: [
+        {
+          topic: 'Government policy coverage',
+          expectedCoverage: 'Balanced assessment of policy impacts on youth',
+          actualCoverage:
+            'Coverage is generally balanced but shallow on political analysis. Tends to avoid ' +
+            'confrontational reporting that might alienate advertisers or platform partners. ' +
+            'Progressive lean on social issues is notable for Indonesian media landscape.',
+          analysis:
+            'The slight progressive lean on social issues is more a reflection of its young ' +
+            "audience's values than a deliberate editorial agenda. Political coverage is too " +
+            'surface-level to exhibit strong partisan bias.',
+        },
+      ],
+      pressFreedomIncidents: [],
+      awards: [{ name: 'Google News Initiative Innovation Challenge Award', year: '2019' }],
+      foundingContext:
+        'Founded in 2014 by Winston Utomo (CEO) and William Utomo as a digital media ' +
+        'platform targeting Indonesian millennials and Gen-Z. Built on the insight that ' +
+        'traditional Indonesian media was not speaking to younger audiences in formats and ' +
+        'on platforms they preferred. Grew rapidly through community-driven content, social ' +
+        'media distribution, and multiple verticals covering news, lifestyle, entertainment, ' +
+        'gaming, and parenting. IDN Media as a parent company has positioned itself as ' +
+        "Indonesia's leading millennial/Gen-Z media group with over 70 million monthly users.",
+      keyMilestones: [
+        { year: '2014', event: 'Founded by Winston Utomo and William Utomo' },
+        { year: '2017', event: 'Secured Series A funding from EV Growth' },
+        { year: '2018', event: 'Launched IDN Times Community user-generated content platform' },
+        { year: '2019', event: 'Expanded to multiple verticals (Popbela, Duniaku, Popmama)' },
+        { year: '2021', event: 'Surpassed 60 million monthly unique visitors' },
+        { year: '2023', event: 'Expanded English-language content and regional coverage' },
+      ],
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // 18. RMOL (RAKYAT MERDEKA ONLINE)
+  // ──────────────────────────────────────────────────────────
+  {
+    id: 'rmol',
+    name: 'RMOL (Rakyat Merdeka Online)',
+    country: 'ID',
+    languages: ['id'],
+    url: 'https://rmol.id',
+    feedUrls: ['https://rmol.id/rss'],
+    politicalLeaning: 'opposition',
+    ownership: {
+      owner: 'PT Rakyat Merdeka Intermedia',
+      conglomerate: undefined,
+      politicalAffiliation:
+        'Opposition-linked; historically associated with elite political figures critical of incumbent governments',
+      notes:
+        'Connected to the Rakyat Merdeka newspaper tradition, which was known for its ' +
+        'sensationalist, opposition-leaning tabloid style. RMOL serves as a digital platform ' +
+        'for opposition narratives and commentary, frequently featuring opinion pieces from ' +
+        'political figures and analysts critical of the ruling government. Has historically ' +
+        'been associated with political circles around figures like Rizal Ramli and other ' +
+        'opposition-aligned commentators.',
+    },
+    editorialGoal:
+      'Opposition-oriented news and political commentary, amplifying critical voices against incumbent power',
+    reliabilityScore: 0.45,
+    audienceTypes: ['elite-policy', 'urban-middle'],
+    biasDirection: 'anti-government',
+    signalWeight: 0.4,
+    active: true,
+    extendedProfile: {
+      ownershipChain: [
+        { entity: 'PT Rakyat Merdeka Intermedia', role: 'direct-owner', stake: '100%' },
+        {
+          entity: 'Rakyat Merdeka Group',
+          role: 'parent-company',
+          since: '2000',
+        },
+      ],
+      politicalHistory: [
+        {
+          period: '2000-2014',
+          stance: 'Populist opposition voice',
+          details:
+            'Rakyat Merdeka newspaper established its identity during the post-Suharto era as a ' +
+            'provocative, often sensationalist tabloid willing to challenge whoever was in power. ' +
+            'RMOL emerged as the digital extension of this tradition. Known for inflammatory ' +
+            'headlines and strong opinion content critical of successive governments from ' +
+            'Megawati through Yudhoyono.',
+          administration: 'Megawati / Susilo Bambang Yudhoyono',
+        },
+        {
+          period: '2014-2024',
+          stance: 'Anti-Jokowi opposition platform',
+          details:
+            "Under Jokowi's presidency, RMOL became a prominent platform for opposition voices, " +
+            'frequently featuring commentary from political figures and analysts critical of ' +
+            "Widodo's policies. Provided a platform for Prabowo-aligned voices during the " +
+            '2014 and 2019 election cycles. Content heavily opinion-driven with selective ' +
+            'news framing to support opposition narratives.',
+          administration: 'Joko Widodo',
+        },
+        {
+          period: '2024-present',
+          stance: 'Adapting to new political configuration',
+          details:
+            "With Prabowo Subianto becoming president, RMOL's positioning is in flux. " +
+            'Historically critical of incumbent governments regardless of party, though its ' +
+            'network of commentators had closer ties to certain opposition figures. May shift ' +
+            'to criticizing or cautiously supporting the new administration depending on ' +
+            'factional alignments.',
+          administration: 'Prabowo Subianto',
+        },
+      ],
+      editorialStances: [
+        {
+          topic: 'Government accountability',
+          stance: 'Aggressively critical of incumbent government',
+          examples: [
+            'Frequent op-eds framing government policies as failures',
+            "Amplifying opposition politicians' press conferences and statements",
+            "Critical coverage of Jokowi's dynasty politics and constitutional court controversy",
+          ],
+        },
+        {
+          topic: 'Economic policy',
+          stance:
+            'Populist-nationalist, critical of perceived neoliberal or foreign-favoring policies',
+          examples: [
+            'Opposition to foreign investment deals framed as "selling national assets"',
+            "Criticism of infrastructure spending as prioritizing optics over people's welfare",
+          ],
+        },
+        {
+          topic: 'Democratic governance',
+          stance: 'Selectively pro-democracy when it serves opposition narrative',
+          examples: [
+            'Strong coverage of democratic backsliding concerns — but primarily when it affects opposition',
+            'Less concerned with press freedom or democratic norms when opposition allies are in question',
+          ],
+        },
+      ],
+      audienceDemographics: {
+        estimatedMonthlyReach: '3-8 million unique visitors',
+        primaryDemographic:
+          'Politically engaged Indonesians sympathetic to opposition; older demographic skew',
+        geographicFocus: 'National, Jakarta-centric political audience',
+        platformBreakdown: {
+          web: '60%',
+          social: '25%',
+          mobile: '10%',
+          youtube: '5%',
+        },
+      },
+      reliabilityRecord: [
+        {
+          incident: 'Frequent mixing of opinion and news content without clear labelling',
+          date: 'Ongoing',
+          impact:
+            'Readers often cannot distinguish between editorial opinion and factual reporting',
+          outcome: 'Contributes to lower reliability score; content requires cross-referencing',
+        },
+        {
+          incident: 'Sensationalist headlines and framing',
+          date: 'Ongoing',
+          impact: 'Headlines frequently exaggerate or misrepresent the nuance of stories',
+          outcome:
+            'Useful as a signal of opposition sentiment but unreliable as a primary news source',
+        },
+        {
+          incident: 'Platform for unverified political claims',
+          date: 'Periodic',
+          impact:
+            'Op-eds and "analysis" pieces sometimes contain unverified allegations presented as fact',
+          outcome:
+            'Content should be weighted as opinion/political signal rather than factual reporting',
+        },
+      ],
+      biasExamples: [
+        {
+          topic: 'Jokowi administration coverage',
+          expectedCoverage: 'Balanced assessment of policy successes and failures',
+          actualCoverage:
+            'Overwhelmingly negative framing of Jokowi-era policies. Positive developments ' +
+            'were minimized or reframed as insufficient, while failures were amplified. ' +
+            'Opposition figures and critics given outsized platform compared to government ' +
+            'voices.',
+          analysis:
+            'RMOL functions more as an opposition political platform than a traditional news ' +
+            'outlet. Its value to LOOM is as a signal source for opposition sentiment and ' +
+            'narratives, not as a reliable factual source. The anti-government bias is ' +
+            'structural and consistent regardless of which party governs.',
+        },
+      ],
+      pressFreedomIncidents: [
+        {
+          date: '2003',
+          description:
+            'Rakyat Merdeka editor Supratman was arrested and convicted of defamation for ' +
+            'publishing inflammatory headlines about then-President Megawati Sukarnoputri. ' +
+            'The case highlighted tensions between press freedom and defamation law in ' +
+            'post-Suharto Indonesia.',
+          outcome:
+            'Editor sentenced; the case became a reference point in debates about Indonesian ' +
+            'press freedom and the use of defamation charges against journalists.',
+        },
+      ],
+      awards: [],
+      foundingContext:
+        'RMOL emerged from the Rakyat Merdeka newspaper tradition, which was established in ' +
+        'the early post-Suharto era as a sensationalist, populist tabloid. The digital ' +
+        'platform extended this identity into online media, becoming a key outlet for ' +
+        'opposition political commentary and analysis. While it plays an important role ' +
+        "in Indonesia's media ecosystem by providing space for dissenting voices, its " +
+        'opinion-heavy, often sensationalist approach means it functions more as a political ' +
+        'signal source than a traditional news outlet.',
+      keyMilestones: [
+        { year: '2000', event: 'Rakyat Merdeka established as a post-Suharto tabloid voice' },
+        { year: '2003', event: 'Editor arrested for defamation of President Megawati' },
+        { year: '2009', event: 'RMOL digital platform launched' },
+        { year: '2014', event: 'Became prominent opposition platform during Jokowi presidency' },
+        { year: '2024', event: 'Navigating editorial position under Prabowo presidency' },
+      ],
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // 19. BISNIS INDONESIA
+  // ──────────────────────────────────────────────────────────
+  {
+    id: 'bisnis-indonesia',
+    name: 'Bisnis Indonesia',
+    country: 'ID',
+    languages: ['id'],
+    url: 'https://www.bisnis.com',
+    feedUrls: [
+      'https://www.bisnis.com/rss',
+      'https://finansial.bisnis.com/rss',
+      'https://market.bisnis.com/rss',
+    ],
+    politicalLeaning: 'centrist',
+    ownership: {
+      owner: 'PT Jurnalindo Aksara Grafika',
+      conglomerate: 'Bisnis Indonesia Group',
+      politicalAffiliation: undefined,
+      notes:
+        "Founded in 1985 by Sukamdani Sahid Gitosardjono as Indonesia's first dedicated " +
+        'business daily. Part of the Bisnis Indonesia Group which also operates Bisnis.com ' +
+        'and related financial information services. Maintained editorial independence focused ' +
+        'on economic and financial reporting. The Sahid Group (hospitality conglomerate) is ' +
+        'the historical backer, though the editorial operation runs independently.',
+    },
+    editorialGoal: 'Authoritative business and financial journalism, pro-market economic analysis',
+    reliabilityScore: 0.75,
+    audienceTypes: ['elite-policy'],
+    biasDirection: 'neutral',
+    signalWeight: 0.8,
+    active: true,
+    extendedProfile: {
+      ownershipChain: [
+        { entity: 'PT Jurnalindo Aksara Grafika', role: 'direct-owner', stake: '100%' },
+        { entity: 'Bisnis Indonesia Group', role: 'parent-company', since: '1985' },
+        {
+          entity: 'Sahid Group (Sukamdani family)',
+          role: 'ultimate-beneficiary',
+          since: '1985',
+        },
+      ],
+      politicalHistory: [
+        {
+          period: '1985-1998',
+          stance: 'Pro-business within New Order constraints',
+          details:
+            'Launched during the Suharto era as a business daily serving the growing Indonesian ' +
+            'corporate sector. Operated within the permissible boundaries of New Order press ' +
+            'restrictions but carved out a niche in financial and economic reporting where ' +
+            'editorial constraints were somewhat looser than in political coverage.',
+          administration: 'Suharto (New Order)',
+        },
+        {
+          period: '1998-2014',
+          stance: 'Pro-reform from an economic liberalization perspective',
+          details:
+            'Supported economic reforms during post-Suharto transition. Covered the Asian ' +
+            'Financial Crisis aftermath, IMF restructuring, and subsequent economic recovery ' +
+            'with depth unmatched by generalist outlets. Maintained centrist political stance ' +
+            'while advocating for market-friendly policies and good governance as prerequisites ' +
+            'for economic development.',
+          administration: 'Post-Suharto transition / Yudhoyono',
+        },
+        {
+          period: '2014-present',
+          stance: 'Centrist, pro-business, policy-focused',
+          details:
+            "Covered Jokowi's infrastructure push and economic policies with analytical depth. " +
+            'Generally supportive of pro-investment and market-opening policies while maintaining ' +
+            'critical coverage of regulatory inconsistencies and business climate challenges. ' +
+            'Under Prabowo, focused on fiscal policy, defense spending impacts on the economy, ' +
+            'and free meal programme cost analysis.',
+          administration: 'Joko Widodo / Prabowo Subianto',
+        },
+      ],
+      editorialStances: [
+        {
+          topic: 'Economic policy and investment climate',
+          stance: 'Pro-market, pro-investment, reform-oriented',
+          examples: [
+            'Supportive coverage of Omnibus Law on Job Creation as business climate improvement',
+            'Critical analysis of protectionist policies that deter foreign investment',
+            'In-depth coverage of capital market development and financial sector reforms',
+          ],
+        },
+        {
+          topic: 'State-owned enterprises (SOEs)',
+          stance: 'Reform-oriented, favours professional management over political appointment',
+          examples: [
+            'Analytical coverage of SOE performance and governance issues',
+            'Critical of political appointments to SOE leadership positions',
+            'Advocacy for SOE privatisation and professional governance standards',
+          ],
+        },
+        {
+          topic: 'Fiscal and monetary policy',
+          stance: 'Broadly orthodox, supportive of Bank Indonesia independence',
+          examples: [
+            'Detailed coverage of BI interest rate decisions and macroeconomic analysis',
+            'Critical coverage of fiscal deficit concerns and debt sustainability',
+            'Analytical reporting on rupiah stability and capital flows',
+          ],
+        },
+      ],
+      audienceDemographics: {
+        estimatedMonthlyReach:
+          '8-15 million unique visitors (web); print circulation ~45,000 (premium business readership)',
+        primaryDemographic:
+          'Business executives, investors, financial professionals, policymakers, aged 30-60',
+        geographicFocus: 'Jakarta-centric; national business community',
+        platformBreakdown: {
+          web: '55%',
+          print: '15%',
+          mobile: '20%',
+          social: '10%',
+        },
+      },
+      reliabilityRecord: [
+        {
+          incident: 'Consistently high standards in financial and economic reporting',
+          date: '1985-present',
+          impact: 'Regarded as the most authoritative Indonesian source for business news',
+          outcome: 'Trusted by financial professionals and policymakers as a reference source',
+        },
+        {
+          incident:
+            'Occasional uncritical coverage of major advertisers and business conglomerates',
+          date: 'Periodic',
+          impact: 'Business model dependence on corporate advertising creates potential conflicts',
+          outcome:
+            'Coverage of major advertisers should be cross-referenced with independent sources',
+        },
+      ],
+      biasExamples: [
+        {
+          topic: 'Labour rights vs business interests',
+          expectedCoverage: 'Balanced assessment of worker protections and business flexibility',
+          actualCoverage:
+            'Consistently frames labour market issues from an employer/investor perspective. ' +
+            'Coverage of the Omnibus Law heavily emphasized business benefits while underplaying ' +
+            'worker concerns. Labour protests covered primarily through the lens of business ' +
+            'disruption rather than legitimate grievance.',
+          analysis:
+            "The pro-business bias is structural and consistent with the publication's identity. " +
+            'Valuable as an authoritative business perspective but should be complemented with ' +
+            'sources that cover labour, social, and distributional impacts of economic policy.',
+        },
+      ],
+      pressFreedomIncidents: [],
+      awards: [
+        { name: 'SOPA Award for Excellence in Business Reporting', year: '2017' },
+        { name: 'Indonesia Press Council Standards Compliance Recognition', year: '2020' },
+      ],
+      foundingContext:
+        "Founded in 1985 by Sukamdani Sahid Gitosardjono as Indonesia's first dedicated " +
+        'business daily newspaper, filling a gap in the media landscape for serious financial ' +
+        'and economic reporting. Modelled on international business dailies, Bisnis Indonesia ' +
+        'has maintained its position as the authoritative voice on Indonesian business and ' +
+        'economic affairs for nearly four decades. The transition to digital through Bisnis.com ' +
+        'has expanded its reach while maintaining the analytical depth of the print tradition.',
+      keyMilestones: [
+        { year: '1985', event: "Founded as Indonesia's first dedicated business daily" },
+        {
+          year: '1998',
+          event:
+            'Comprehensive coverage of Asian Financial Crisis and its impact on Indonesian business',
+        },
+        { year: '2008', event: 'Launched Bisnis.com digital platform' },
+        { year: '2017', event: 'Won SOPA Award for business reporting excellence' },
+        { year: '2020', event: 'Expanded digital subscription model and financial data services' },
+      ],
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // 20. JAWA POS
+  // ──────────────────────────────────────────────────────────
+  {
+    id: 'jawa-pos',
+    name: 'Jawa Pos',
+    country: 'ID',
+    languages: ['id'],
+    url: 'https://www.jawapos.com',
+    feedUrls: ['https://www.jawapos.com/rss', 'https://www.jawapos.com/nasional/rss'],
+    politicalLeaning: 'centrist',
+    ownership: {
+      owner: 'PT Jawa Pos Koran',
+      conglomerate: 'Jawa Pos Group',
+      politicalAffiliation:
+        'Moderate pro-government leanings; founder Dahlan Iskan served as Minister of SOEs under Yudhoyono',
+      notes:
+        'Founded in 1949, but revitalised and transformed into a major media empire by Dahlan ' +
+        "Iskan from the 1980s onward. The Jawa Pos Group grew to become one of Indonesia's " +
+        'largest media conglomerates with over 100 regional newspapers under the Jawa Pos News ' +
+        "Network (JPNN). Dahlan Iskan's political career (SOE Minister 2011-2014, brief 2014 " +
+        'presidential bid) inextricably linked the media group to political networks. After ' +
+        "Dahlan's era, the group continues under professional management but retains the " +
+        'moderate, establishment-friendly editorial orientation.',
+    },
+    editorialGoal:
+      'Regional and national news with strong East Java roots, moderate mainstream reporting',
+    reliabilityScore: 0.65,
+    audienceTypes: ['urban-middle', 'rural-mass'],
+    biasDirection: 'pro-government',
+    signalWeight: 0.65,
+    active: true,
+    extendedProfile: {
+      ownershipChain: [
+        { entity: 'PT Jawa Pos Koran', role: 'direct-owner', stake: '100%' },
+        { entity: 'Jawa Pos Group', role: 'parent-company', since: '1982' },
+        {
+          entity: 'Dahlan Iskan / Jawa Pos Group management',
+          role: 'ultimate-beneficiary',
+          since: '1982',
+        },
+        {
+          entity: 'Jawa Pos News Network (JPNN — 100+ regional newspapers)',
+          role: 'parent-company',
+          since: '2002',
+        },
+      ],
+      politicalHistory: [
+        {
+          period: '1949-1982',
+          stance: 'Small regional newspaper',
+          details:
+            'Founded in 1949 in Surabaya as a small local newspaper. Went through several ' +
+            'ownership changes and struggled financially before Dahlan Iskan took over editorial ' +
+            'leadership in 1982, transforming it from a nearly defunct paper with circulation ' +
+            'under 10,000 into a major national media force.',
+          administration: 'Sukarno / Suharto (New Order)',
+        },
+        {
+          period: '1982-2011',
+          stance: 'Moderate, business-minded, expansion-focused',
+          details:
+            "Under Dahlan Iskan's leadership, Jawa Pos grew from a struggling regional paper " +
+            "into one of Indonesia's largest media groups. Editorial stance was moderate and " +
+            "business-friendly, reflecting Dahlan's entrepreneurial orientation. Built the JPNN " +
+            'network of over 100 regional papers, creating unprecedented regional media coverage ' +
+            'across Indonesia. Operated within New Order constraints but pivoted effectively to ' +
+            'the post-Reformasi landscape.',
+          administration: 'Suharto (New Order) / Post-Suharto transition / Yudhoyono',
+        },
+        {
+          period: '2011-2014',
+          stance: "Complicated by founder's political career",
+          details:
+            'Dahlan Iskan was appointed Minister of State-Owned Enterprises by President ' +
+            'Yudhoyono in 2011, creating an inherent conflict of interest with the media group. ' +
+            'During this period, coverage of SOE-related issues and Yudhoyono government was ' +
+            'notably softer. Dahlan briefly ran for the 2014 presidential nomination, further ' +
+            'entangling the media group with political ambitions.',
+          administration: 'Susilo Bambang Yudhoyono',
+        },
+        {
+          period: '2014-present',
+          stance: 'Moderate pro-government, establishment-friendly',
+          details:
+            "After Dahlan's exit from government, Jawa Pos settled into a moderate, " +
+            'establishment-friendly editorial stance. Coverage of successive governments has ' +
+            'been generally supportive without being sycophantic. Strong on regional coverage ' +
+            'through JPNN network, but national political coverage tends toward safe, ' +
+            'non-confrontational reporting.',
+          administration: 'Joko Widodo / Prabowo Subianto',
+        },
+      ],
+      editorialStances: [
+        {
+          topic: 'Regional development and decentralisation',
+          stance: 'Strongly supportive, reflecting East Java roots and regional network',
+          examples: [
+            'Extensive coverage of regional development through JPNN network',
+            'Advocacy for equitable development beyond Jakarta',
+            'Positive framing of regional autonomy and local governance stories',
+          ],
+        },
+        {
+          topic: 'National politics',
+          stance: 'Moderate, avoids strong adversarial positions',
+          examples: [
+            'Coverage of national politics tends toward event reporting over investigative depth',
+            "Soft treatment of figures connected to Jawa Pos Group's political network",
+            'Generally supportive of government development narratives',
+          ],
+        },
+        {
+          topic: 'Business and entrepreneurship',
+          stance: "Pro-business, reflecting Dahlan Iskan's entrepreneurial legacy",
+          examples: [
+            'Regular features on business success stories, especially from East Java',
+            'Positive coverage of infrastructure and economic development programmes',
+            "Dahlan Iskan's personal column remains influential",
+          ],
+        },
+      ],
+      audienceDemographics: {
+        estimatedMonthlyReach:
+          '15-25 million unique visitors (Jawapos.com + JPNN network combined reach)',
+        primaryDemographic:
+          'Middle-class Indonesians, 25-55, strong East Java and regional readership',
+        geographicFocus:
+          'East Java (primary), national via JPNN network; Surabaya is the editorial base',
+        platformBreakdown: {
+          web: '40%',
+          print: '20%',
+          mobile: '25%',
+          social: '15%',
+        },
+      },
+      reliabilityRecord: [
+        {
+          incident: 'Solid regional reporting through extensive JPNN correspondent network',
+          date: 'Ongoing',
+          impact: 'Often first to report on regional stories due to deep local presence',
+          outcome: 'Strong reliability for East Java and regional news coverage',
+        },
+        {
+          incident: 'National political coverage limited by establishment-friendly orientation',
+          date: 'Ongoing',
+          impact: 'Avoids adversarial reporting that might damage political relationships',
+          outcome:
+            'Reliable for factual reporting but limited as a source for critical political analysis',
+        },
+        {
+          incident: "Conflict of interest during Dahlan Iskan's ministerial tenure",
+          date: '2011-2014',
+          impact: 'Coverage of SOEs and Yudhoyono government was compromised during this period',
+          outcome:
+            "Legacy conflict of interest that affected credibility; since resolved with Dahlan's departure from government",
+        },
+      ],
+      biasExamples: [
+        {
+          topic: "Coverage of Dahlan Iskan's political and legal issues",
+          expectedCoverage:
+            "Objective coverage of founder's corruption case and political activities",
+          actualCoverage:
+            "Notably sympathetic coverage of Dahlan Iskan's 2017 corruption conviction (later " +
+            'overturned on appeal) and his ongoing political commentary. His personal column ' +
+            'in Jawa Pos remains a prominent feature despite the obvious editorial independence ' +
+            'concerns.',
+          analysis:
+            'The founder-media relationship creates an inherent bias in coverage related to ' +
+            'Dahlan Iskan personally and to political figures and issues connected to him. ' +
+            'This is a well-understood limitation in Indonesian media circles.',
+        },
+        {
+          topic: 'East Java regional politics',
+          expectedCoverage: 'Balanced coverage of regional political competition',
+          actualCoverage:
+            'Coverage of East Java politics tends to favour candidates and parties aligned with ' +
+            "the Jawa Pos Group's interests and network. The paper's enormous influence in East " +
+            'Java makes it a political actor in its own right, not merely a reporter.',
+          analysis:
+            "Jawa Pos's dominance in East Java media makes it simultaneously a news source and " +
+            'a political power broker in the region. Coverage should be read with this dual role ' +
+            'in mind.',
+        },
+      ],
+      pressFreedomIncidents: [],
+      awards: [
+        { name: 'Adinegoro Award (Indonesian Journalism Award)', year: '2005' },
+        { name: 'WAN-IFRA Asian Media Award for regional network innovation', year: '2015' },
+      ],
+      foundingContext:
+        'Founded in 1949 in Surabaya as a small local newspaper, Jawa Pos was transformed into ' +
+        'a media powerhouse by Dahlan Iskan after he took over editorial leadership in 1982. ' +
+        'From a nearly defunct paper with fewer than 10,000 readers, Dahlan built it into ' +
+        "Indonesia's largest regional newspaper and established the Jawa Pos News Network " +
+        '(JPNN), a network of over 100 regional newspapers spanning the Indonesian archipelago. ' +
+        'This network represents one of the most significant innovations in Indonesian media — ' +
+        'creating a distributed regional reporting infrastructure unmatched by any other ' +
+        "Indonesian media group. Dahlan Iskan's subsequent political career (SOE Minister " +
+        'under Yudhoyono 2011-2014, unsuccessful 2014 presidential bid, 2017 corruption case ' +
+        "later overturned) added layers of political entanglement to the media group's identity.",
+      keyMilestones: [
+        { year: '1949', event: 'Founded in Surabaya as a local newspaper' },
+        {
+          year: '1982',
+          event: 'Dahlan Iskan takes over; begins transformation into national media group',
+        },
+        { year: '1997', event: 'Circulation reaches 400,000+, largest in East Java' },
+        { year: '2002', event: 'Jawa Pos News Network (JPNN) formalised with 80+ regional papers' },
+        { year: '2011', event: 'Founder Dahlan Iskan appointed Minister of SOEs under Yudhoyono' },
+        {
+          year: '2014',
+          event: "Dahlan Iskan's brief presidential bid; returns to media after Jokowi wins",
+        },
+        {
+          year: '2017',
+          event: 'Dahlan Iskan convicted of corruption (later overturned on appeal in 2018)',
+        },
+        {
+          year: '2020',
+          event: 'Digital expansion of Jawapos.com; JPNN network exceeds 100 regional papers',
+        },
+      ],
+    },
+  },
 ];
 
 /**
