@@ -2,7 +2,7 @@
 
 > _"Every dataset tells a story. LOOM reads the plot, tracks the tension, and dreams the next chapter."_
 
-**8,434 lines of TypeScript. 75 passing tests. One narrative lens.**
+**12,000+ lines of TypeScript. 400+ passing tests. One narrative lens.**
 
 LOOM is a full-stack intelligence engine that treats real-world data as **living narrative** — extracting characters, tracking tensions, detecting story arcs, and generating speculative futures using the deep structure of storytelling.
 
@@ -55,16 +55,101 @@ Force-directed network graphs showing entity relationships and alliances. Timeli
 
 ---
 
-## Demo: The OpenAI Board Crisis
+## Country Sentiment Engine
 
-LOOM ships with a pre-loaded demo of the November 2023 OpenAI crisis:
+LOOM includes a **precision sentiment measurement instrument** for country-level narrative analysis. Starting with Indonesia, it ingests real news, measures impact, and enables predictive analysis.
 
-- **9 characters** — Sam Altman, the Board, Ilya Sutskever, Satya Nadella, and more — with tracked motivations and shifting alliances
+### How It Works
+
+| Step           | What Happens                                                                                         |
+| -------------- | ---------------------------------------------------------------------------------------------------- |
+| **Ingest**     | Feed articles from multiple news sources (RSS, API, manual)                                          |
+| **Categorize** | Auto-classify into 12 categories (political, economic, corruption, etc.)                             |
+| **Score**      | Multi-strategy sentiment scoring (lexicon + LLM) with bilingual support (English + Bahasa Indonesia) |
+| **Weight**     | Source-weighted scoring — unexpected sentiment from biased sources is amplified                      |
+| **Measure**    | Before/after impact measurement, time-series tracking, moving averages                               |
+| **Predict**    | Historical pattern matching to predict impact of future events                                       |
+
+### Source-Weighted Sentiment (The Key Insight)
+
+Not all sources are equal. The **same event** reported by different sources tells you different things:
+
+| Source                   | Type                      | If They Report Positively on Government    | Signal    |
+| ------------------------ | ------------------------- | ------------------------------------------ | --------- |
+| **Tempo** (opposition)   | Independent investigative | Unexpected → **HIGH signal** (2.5x weight) | 🔴 Strong |
+| **Antara** (state media) | Government wire service   | Expected → **LOW signal** (0.5x weight)    | ⚪ Weak   |
+| **Kompas** (centrist)    | Quality broadsheet        | Baseline signal (1.0x weight)              | 🟡 Normal |
+
+A positive article about Prabowo from Tempo is worth **5x** a positive article from Antara.
+
+### Narrative Impact Score (NIS)
+
+Every article gets a **NIS** (0-100) combining:
+
+- **Sentiment shift** magnitude (0-20)
+- **Source credibility** and signal weight (0-20)
+- **Audience reach** across segments (0-20)
+- **Impact duration** estimate (0-20)
+- **Cross-source amplification** (0-20)
+
+### Indonesian Media Profiles (11 Sources)
+
+| Source          | Owner                     | Bias                 | Reliability | Audience             |
+| --------------- | ------------------------- | -------------------- | ----------- | -------------------- |
+| Kompas          | Kompas Gramedia           | Centrist/Neutral     | 0.85        | Elite, Urban         |
+| Tempo           | Independent               | Anti-gov             | 0.90        | Elite, International |
+| Detik           | CT Corp (Chairul Tanjung) | Pro-gov              | 0.60        | Urban, Youth         |
+| Jakarta Post    | Independent               | Neutral              | 0.82        | International        |
+| Antara          | State                     | Pro-gov              | 0.55        | Elite, Rural         |
+| Republika       | Mahaka Media              | Islamic Conservative | 0.60        | Urban, Rural         |
+| Kumparan        | Independent               | Neutral              | 0.65        | Youth                |
+| CNN Indonesia   | CT Corp                   | Pro-gov              | 0.70        | Urban, Youth         |
+| tvOne/Viva      | Bakrie Group              | Pro-gov              | 0.45        | Rural, Urban         |
+| Media Indonesia | Surya Paloh (NasDem)      | Pro-gov              | 0.50        | Elite                |
+| Tribunnews      | Kompas Gramedia           | Neutral              | 0.45        | Mass market          |
+
+### Event Detail Analysis
+
+Click any article/event to see:
+
+- **NIS Score** with component breakdown
+- **Sentiment Types** — 8 emotional dimensions (fear, hope, anger, trust, pride, confusion, urgency, apathy)
+- **Effectiveness Analysis** — source credibility, timing, framing quality, emotional resonance, novelty
+- **Audience Impact** — which demographics are affected (elite, urban, rural, international, youth)
+- **Downstream Effects** — policy support, investor sentiment, social amplification, political pressure
+
+---
+
+## Demo Scenarios
+
+LOOM ships with three pre-loaded narrative scenarios. Load any of them in one click.
+
+### 1. The OpenAI Board Crisis (November 2023)
+
+- **9 characters** — Sam Altman, the Board, Ilya Sutskever, Satya Nadella, and more
 - **10 key events** with full causal chains
 - **5 active tensions** from "Safety vs. Speed" to "Non-Profit vs. For-Profit"
 - **3 narrative arcs** including "The Boardroom Coup" and "Microsoft's Power Play"
 
-Load it in one click and explore the narrative through every visualization.
+### 2. US-China Semiconductor War
+
+- **8 entities** — US Government, China, NVIDIA, Huawei, TSMC, SMIC, ASML, Indonesia
+- **10 events** — Export controls, Huawei's breakthrough, TSMC Arizona, critical minerals retaliation
+- **4 tensions** — Tech Decoupling vs. Interdependence, NVIDIA's China Dilemma, Taiwan Strait Risk
+- **3 arcs** — The Semiconductor Iron Curtain, China's Great Leap Inward, Southeast Asia's Leverage Play
+
+### 3. NVIDIA & The AI Bubble Question
+
+- **6 entities** — NVIDIA, Microsoft, OpenAI, DeepSeek, Meta, Wall Street
+- **8 events** — NVIDIA earnings triple, DeepSeek $6M shock, Goldman bubble warning
+- **3 tensions** — AI Capex vs. Revenue, Proprietary vs. Open Source, Pricing Power vs. Efficiency
+- **3 arcs** — The AI Gold Rush, The Efficiency Insurgency, OpenAI's Existential Race
+
+### 4. Indonesian Sentiment Engine Demo
+
+- **22 articles** across 11 Indonesian media sources
+- Covers Prabowo's first 100 days, IKN, economic policy, South China Sea, anti-corruption
+- Source-weighted sentiment analysis with NIS (Narrative Impact Score) for every article
 
 ---
 
@@ -121,7 +206,12 @@ packages/
 │   ├── errors/           # Custom error classes (LoomError hierarchy)
 │   ├── middleware/        # Rate limiting, validation, error handling
 │   ├── config/           # Environment validation (fail-fast on missing vars)
-│   ├── demo/             # Pre-loaded OpenAI crisis narrative data
+│   ├── demo/             # 3 narrative scenarios (OpenAI, US-China, AI Bubble)
+│   ├── sentiment/        # Country Sentiment Engine
+│   │   ├── analysis/     # Scoring, classification, impact, trend tracking
+│   │   ├── sources/      # Media source registry + profiles (Indonesia)
+│   │   ├── api/          # Sentiment REST endpoints
+│   │   └── demo/         # Indonesian news demo data (22 articles)
 │   └── index.ts          # Express + WebSocket server entry point
 │
 └── client/src/
@@ -131,11 +221,14 @@ packages/
     │   ├── NetworkGraph.tsx  # Entity relationship force graph (D3)
     │   ├── TensionRadar.tsx  # Tension pressure heatmap
     │   ├── DreamTree.tsx     # Speculative branch explorer
-    │   └── InputPanel.tsx    # Text extraction + demo controls
+    │   ├── InputPanel.tsx         # Text extraction + demo controls
+    │   ├── SentimentDashboard.tsx # Country sentiment dashboard
+    │   └── EventDetailPanel.tsx   # Article/event detail slide-out
     ├── hooks/
     │   ├── useApi.ts         # Typed API client with pagination support
+    │   ├── useSentiment.ts   # Sentiment engine hooks
     │   └── useWebSocket.ts   # Real-time graph update subscription
-    └── App.tsx               # Main app with tab navigation + state management
+    └── App.tsx               # Main app with Narrative | Sentiment tabs
 ```
 
 ---
@@ -299,10 +392,30 @@ Request body: `{ "text": "..." }` (max 50,000 characters)
 
 ### Demo
 
-| Method | Endpoint      | Description                      |
-| ------ | ------------- | -------------------------------- |
-| `POST` | `/demo/load`  | Load the OpenAI crisis demo data |
-| `POST` | `/demo/reset` | Clear all narrative data         |
+| Method | Endpoint                   | Description                                                     |
+| ------ | -------------------------- | --------------------------------------------------------------- |
+| `GET`  | `/demo/list`               | List available demo scenarios                                   |
+| `POST` | `/demo/load?scenario=<id>` | Load a demo (`openai-crisis`, `us-china-tech-war`, `ai-bubble`) |
+| `POST` | `/demo/reset`              | Clear all narrative data                                        |
+
+### Sentiment Engine API
+
+Base URL: `/api/sentiment`
+
+| Method | Endpoint                  | Description                                               |
+| ------ | ------------------------- | --------------------------------------------------------- |
+| `POST` | `/ingest`                 | Batch ingest articles for analysis                        |
+| `GET`  | `/articles`               | List articles (filters: category, source, entity, minNIS) |
+| `GET`  | `/articles/:id`           | Full article detail with source profile                   |
+| `GET`  | `/events`                 | Sentiment events ranked by impact                         |
+| `GET`  | `/timeline/:entity`       | Sentiment time series for an entity                       |
+| `GET`  | `/categories`             | Category breakdown with avg sentiment/NIS                 |
+| `GET`  | `/sources`                | Media source registry with profiles                       |
+| `GET`  | `/sources/:id`            | Single source profile                                     |
+| `POST` | `/predict`                | Predict sentiment impact of hypothetical                  |
+| `GET`  | `/dashboard`              | Aggregated dashboard for a country                        |
+| `GET`  | `/compare?entities=A,B,C` | Compare sentiment across entities                         |
+| `POST` | `/demo/load`              | Load Indonesian sentiment demo data                       |
 
 ### Pagination
 
