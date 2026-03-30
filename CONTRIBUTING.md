@@ -33,7 +33,7 @@ cp .env.example .env
 npm run dev
 
 # Verify everything works
-npm run test       # Should see 780 tests passing
+npm run test       # Should see 1058+ tests passing
 npm run lint       # Should pass clean
 npm run build      # Should succeed
 ```
@@ -72,17 +72,18 @@ loom/
 │   │       ├── middleware/    # Rate limiting, validation, error handling
 │   │       ├── config/        # Environment validation (fail-fast)
 │   │       ├── mcp/           # MCP server for AI agent integration (8 tools)
-│   │       ├── demo/          # 4 narrative demo scenarios
+│   │       ├── demo/          # 5 narrative demo scenarios (incl. Indonesia election)
 │   │       ├── ingestion/     # Auto-researcher (SerpAPI, RSS, Firecrawl)
 │   │       ├── sentiment/     # Country Sentiment Engine
 │   │       │   ├── analysis/  # Scoring, classification, impact, trends
 │   │       │   ├── sources/   # Media source registry + profiles
 │   │       │   ├── api/       # Sentiment REST endpoints
 │   │       │   └── demo/      # Demo data (50+ Indonesian articles)
-│   │       ├── social/        # Social Media Intelligence (emerging)
-│   │       │   ├── analysis/  # Platform tracking, audience segmentation
-│   │       │   ├── api/       # Social intelligence endpoints
-│   │       │   └── demo/      # Demo data for social scenarios
+│   │       ├── social/        # Social Media Intelligence (48K+ lines, 93%+ coverage)
+│   │       │   ├── analysis/  # Engagement patterns, audience segmentation, amplification tracking
+│   │       │   ├── integration/ # Narrative-social bridge, impact chain builder
+│   │       │   ├── api/       # Social intelligence REST endpoints (19 routes)
+│   │       │   └── demo/      # Indonesian social media demo data
 │   │       └── knowledge-base/ # Source profiles, entity profiles, methodology
 │   │
 │   └── client/                # Frontend — React + Three.js + D3
@@ -150,7 +151,7 @@ refactor: extract pressure calculation into pure function
 LOOM uses **Vitest** for all testing. Tests are colocated next to their source files.
 
 ```bash
-npm run test              # Run all 780 tests
+npm run test              # Run all 1058+ tests
 npm run test:cov          # Run with coverage report (70% minimum target)
 npx vitest path/to/file   # Run a specific test file
 npx vitest --watch        # Watch mode for development
@@ -307,31 +308,55 @@ describe('<Country> source profiles', () => {
 
 ## How to Extend the Social Intelligence Module
 
-The `social/` module tracks how narratives propagate across social media platforms. It's structured similarly to the sentiment engine:
+The `social/` module tracks how narratives propagate across social media platforms. It has **22 source files**, **1058+ tests at 93%+ coverage**, and **48K+ lines** of code.
 
 ### Directory Structure
 
 ```
 packages/server/src/social/
-├── analysis/     # Platform tracking, audience segmentation, persona generation
-├── api/          # REST endpoints for social intelligence data
-└── demo/         # Demo data for social scenarios
+├── social-engine.ts           # Central orchestrator (SocialMediaEngine class)
+├── types.ts                   # All social intelligence type definitions
+├── analysis/
+│   ├── engagement-analyzer.ts     # Pattern detection: spike-decay, sustained, viral-loop, slow-burn
+│   ├── engagement-deep-analyzer.ts # Decay prediction, resurgence detection
+│   ├── audience-analyzer.ts       # Segmentation, overlap (Jaccard), reaction prediction
+│   ├── audience-deep-analyzer.ts  # Growth prediction, demographic shifts
+│   └── amplification-tracker.ts   # Chain building, bot detection, velocity analysis
+├── integration/
+│   ├── narrative-bridge.ts        # Links social data to narrative graph
+│   ├── impact-chain-builder.ts    # Announcement → amplification → media → action chains
+│   └── bridge-types.ts            # Integration type definitions
+├── api/
+│   ├── social-routes.ts           # 15 social intelligence REST endpoints
+│   └── bridge-routes.ts           # 4 narrative-social bridge endpoints
+└── demo/
+    └── social-demo.ts             # Indonesian political context demo data
 ```
 
 ### Key Concepts
 
-- **Platform Tracking** — Monitor how an announcement or narrative spreads across Twitter/X, Instagram, TikTok, Facebook, and news aggregators
-- **Audience Segmentation** — Classify audiences by demographic, political leaning, and engagement pattern
-- **Persona Generation** — AI-generated audience profiles that predict how different segments will react to narratives
-- **Engagement Patterns** — Track amplification, sentiment drift, and virality metrics across platforms
+- **Announcement Tracking** — Track how entity announcements propagate across Twitter/X, Instagram, TikTok, Facebook, Reddit, and YouTube with per-platform engagement metrics
+- **Engagement Pattern Detection** — Classify engagement into spike-decay, sustained, viral-loop, or slow-burn patterns with decay curve fitting and viral coefficient
+- **Audience Segmentation** — Classify audiences by demographic, political leaning, geography, and engagement rate using Jaccard similarity for overlap detection
+- **Persona Profiles** — 6 detailed Indonesian audience personas (Urban Jakarta Millennial, Rural Java Conservative, etc.) that predict reactions to narratives
+- **Influencer Analysis** — 8 tracked influencers with follower counts, amplification scores, and content categories
+- **Amplification Chains** — Trace message spread from source → influencers → mass audience with velocity and bot detection
+- **Narrative Bridge** — Links social announcements to narrative events for cross-domain impact scoring
+- **Impact Chains** — Full tracing from announcement through social amplification to media pickup to sentiment shift
+
+### Demo Scenarios
+
+- **Indonesian Social Media Demo** — Pre-built personas, influencers, segments, and announcements in Indonesian political context
+- **Indonesia Election Crisis** — Minister's "lazy workers" gaffe, viral spread, student protests, cabinet reshuffle (narrative demo)
 
 ### Adding a New Platform
 
-1. Create a platform adapter in `social/analysis/`
-2. Define the platform's audience taxonomy
-3. Add engagement metric extractors
-4. Write tests covering the platform's unique data patterns
-5. Register the platform in the social intelligence API
+1. Add the platform to the `SocialPlatform` union type in `types.ts`
+2. Create a platform adapter in `social/analysis/`
+3. Define the platform's audience taxonomy
+4. Add engagement metric extractors
+5. Write tests covering the platform's unique data patterns
+6. Register the platform in the Zod validation schemas in `social-routes.ts`
 
 ---
 
@@ -428,7 +453,7 @@ LOOM has a strong visual identity. All UI contributions should follow these stan
 3. Ensure all checks pass:
    ```bash
    npm run lint      # Must pass clean
-   npm run test      # All 780+ tests must pass
+   npm run test      # All 1058+ tests must pass
    npm run build     # Must compile without errors
    ```
 4. Open a PR with a clear description of **what** and **why**

@@ -95,6 +95,26 @@ describe('OpenAPI Specification', () => {
       '/api/sentiment/dashboard',
       '/api/sentiment/compare',
       '/api/sentiment/demo/load',
+      // Social Intelligence
+      '/api/social/dashboard',
+      '/api/social/announcements',
+      '/api/social/announcements/{id}',
+      '/api/social/announcements/{id}/engagement',
+      '/api/social/announcements/{id}/amplification',
+      '/api/social/audiences/{entityId}',
+      '/api/social/personas',
+      '/api/social/personas/{id}',
+      '/api/social/personas/{id}/predict',
+      '/api/social/influencers',
+      '/api/social/influencers/{entityId}',
+      '/api/social/cross-platform/{eventId}',
+      '/api/social/overlap',
+      '/api/social/demo/load',
+      // Social Bridge
+      '/api/social/link',
+      '/api/social/impact/{eventId}',
+      '/api/social/correlation/{entityId}',
+      '/api/social/impact-chain/{eventId}',
     ];
 
     const paths = (swaggerSpec as Record<string, unknown>).paths as Record<string, unknown>;
@@ -135,6 +155,22 @@ describe('OpenAPI Specification', () => {
         '/api/sentiment/sources/{id}',
         '/api/sentiment/dashboard',
         '/api/sentiment/compare',
+        // Social Intelligence GET-only
+        '/api/social/dashboard',
+        '/api/social/announcements/{id}',
+        '/api/social/announcements/{id}/engagement',
+        '/api/social/announcements/{id}/amplification',
+        '/api/social/audiences/{entityId}',
+        '/api/social/personas',
+        '/api/social/personas/{id}',
+        '/api/social/influencers',
+        '/api/social/influencers/{entityId}',
+        '/api/social/cross-platform/{eventId}',
+        '/api/social/overlap',
+        // Social Bridge GET-only
+        '/api/social/impact/{eventId}',
+        '/api/social/correlation/{entityId}',
+        '/api/social/impact-chain/{eventId}',
       ];
 
       const postOnlyPaths = [
@@ -145,6 +181,10 @@ describe('OpenAPI Specification', () => {
         '/api/sentiment/ingest',
         '/api/sentiment/predict',
         '/api/sentiment/demo/load',
+        // Social Intelligence POST-only
+        '/api/social/personas/{id}/predict',
+        '/api/social/demo/load',
+        '/api/social/link',
       ];
 
       for (const path of getOnlyPaths) {

@@ -12,19 +12,19 @@ import type { SocialMediaEngine } from '../social-engine.js';
 // --- Request validation schemas ---
 
 const trackAnnouncementSchema = z.object({
-  entityId: z.string().min(1, 'entityId is required'),
-  entityName: z.string().min(1, 'entityName is required'),
-  title: z.string().min(1, 'title is required'),
-  description: z.string().min(1, 'description is required'),
+  entityId: z.string().min(1, 'entityId is required').max(200, 'entityId too long'),
+  entityName: z.string().min(1, 'entityName is required').max(500, 'entityName too long (max 500 chars)'),
+  title: z.string().min(1, 'title is required').max(500, 'title too long (max 500 chars)'),
+  description: z.string().min(1, 'description is required').max(5000, 'description too long (max 5000 chars)'),
   platforms: z
     .array(z.enum(['twitter', 'instagram', 'tiktok', 'facebook', 'reddit', 'youtube']))
     .min(1, 'at least one platform is required'),
-  tags: z.array(z.string()).default([]),
+  tags: z.array(z.string().max(100, 'tag too long')).max(20, 'too many tags (max 20)').default([]),
 });
 
 const predictReactionSchema = z.object({
-  announcement: z.string().min(1, 'announcement text is required'),
-  tags: z.array(z.string()).default([]),
+  announcement: z.string().min(1, 'announcement text is required').max(5000, 'announcement too long (max 5000 chars)'),
+  tags: z.array(z.string().max(100, 'tag too long')).max(20, 'too many tags (max 20)').default([]),
   platforms: z
     .array(z.enum(['twitter', 'instagram', 'tiktok', 'facebook', 'reddit', 'youtube']))
     .default(['twitter', 'instagram', 'tiktok']),

@@ -17,6 +17,12 @@ import {
   aiBubbleTensions,
   aiBubbleArcs,
 } from '../demo/nvidia-ai-bubble.js';
+import {
+  electionEntities,
+  electionEvents,
+  electionTensions,
+  electionArcs,
+} from '../demo/indonesia-election.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { validateBody } from '../middleware/validation.js';
 import { apiRateLimiter } from '../middleware/rate-limiter.js';
@@ -28,12 +34,12 @@ import { researchTopic } from '../ingestion/auto-researcher.js';
 // ============================================================
 
 const extractSchema = z.object({
-  text: z.string().min(1, 'text field is required'),
+  text: z.string().min(1, 'text field is required').max(50000, 'text too long (max 50000 chars)'),
 });
 
 const researchSchema = z.object({
-  topic: z.string().min(1, 'topic is required'),
-  country: z.string().optional(),
+  topic: z.string().min(1, 'topic is required').max(500, 'topic too long (max 500 chars)'),
+  country: z.string().max(100, 'country too long').optional(),
   maxArticles: z.coerce.number().int().min(1).max(20).default(10),
 });
 
@@ -244,6 +250,13 @@ export function createRoutes(graph: TemporalGraph, broadcast: (data: unknown) =>
       events: aiBubbleEvents,
       tensions: aiBubbleTensions,
       arcs: aiBubbleArcs,
+    },
+    'indonesia-election': {
+      name: 'Indonesian Minister Social Media Crisis',
+      entities: electionEntities,
+      events: electionEvents,
+      tensions: electionTensions,
+      arcs: electionArcs,
     },
   };
 

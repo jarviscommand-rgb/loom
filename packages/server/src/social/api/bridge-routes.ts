@@ -17,8 +17,8 @@ import type { NarrativeBridge } from '../integration/narrative-bridge.js';
 // ============================================================
 
 const linkAnnouncementSchema = z.object({
-  announcementId: z.string().min(1, 'announcementId is required'),
-  narrativeEventId: z.string().min(1, 'narrativeEventId is required'),
+  announcementId: z.string().min(1, 'announcementId is required').max(200, 'announcementId too long'),
+  narrativeEventId: z.string().min(1, 'narrativeEventId is required').max(200, 'narrativeEventId too long'),
 });
 
 // ============================================================

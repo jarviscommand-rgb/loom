@@ -43,6 +43,8 @@ const options: swaggerJsdoc.Options = {
       { name: 'Sentiment Compare', description: 'Entity sentiment comparison' },
       { name: 'Sentiment Demo', description: 'Sentiment demo data' },
       { name: 'Health', description: 'Server health check' },
+      { name: 'Social Intelligence', description: 'Social media tracking, audience analysis, engagement patterns, and amplification chains' },
+      { name: 'Social Bridge', description: 'Narrative-social integration — linking announcements to events and impact analysis' },
     ],
     components: {
       schemas: {
@@ -193,6 +195,224 @@ const options: swaggerJsdoc.Options = {
           type: 'object',
           properties: {
             error: { type: 'string' },
+          },
+        },
+
+        // ========== Social Intelligence Schemas ==========
+        TrackAnnouncementRequest: {
+          type: 'object',
+          required: ['entityId', 'entityName', 'title', 'description', 'platforms'],
+          properties: {
+            entityId: { type: 'string', minLength: 1, description: 'Entity making the announcement' },
+            entityName: { type: 'string', minLength: 1, maxLength: 500, description: 'Entity display name' },
+            title: { type: 'string', minLength: 1, maxLength: 500, description: 'Announcement title' },
+            description: { type: 'string', minLength: 1, maxLength: 5000, description: 'Announcement body' },
+            platforms: {
+              type: 'array',
+              items: { type: 'string', enum: ['twitter', 'instagram', 'tiktok', 'facebook', 'reddit', 'youtube'] },
+              minItems: 1,
+            },
+            tags: { type: 'array', items: { type: 'string' }, default: [] },
+          },
+          example: {
+            entityId: 'minister-eko',
+            entityName: 'Minister Eko Prasetyo',
+            title: 'Labor Reform Press Conference',
+            description: 'Minister announces new labor reform policy at press conference.',
+            platforms: ['twitter', 'tiktok', 'instagram'],
+            tags: ['labor', 'reform', 'controversy'],
+          },
+        },
+        PredictReactionRequest: {
+          type: 'object',
+          required: ['announcement'],
+          properties: {
+            announcement: { type: 'string', minLength: 1, maxLength: 5000, description: 'Announcement text to predict reactions for' },
+            tags: { type: 'array', items: { type: 'string' }, default: [] },
+            platforms: {
+              type: 'array',
+              items: { type: 'string', enum: ['twitter', 'instagram', 'tiktok', 'facebook', 'reddit', 'youtube'] },
+              default: ['twitter', 'instagram', 'tiktok'],
+            },
+          },
+          example: {
+            announcement: 'Workers need to stop being lazy and start competing globally.',
+            tags: ['labor', 'controversy'],
+            platforms: ['twitter', 'tiktok'],
+          },
+        },
+        LinkAnnouncementRequest: {
+          type: 'object',
+          required: ['announcementId', 'narrativeEventId'],
+          properties: {
+            announcementId: { type: 'string', minLength: 1, description: 'Social announcement ID' },
+            narrativeEventId: { type: 'string', minLength: 1, description: 'Narrative event ID to link to' },
+          },
+        },
+        SocialAnnouncementTracking: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            entityId: { type: 'string' },
+            entityName: { type: 'string' },
+            title: { type: 'string' },
+            description: { type: 'string' },
+            announcedAt: { type: 'string', format: 'date-time' },
+            platforms: { type: 'array', items: { type: 'string' } },
+            platformResponses: { type: 'array', items: { $ref: '#/components/schemas/SocialPlatformResponse' } },
+            engagementPattern: { $ref: '#/components/schemas/SocialEngagementPattern' },
+            impactScore: { $ref: '#/components/schemas/SocialImpactScore' },
+            amplificationChain: { $ref: '#/components/schemas/SocialAmplificationChain' },
+            tags: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        SocialEngagementPattern: {
+          type: 'object',
+          properties: {
+            type: { type: 'string', enum: ['spike-decay', 'sustained', 'viral-loop', 'slow-burn'] },
+            confidence: { type: 'number', description: 'Classification confidence (0-1)' },
+            peakValue: { type: 'number' },
+            peakTimestamp: { type: 'string', format: 'date-time' },
+            decayRate: { type: 'number' },
+            halfLifeHours: { type: 'number' },
+            viralCoefficient: { type: 'number', description: '>1 means viral spread' },
+          },
+        },
+        SocialPlatformResponse: {
+          type: 'object',
+          properties: {
+            platform: { type: 'string' },
+            totalEngagement: { type: 'object' },
+            sentimentScore: { type: 'number', description: 'Dominant sentiment (-1 to 1)' },
+            topHashtags: { type: 'array', items: { type: 'string' } },
+            talkingPoints: { type: 'array', items: { type: 'string' } },
+            quality: { $ref: '#/components/schemas/SocialEngagementQuality' },
+          },
+        },
+        SocialEngagementQuality: {
+          type: 'object',
+          properties: {
+            botScore: { type: 'number', description: 'Bot-driven engagement ratio (0-1)' },
+            realScore: { type: 'number', description: 'Human engagement ratio (0-1)' },
+            passiveToActiveRatio: { type: 'number' },
+            qualityScore: { type: 'number', description: 'Overall quality (0-100)' },
+          },
+        },
+        SocialImpactScore: {
+          type: 'object',
+          properties: {
+            score: { type: 'number', description: 'Composite score (0-100)' },
+            reachScore: { type: 'number' },
+            engagementScore: { type: 'number' },
+            sentimentScore: { type: 'number' },
+            amplificationScore: { type: 'number' },
+            crossPlatformScore: { type: 'number' },
+            summary: { type: 'string' },
+          },
+        },
+        SocialAmplificationChain: {
+          type: 'object',
+          properties: {
+            source: { $ref: '#/components/schemas/SocialAmplificationNode' },
+            influencers: { type: 'array', items: { $ref: '#/components/schemas/SocialAmplificationNode' } },
+            massAudience: { type: 'array', items: { $ref: '#/components/schemas/SocialAmplificationNode' } },
+            totalReach: { type: 'number' },
+            velocityPerHour: { type: 'number' },
+            timeToPeakHours: { type: 'number' },
+            botAmplificationRate: { type: 'number' },
+          },
+        },
+        SocialAmplificationNode: {
+          type: 'object',
+          properties: {
+            nodeId: { type: 'string' },
+            name: { type: 'string' },
+            nodeType: { type: 'string', enum: ['source', 'influencer', 'mass-audience'] },
+            platform: { type: 'string' },
+            audienceSize: { type: 'number' },
+            amplifiedAt: { type: 'string', format: 'date-time' },
+            engagement: { type: 'number' },
+          },
+        },
+        SocialAudiencePersona: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string', description: 'E.g. "Urban Jakarta Millennial"' },
+            description: { type: 'string' },
+            ageRange: { type: 'string' },
+            platforms: { type: 'array', items: { type: 'string' } },
+            interests: { type: 'array', items: { type: 'string' } },
+            politicalLeaning: { type: 'string' },
+            geography: { type: 'string' },
+            keyConcerns: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        SocialPersonaReaction: {
+          type: 'object',
+          properties: {
+            personaId: { type: 'string' },
+            personaName: { type: 'string' },
+            sentimentScore: { type: 'number', description: 'Reaction sentiment (-1 to 1)' },
+            engagementLikelihood: { type: 'number', description: '0-1' },
+            amplificationLikelihood: { type: 'number', description: '0-1' },
+            dominantEmotion: { type: 'string' },
+            likelyTalkingPoints: { type: 'array', items: { type: 'string' } },
+            preferredPlatform: { type: 'string' },
+            summary: { type: 'string' },
+          },
+        },
+        SocialInfluencerProfile: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            platform: { type: 'string' },
+            followerCount: { type: 'number' },
+            engagementRate: { type: 'number' },
+            amplificationScore: { type: 'number', description: '0-100' },
+            contentCategories: { type: 'array', items: { type: 'string' } },
+            verified: { type: 'boolean' },
+            geography: { type: 'string' },
+          },
+        },
+        SocialCrossPlatformAnalysis: {
+          type: 'object',
+          properties: {
+            eventId: { type: 'string' },
+            eventDescription: { type: 'string' },
+            platformBreakdowns: { type: 'array', items: { $ref: '#/components/schemas/SocialPlatformResponse' } },
+            dominantPlatform: { type: 'string' },
+            sentimentDivergence: { type: 'number', description: '0-1, higher = more divergent' },
+            framingDifferences: { type: 'array', items: { type: 'string' } },
+            summary: { type: 'string' },
+          },
+        },
+        SocialAudienceOverlap: {
+          type: 'object',
+          properties: {
+            entityId1: { type: 'string' },
+            entityId2: { type: 'string' },
+            overlapCoefficient: { type: 'number', description: 'Jaccard similarity (0-1)' },
+            sharedSegments: { type: 'array', items: { type: 'object' } },
+            uniqueToEntity1: { type: 'array', items: { type: 'object' } },
+            uniqueToEntity2: { type: 'array', items: { type: 'object' } },
+            competitiveTension: { type: 'number', description: '0-100' },
+            summary: { type: 'string' },
+          },
+        },
+        SocialDashboard: {
+          type: 'object',
+          properties: {
+            totalAnnouncements: { type: 'integer' },
+            totalInfluencers: { type: 'integer' },
+            totalPersonas: { type: 'integer' },
+            averageImpactScore: { type: 'number' },
+            mostActivePlatform: { type: 'string' },
+            topAnnouncements: { type: 'array', items: { type: 'object' } },
+            topInfluencers: { type: 'array', items: { type: 'object' } },
+            platformDistribution: { type: 'object' },
+            trendDirection: { type: 'string', enum: ['rising', 'falling', 'stable'] },
           },
         },
       },
@@ -660,7 +880,7 @@ const options: swaggerJsdoc.Options = {
               in: 'query',
               schema: {
                 type: 'string',
-                enum: ['openai-crisis', 'us-china-tech-war', 'ai-bubble'],
+                enum: ['openai-crisis', 'us-china-tech-war', 'ai-bubble', 'indonesia-election'],
                 default: 'openai-crisis',
               },
               description: 'Scenario ID to load',
@@ -1148,6 +1368,435 @@ const options: swaggerJsdoc.Options = {
                   },
                 },
               },
+            },
+          },
+        },
+      },
+
+      // ========== Social Intelligence ==========
+      '/api/social/dashboard': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Get social intelligence dashboard',
+          description: 'Returns aggregated social intelligence metrics including top announcements, platform distribution, influencer rankings, and trend direction.',
+          responses: {
+            '200': {
+              description: 'Social dashboard data',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialDashboard' } } },
+            },
+          },
+        },
+      },
+      '/api/social/announcements': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'List announcements',
+          description: 'Returns a paginated list of tracked announcements sorted by impact score, optionally filtered by entity or tag.',
+          parameters: [
+            { name: 'entityId', in: 'query', schema: { type: 'string' }, description: 'Filter by entity ID' },
+            { name: 'tag', in: 'query', schema: { type: 'string' }, description: 'Filter by tag (case-insensitive partial match)' },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 50, minimum: 1, maximum: 500 } },
+            { name: 'offset', in: 'query', schema: { type: 'integer', default: 0, minimum: 0 } },
+          ],
+          responses: {
+            '200': {
+              description: 'Paginated announcement list',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      total: { type: 'integer' },
+                      limit: { type: 'integer' },
+                      offset: { type: 'integer' },
+                      announcements: { type: 'array', items: { $ref: '#/components/schemas/SocialAnnouncementTracking' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        post: {
+          tags: ['Social Intelligence'],
+          summary: 'Track a new announcement',
+          description: 'Creates a new announcement tracking entry with simulated platform responses, engagement pattern, impact score, and amplification chain.',
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/TrackAnnouncementRequest' } } },
+          },
+          responses: {
+            '201': {
+              description: 'Announcement created',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialAnnouncementTracking' } } },
+            },
+            '400': {
+              description: 'Validation error',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/announcements/{id}': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Get announcement detail',
+          description: 'Returns full detail for a single tracked announcement.',
+          parameters: [
+            { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Announcement ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Announcement detail',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialAnnouncementTracking' } } },
+            },
+            '404': {
+              description: 'Announcement not found',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/announcements/{id}/engagement': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Get engagement pattern',
+          description: 'Returns the classified engagement pattern (spike-decay, sustained, viral-loop, slow-burn) with decay rate, peak, and viral coefficient.',
+          parameters: [
+            { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Announcement ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Engagement pattern analysis',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialEngagementPattern' } } },
+            },
+            '404': {
+              description: 'Announcement not found',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/announcements/{id}/amplification': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Get amplification chain',
+          description: 'Returns the amplification chain showing how the announcement spread from source through influencers to mass audience.',
+          parameters: [
+            { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Announcement ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Amplification chain',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialAmplificationChain' } } },
+            },
+            '404': {
+              description: 'Announcement not found',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/audiences/{entityId}': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Get audience segmentation',
+          description: 'Returns audience segments for an entity, weighted by engagement patterns and demographics.',
+          parameters: [
+            { name: 'entityId', in: 'path', required: true, schema: { type: 'string' }, description: 'Entity ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Audience segmentation data',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      entityId: { type: 'string' },
+                      segments: { type: 'array', items: { type: 'object' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/social/personas': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'List all audience personas',
+          description: 'Returns all audience persona profiles used for reaction prediction.',
+          responses: {
+            '200': {
+              description: 'Persona list',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      total: { type: 'integer' },
+                      personas: { type: 'array', items: { $ref: '#/components/schemas/SocialAudiencePersona' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/social/personas/{id}': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Get persona detail',
+          description: 'Returns full detail for a single audience persona.',
+          parameters: [
+            { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Persona ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Persona detail',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialAudiencePersona' } } },
+            },
+            '404': {
+              description: 'Persona not found',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/personas/{id}/predict': {
+        post: {
+          tags: ['Social Intelligence'],
+          summary: 'Predict persona reaction',
+          description: 'Predicts how a specific audience persona would react to an announcement, including sentiment, engagement likelihood, and likely talking points.',
+          parameters: [
+            { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Persona ID' },
+          ],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/PredictReactionRequest' } } },
+          },
+          responses: {
+            '200': {
+              description: 'Predicted persona reaction',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialPersonaReaction' } } },
+            },
+            '400': {
+              description: 'Validation error',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+            '404': {
+              description: 'Persona not found',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/influencers': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'List influencers',
+          description: 'Returns a paginated list of tracked influencer profiles.',
+          parameters: [
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 50, minimum: 1, maximum: 500 } },
+            { name: 'offset', in: 'query', schema: { type: 'integer', default: 0, minimum: 0 } },
+          ],
+          responses: {
+            '200': {
+              description: 'Paginated influencer list',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      total: { type: 'integer' },
+                      limit: { type: 'integer' },
+                      offset: { type: 'integer' },
+                      influencers: { type: 'array', items: { $ref: '#/components/schemas/SocialInfluencerProfile' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/social/influencers/{entityId}': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Get influencers for entity',
+          description: 'Returns influencers associated with a specific entity/narrative.',
+          parameters: [
+            { name: 'entityId', in: 'path', required: true, schema: { type: 'string' }, description: 'Entity ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Influencer profiles for entity',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      entityId: { type: 'string' },
+                      influencers: { type: 'array', items: { $ref: '#/components/schemas/SocialInfluencerProfile' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/social/cross-platform/{eventId}': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Cross-platform analysis',
+          description: 'Analyzes how an event played across platforms — sentiment divergence, dominant platform, framing differences.',
+          parameters: [
+            { name: 'eventId', in: 'path', required: true, schema: { type: 'string' }, description: 'Event ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Cross-platform analysis',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialCrossPlatformAnalysis' } } },
+            },
+            '404': {
+              description: 'Event not found',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/overlap': {
+        get: {
+          tags: ['Social Intelligence'],
+          summary: 'Audience overlap analysis',
+          description: 'Computes Jaccard similarity between two entities\' audiences — shared segments, unique segments, competitive tension.',
+          parameters: [
+            { name: 'entity1', in: 'query', required: true, schema: { type: 'string' }, description: 'First entity ID' },
+            { name: 'entity2', in: 'query', required: true, schema: { type: 'string' }, description: 'Second entity ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Audience overlap analysis',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialAudienceOverlap' } } },
+            },
+            '400': {
+              description: 'Missing entity1 or entity2 query parameter',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/demo/load': {
+        post: {
+          tags: ['Social Intelligence'],
+          summary: 'Load social demo data',
+          description: 'Loads Indonesian social media intelligence demo data (personas, influencers, segments, announcements).',
+          responses: {
+            '200': {
+              description: 'Demo data loaded',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      loaded: { type: 'boolean' },
+                      announcementCount: { type: 'integer' },
+                      message: { type: 'string', example: 'Indonesian social media intelligence demo data loaded' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+
+      // ========== Social Bridge ==========
+      '/api/social/link': {
+        post: {
+          tags: ['Social Bridge'],
+          summary: 'Link announcement to narrative event',
+          description: 'Creates a bidirectional link between a social announcement and a narrative event for cross-domain impact analysis.',
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/LinkAnnouncementRequest' } } },
+          },
+          responses: {
+            '201': {
+              description: 'Link created',
+              content: { 'application/json': { schema: { type: 'object' } } },
+            },
+            '400': {
+              description: 'Validation error',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+            '404': {
+              description: 'Announcement or event not found',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/impact/{eventId}': {
+        get: {
+          tags: ['Social Bridge'],
+          summary: 'Get social impact for narrative event',
+          description: 'Returns the social impact score and platform breakdown for a narrative event with linked announcements.',
+          parameters: [
+            { name: 'eventId', in: 'path', required: true, schema: { type: 'string' }, description: 'Narrative event ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Social impact data',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/SocialImpactScore' } } },
+            },
+            '404': {
+              description: 'No social impact data for event',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/correlation/{entityId}': {
+        get: {
+          tags: ['Social Bridge'],
+          summary: 'Engagement-sentiment correlation',
+          description: 'Analyzes correlation between social engagement patterns and narrative sentiment shifts for an entity.',
+          parameters: [
+            { name: 'entityId', in: 'path', required: true, schema: { type: 'string' }, description: 'Entity ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Correlation analysis',
+              content: { 'application/json': { schema: { type: 'object' } } },
+            },
+            '404': {
+              description: 'No correlation data',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+            },
+          },
+        },
+      },
+      '/api/social/impact-chain/{eventId}': {
+        get: {
+          tags: ['Social Bridge'],
+          summary: 'Full impact chain',
+          description: 'Traces the complete impact chain from narrative event through social announcements, amplification, and audience reactions.',
+          parameters: [
+            { name: 'eventId', in: 'path', required: true, schema: { type: 'string' }, description: 'Narrative event ID' },
+          ],
+          responses: {
+            '200': {
+              description: 'Full impact chain',
+              content: { 'application/json': { schema: { type: 'object' } } },
+            },
+            '404': {
+              description: 'No impact chain data',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
             },
           },
         },

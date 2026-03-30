@@ -12,6 +12,12 @@ import {
   techWarTensions,
   techWarArcs,
 } from './us-china-tech-war.js';
+import {
+  electionEntities,
+  electionEvents,
+  electionTensions,
+  electionArcs,
+} from './indonesia-election.js';
 import type { Entity, NarrativeEvent, Tension, NarrativeArc } from '../graph/types.js';
 
 // ============================================================
@@ -233,5 +239,13 @@ describe('Demo Data Validation', () => {
     validateEvents(techWarEvents, techWarEntities, 'Tech War');
     validateTensions(techWarTensions, techWarEntities, 'Tech War');
     validateArcs(techWarArcs, techWarEntities, 'Tech War');
+  });
+
+  // --- Indonesia Election / Social Media Crisis ---
+  describe('Indonesia Election', () => {
+    validateEntities(electionEntities, 'Indonesia Election');
+    validateEvents(electionEvents, electionEntities, 'Indonesia Election');
+    validateTensions(electionTensions, electionEntities, 'Indonesia Election');
+    validateArcs(electionArcs, electionEntities, 'Indonesia Election');
   });
 });

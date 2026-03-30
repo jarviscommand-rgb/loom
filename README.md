@@ -4,8 +4,9 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-780%20passing-brightgreen)](.)
+[![Tests](https://img.shields.io/badge/tests-1058%20passing-brightgreen)](.)
 [![Coverage](https://img.shields.io/badge/coverage-93%25%2B-brightgreen)](.)
+[![Lines](https://img.shields.io/badge/lines-48K%2B-blue)](.)
 [![Zero Any](https://img.shields.io/badge/any%20types-zero-blue)](.)
 
 ---
